@@ -1,39 +1,82 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>التوعية بالتصيد الاحتيالي</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      direction: rtl;
-      text-align: center;
-      padding: 40px;
-    }
-    .box {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: auto;
-    }
-    h1 { color: #c0392b; }
-  </style>
+    <meta charset="UTF-8">
+    <title>تنبيه من التصيد الأحتيالي </title>
+
+    <style>
+        body {
+            font-family: Arial;
+            direction: rtl;
+            text-align: center;
+            background-color: #a6c2f7;
+            padding-top: 50px;
+        }
+
+        input {
+            width: 320px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 25px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="box">
-    <h1>⚠️ احذر التصيد الاحتيالي</h1>
-    <p>
-      التصيد الاحتيالي هو محاولة خداعك لإدخال بياناتك
-      في مواقع مزيفة تشبه المواقع الحقيقية.
-    </p>
-    <h3>كيف تحمي نفسك؟</h3>
-    <ul>
-      <li>تأكد من رابط الموقع</li>
-      <li>لا تدخل بياناتك في روابط مشبوهة</li>
-      <li>فعّل التحقق بخطوتين</li>
-    </ul>
-  </div>
+
+    <h2>🔍 تنبيه من التصيد الأحتيالي  </h2>
+
+    <!-- الإدخال -->
+    <input type="text" id="urlInput" placeholder="أدخل الرسالة هنا">
+
+    <br>
+
+    <button onclick="checkURL()">فحص الرسالة</button>
+
+    <!-- الإخراج -->
+    <div id="result"></div>
+
+    <!-- كود الجافاسكربت مع الصوت -->
+ <script>
+    function speak(text) {
+        var msg = new SpeechSynthesisUtterance();
+        msg.text = text;
+        msg.lang = "ar-SA";
+        window.speechSynthesis.speak(msg);
+    }
+
+    function checkURL() {
+        var url = document.getElementById("urlInput").value;
+        var result = document.getElementById("result");
+
+        if (
+            url.includes("http") ||
+            url.includes("تحقق من حسابك") ||
+            url.includes("كلمة مرور") ||
+            url.includes("login")
+        ) {
+            result.innerHTML = "⚠️ تحذير، الرسالة مشبوهة";
+            result.style.color = "red";
+            speak("تحذير، الرسالة مشبوهة");
+        } 
+        else {
+            result.innerHTML = "✅ الرسالة آمنة";
+            result.style.color = "green";
+            speak("الرسالة آمنة");
+        }
+    }
+</script>
 </body>
 </html>
