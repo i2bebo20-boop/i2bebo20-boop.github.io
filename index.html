@@ -46,42 +46,53 @@ button {
 
 <h2 id="title">🔍 فحص الرسائل والروابط الاحتيالية</h2>
 
-<textarea id="textInput" rows="7"
-placeholder="أدخل الرسالة أو الرابط هنا"></textarea>
+<textarea
+  id="textInput"
+  rows="7"
+  placeholder="أدخل الرسالة أو الرابط هنا"
+></textarea>
 
 <br>
 <button id="scanBtn">🔍 فحص</button>
-<button id="voiceBtn">🔊 بدء المساعد الصوتي</button>
+<button id="voiceBtn">🔊 تفعيل المساعد الصوتي</button>
 
 <div id="result"></div>
 <div id="mitre"></div>
 
 <script>
-// ================= التحكم بالصوت =================
+// ================= إعداد الصوت =================
 let voiceEnabled = false;
 
 function speak(text) {
   if (!voiceEnabled) return;
+  window.speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "ar-SA";
   msg.rate = 1;
   window.speechSynthesis.speak(msg);
 }
 
-// تفعيل الصوت (لازم ضغط)
+// ===== زر تفعيل الصوت (لازم ضغط) =====
 document.getElementById("voiceBtn").addEventListener("click", () => {
   voiceEnabled = true;
-  speak("تم تفعيل المساعد الصوتي");
+  const msg = new SpeechSynthesisUtterance("تم تفعيل المساعد الصوتي");
+  msg.lang = "ar-SA";
+  window.speechSynthesis.speak(msg);
 });
 
-// ===== نطق عند المرور =====
+// ================= نطق عند المرور =================
 const input = document.getElementById("textInput");
 const title = document.getElementById("title");
 const scanBtn = document.getElementById("scanBtn");
 
+title.addEventListener("mouseenter", () =>
+  speak("عنوان الصفحة فحص الرسائل والروابط الاحتيالية")
+);
+
 input.addEventListener("mouseenter", () =>
   speak("مربع إدخال الرسالة أو الرابط")
 );
+
 input.addEventListener("focus", () =>
   speak("أنت الآن داخل مربع إدخال النص")
 );
@@ -97,7 +108,7 @@ const criticalWords = [
   "verify","login","confirm","suspended"
 ];
 
-// ================= كلمات مشبوهة =================
+// ================= كلمات مشبوهة متقدمة =================
 const suspiciousWords = [
   "تحديث بياناتك","رمز التحقق","otp","token",
   "session","انتهت الجلسة","api key","password",
@@ -106,15 +117,16 @@ const suspiciousWords = [
   "secure","account","حساب","bank","بنك"
 ];
 
-// ================= MITRE =================
+// ================= MITRE ATT&CK =================
 const mitreMap = [
   { k:["login","تسجيل الدخول"], id:"T1566.002", tactic:"Initial Access" },
-  { k:["verify","تحقق"], id:"T1566.002", tactic:"Initial Access" },
-  { k:["otp","رمز التحقق"], id:"T1556", tactic:"Credential Access" },
-  { k:["حسابك موقوف"], id:"T1098", tactic:"Persistence" }
+  { k:["verify","تحقق","تأكيد"], id:"T1566.002", tactic:"Initial Access" },
+  { k:["otp","رمز التحقق","token"], id:"T1556", tactic:"Credential Access" },
+  { k:["session","انتهت الجلسة"], id:"T1539", tactic:"Credential Access" },
+  { k:["حسابك موقوف","account suspended"], id:"T1098", tactic:"Persistence" }
 ];
 
-// ================= الفحص =================
+// ================= زر الفحص =================
 document.getElementById("scanBtn").addEventListener("click", checkText);
 
 function checkText() {
@@ -132,8 +144,10 @@ function checkText() {
     return;
   }
 
-  const hasLink = /https?:\/\//.test(text) || text.includes("www.");
-  const hasCritical = criticalWords.some(w => text.includes(w));
+  const hasLink =
+    /https?:\/\//.test(text) || text.includes("www.");
+  const hasCritical =
+    criticalWords.some(w => text.includes(w));
 
   suspiciousWords.forEach(w => {
     if (text.includes(w)) risk++;
