@@ -50,40 +50,45 @@ button {
 placeholder="أدخل الرسالة أو الرابط هنا"></textarea>
 
 <br>
-<button onclick="checkText()">🔍 فحص</button>
-<button onclick="toggleVoice()">🔊 الصوت: تشغيل</button>
+<button id="scanBtn">🔍 فحص</button>
+<button id="voiceBtn">🔊 بدء المساعد الصوتي</button>
 
 <div id="result"></div>
 <div id="mitre"></div>
 
 <script>
 // ================= التحكم بالصوت =================
-let voiceEnabled = true;
+let voiceEnabled = false;
 
 function speak(text) {
   if (!voiceEnabled) return;
-  window.speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "ar-SA";
   msg.rate = 1;
   window.speechSynthesis.speak(msg);
 }
 
-function toggleVoice() {
-  voiceEnabled = !voiceEnabled;
-  speak(voiceEnabled ? "تم تشغيل الصوت" : "تم إيقاف الصوت");
-}
+// تفعيل الصوت (لازم ضغط)
+document.getElementById("voiceBtn").addEventListener("click", () => {
+  voiceEnabled = true;
+  speak("تم تفعيل المساعد الصوتي");
+});
 
 // ===== نطق عند المرور =====
 const input = document.getElementById("textInput");
 const title = document.getElementById("title");
-const button = document.querySelector("button");
+const scanBtn = document.getElementById("scanBtn");
 
-input.addEventListener("mouseenter", () => speak("مربع إدخال الرسالة أو الرابط"));
-input.addEventListener("focus", () => speak("أنت الآن داخل مربع إدخال النص"));
+input.addEventListener("mouseenter", () =>
+  speak("مربع إدخال الرسالة أو الرابط")
+);
+input.addEventListener("focus", () =>
+  speak("أنت الآن داخل مربع إدخال النص")
+);
 
-button.addEventListener("mouseenter", () => speak("زر فحص الرسالة"));
-button.addEventListener("focus", () => speak("زر فحص الرسالة اضغط Enter"));
+scanBtn.addEventListener("mouseenter", () =>
+  speak("زر فحص الرسالة")
+);
 
 // ================= كلمات خطيرة =================
 const criticalWords = [
@@ -92,7 +97,7 @@ const criticalWords = [
   "verify","login","confirm","suspended"
 ];
 
-// ================= كلمات مشبوهة متقدمة =================
+// ================= كلمات مشبوهة =================
 const suspiciousWords = [
   "تحديث بياناتك","رمز التحقق","otp","token",
   "session","انتهت الجلسة","api key","password",
@@ -101,28 +106,22 @@ const suspiciousWords = [
   "secure","account","حساب","bank","بنك"
 ];
 
-// ================= روابط مختصرة =================
-const shorteners = [
-  "bit.ly","tinyurl","t.co","goo.gl",
-  "cutt.ly","rb.gy","ow.ly"
+// ================= MITRE =================
+const mitreMap = [
+  { k:["login","تسجيل الدخول"], id:"T1566.002", tactic:"Initial Access" },
+  { k:["verify","تحقق"], id:"T1566.002", tactic:"Initial Access" },
+  { k:["otp","رمز التحقق"], id:"T1556", tactic:"Credential Access" },
+  { k:["حسابك موقوف"], id:"T1098", tactic:"Persistence" }
 ];
 
-// ================= MITRE ATT&CK Mapping =================
-const mitreMap = [
-  { k:["login","سجل دخولك","تسجيل الدخول"], id:"T1566.002", tactic:"Initial Access", desc:"Phishing Link" },
-  { k:["verify","تحقق","تأكيد الحساب"], id:"T1566.002", tactic:"Initial Access", desc:"Credential Harvesting" },
-  { k:["تحديث بياناتك","update"], id:"T1566", tactic:"Initial Access", desc:"Phishing for Information" },
-  { k:["otp","رمز التحقق","token"], id:"T1556", tactic:"Credential Access", desc:"Authentication Info" },
-  { k:["session","انتهت الجلسة"], id:"T1539", tactic:"Credential Access", desc:"Session Hijacking" },
-  { k:["حسابك موقوف","account suspended"], id:"T1098", tactic:"Persistence", desc:"Account Manipulation" },
-  { k:["support","دعم فني"], id:"T1566", tactic:"Initial Access", desc:"Social Engineering" },
-  { k:["bit.ly","tinyurl","رابط مختصر"], id:"T1566", tactic:"Initial Access", desc:"Obfuscated Link" }
-];
+// ================= الفحص =================
+document.getElementById("scanBtn").addEventListener("click", checkText);
 
 function checkText() {
   const text = document.getElementById("textInput").value.toLowerCase();
   const result = document.getElementById("result");
   const mitreDiv = document.getElementById("mitre");
+
   let risk = 0;
   let found = [];
 
@@ -136,24 +135,20 @@ function checkText() {
   const hasLink = /https?:\/\//.test(text) || text.includes("www.");
   const hasCritical = criticalWords.some(w => text.includes(w));
 
-  suspiciousWords.forEach(w => { if (text.includes(w)) risk++; });
-  shorteners.forEach(s => { if (text.includes(s)) risk += 2; });
-  if (text.includes("http://")) risk += 2;
-  if (text.match(/\b\d{1,3}(\.\d{1,3}){3}\b/)) risk += 2;
-
-  const tactics = new Set();
+  suspiciousWords.forEach(w => {
+    if (text.includes(w)) risk++;
+  });
 
   mitreMap.forEach(m => {
     m.k.forEach(word => {
       if (text.includes(word)) {
-        found.push(m);
-        tactics.add(m.tactic);
+        found.push(m.id);
         risk += 2;
       }
     });
   });
 
-  if (hasLink && hasCritical || risk >= 4) {
+  if ((hasLink && hasCritical) || risk >= 4) {
     result.innerHTML = "🚨 رسالة احتيالية (خطر عالي)";
     result.style.color = "red";
     speak("تحذير رسالة احتيالية خطر عالي");
@@ -169,14 +164,9 @@ function checkText() {
     speak("الرسالة تبدو آمنة");
   }
 
-  if (found.length) {
-    mitreDiv.innerHTML = "<b>MITRE ATT&CK:</b><br>" +
-      [...new Set(found.map(f =>
-        ${f.id} – ${f.tactic} (${f.desc})
-      ))].join("<br>");
-  } else {
-    mitreDiv.innerHTML = "";
-  }
+  mitreDiv.innerHTML = found.length
+    ? "<b>MITRE ATT&CK:</b> " + [...new Set(found)].join(", ")
+    : "";
 }
 </script>
 
