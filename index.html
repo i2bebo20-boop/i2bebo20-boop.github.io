@@ -1,6 +1,5 @@
 
-
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -24,7 +23,7 @@ textarea {
 
 button {
     margin-top: 15px;
-    padding: 10px 30px;
+    padding: 10px 25px;
     font-size: 16px;
     cursor: pointer;
 }
@@ -34,35 +33,72 @@ button {
     font-size: 20px;
     font-weight: bold;
 }
+
+#mitre {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333;
+}
 </style>
 </head>
 
 <body>
 
-<h2>🔍 فحص الرسائل والروابط الاحتيالية</h2>
+<h2 id="title">🔍 فحص الرسائل والروابط الاحتيالية</h2>
 
 <textarea id="textInput" rows="7"
 placeholder="أدخل الرسالة أو الرابط هنا"></textarea>
 
 <br>
 <button onclick="checkText()">🔍 فحص</button>
+<button onclick="toggleVoice()">🔊 الصوت: تشغيل</button>
 
 <div id="result"></div>
+<div id="mitre"></div>
 
 <script>
-// ================= كلمات خطيرة جدًا =================
+// ================= التحكم بالصوت =================
+let voiceEnabled = true;
+
+function speak(text) {
+  if (!voiceEnabled) return;
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "ar-SA";
+  msg.rate = 1;
+  window.speechSynthesis.speak(msg);
+}
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  speak(voiceEnabled ? "تم تشغيل الصوت" : "تم إيقاف الصوت");
+}
+
+// ===== نطق عند المرور =====
+const input = document.getElementById("textInput");
+const title = document.getElementById("title");
+const button = document.querySelector("button");
+
+input.addEventListener("mouseenter", () => speak("مربع إدخال الرسالة أو الرابط"));
+input.addEventListener("focus", () => speak("أنت الآن داخل مربع إدخال النص"));
+
+button.addEventListener("mouseenter", () => speak("زر فحص الرسالة"));
+button.addEventListener("focus", () => speak("زر فحص الرسالة اضغط Enter"));
+
+// ================= كلمات خطيرة =================
 const criticalWords = [
-  "ايقاف","إيقاف","حظر","تعليق","موقوف",
-  "تحذير","عاجل","انذار","سيتم ايقاف",
-  "حدث بياناتك","اضغط","سجل","login","verify"
+  "إيقاف","ايقاف","حسابك موقوف","تعليق",
+  "تحذير","عاجل","انذار","تم اختراق",
+  "verify","login","confirm","suspended"
 ];
 
-// ================= كلمات مشبوهة =================
+// ================= كلمات مشبوهة متقدمة =================
 const suspiciousWords = [
-  "حساب","بيانات","رمز","otp","pin","تأكيد",
-  "تحديث","جائزة","ربحت","هدية","free","win",
-  "paypal","stc","amazon","apple","google",
-  "microsoft","netflix","بنك","مصرف"
+  "تحديث بياناتك","رمز التحقق","otp","token",
+  "session","انتهت الجلسة","api key","password",
+  "بيانات الدخول","support","دعم فني",
+  "unusual activity","نشاط غير معتاد",
+  "secure","account","حساب","bank","بنك"
 ];
 
 // ================= روابط مختصرة =================
@@ -71,63 +107,75 @@ const shorteners = [
   "cutt.ly","rb.gy","ow.ly"
 ];
 
+// ================= MITRE ATT&CK Mapping =================
+const mitreMap = [
+  { k:["login","سجل دخولك","تسجيل الدخول"], id:"T1566.002", tactic:"Initial Access", desc:"Phishing Link" },
+  { k:["verify","تحقق","تأكيد الحساب"], id:"T1566.002", tactic:"Initial Access", desc:"Credential Harvesting" },
+  { k:["تحديث بياناتك","update"], id:"T1566", tactic:"Initial Access", desc:"Phishing for Information" },
+  { k:["otp","رمز التحقق","token"], id:"T1556", tactic:"Credential Access", desc:"Authentication Info" },
+  { k:["session","انتهت الجلسة"], id:"T1539", tactic:"Credential Access", desc:"Session Hijacking" },
+  { k:["حسابك موقوف","account suspended"], id:"T1098", tactic:"Persistence", desc:"Account Manipulation" },
+  { k:["support","دعم فني"], id:"T1566", tactic:"Initial Access", desc:"Social Engineering" },
+  { k:["bit.ly","tinyurl","رابط مختصر"], id:"T1566", tactic:"Initial Access", desc:"Obfuscated Link" }
+];
+
 function checkText() {
   const text = document.getElementById("textInput").value.toLowerCase();
   const result = document.getElementById("result");
+  const mitreDiv = document.getElementById("mitre");
   let risk = 0;
+  let found = [];
 
-  if (text.trim() === "") {
+  if (!text.trim()) {
     result.innerHTML = "⚠️ الرجاء إدخال نص";
     result.style.color = "gray";
+    speak("الرجاء إدخال نص");
     return;
   }
 
-  // هل يوجد رابط؟
   const hasLink = /https?:\/\//.test(text) || text.includes("www.");
+  const hasCritical = criticalWords.some(w => text.includes(w));
 
-  // كلمات خطيرة
-  let hasCritical = criticalWords.some(word => text.includes(word));
-
-  // كلمات مشبوهة
-  suspiciousWords.forEach(word => {
-    if (text.includes(word)) risk += 1;
-  });
-
-  // روابط مختصرة
-  shorteners.forEach(short => {
-    if (text.includes(short)) risk += 2;
-  });
-
-  // http بدون https
+  suspiciousWords.forEach(w => { if (text.includes(w)) risk++; });
+  shorteners.forEach(s => { if (text.includes(s)) risk += 2; });
   if (text.includes("http://")) risk += 2;
-
-  // IP
   if (text.match(/\b\d{1,3}(\.\d{1,3}){3}\b/)) risk += 2;
 
-  // دومين مقلد
-  if (text.match(/paypa1|g00gle|micr0soft|app1e/)) risk += 3;
+  const tactics = new Set();
 
-  // ================= القرار النهائي =================
+  mitreMap.forEach(m => {
+    m.k.forEach(word => {
+      if (text.includes(word)) {
+        found.push(m);
+        tactics.add(m.tactic);
+        risk += 2;
+      }
+    });
+  });
 
-  // 🔴 قاعدة قاطعة
-  if (hasLink && hasCritical) {
-    result.innerHTML = "🚨 رسالة احتيالية (خطر عالي جدًا)";
-    result.style.color = "darkred";
-    return;
-  }
-
-  // 🔴 خطر عالي بالنقاط
-  if (risk >= 4) {
+  if (hasLink && hasCritical || risk >= 4) {
     result.innerHTML = "🚨 رسالة احتيالية (خطر عالي)";
     result.style.color = "red";
+    speak("تحذير رسالة احتيالية خطر عالي");
   }
   else if (risk >= 2) {
     result.innerHTML = "⚠️ رسالة مشبوهة";
     result.style.color = "orange";
+    speak("تنبيه رسالة مشبوهة");
   }
   else {
     result.innerHTML = "✅ تبدو آمنة";
     result.style.color = "green";
+    speak("الرسالة تبدو آمنة");
+  }
+
+  if (found.length) {
+    mitreDiv.innerHTML = "<b>MITRE ATT&CK:</b><br>" +
+      [...new Set(found.map(f =>
+        ${f.id} – ${f.tactic} (${f.desc})
+      ))].join("<br>");
+  } else {
+    mitreDiv.innerHTML = "";
   }
 }
 </script>
