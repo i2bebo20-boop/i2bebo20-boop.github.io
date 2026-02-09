@@ -1,28 +1,91 @@
 
-includes(s)){score+=15; reasons.push("رابط مختصر يخفي الوجهة");}});
-    if(!url.startsWith("https")){score+=10; reasons.push("رابط بدون HTTPS");}
-  });
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Cyber Phishing Analyzer Voice Auto</title>
+<style>
+body{margin:0;font-family:tahoma;background:#0f172a;color:#e5e7eb;direction:rtl;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{background:#020617;padding:30px;border-radius:16px;width:450px;max-width:95%;box-shadow:0 0 30px rgba(56,189,248,0.15)}
+textarea{width:100%;background:#020617;border:1px solid #1e293b;border-radius:10px;padding:14px;color:#e5e7eb;resize:none}
+button{width:100%;margin-top:12px;padding:12px;border:none;border-radius:10px;background:#38bdf8;color:#020617;cursor:pointer}
+button:hover{background:#0ea5e9;color:white}
+#result{margin-top:20px;padding:10px;border-radius:10px;font-weight:bold;text-align:center}
+.safe{background:rgba(34,197,94,.15);color:#22c55e}
+.warn{background:rgba(245,158,11,.15);color:#f59e0b}
+.danger{background:rgba(239,68,68,.15);color:#ef4444}
+#report{margin-top:15px;font-size:13px;color:#94a3b8;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Cyber Phishing Analyzer</h2>
+<textarea id="textInput" rows="6" placeholder="أدخل الرسالة هنا"></textarea>
+<button id="scanBtn">تحليل الرسالة</button>
+<div id="result"></div>
+<div id="report"></div>
+</div>
 
-  // ===== النتيجة =====
-  let percent=Math.min(score,100);
-  let level="آمن",color="lightgreen";
-  if(percent>=70){level="🚨 احتيال مؤكد";color="red"; speak("تحذير! الرسالة احتيال مؤكد");}
-  else if(percent>=40){level="⚠️ مشبوه";color="orange"; speak("تنبيه! الرسالة مشبوهة");}
-  else {level="✅ آمن"; color="lightgreen"; speak("الرسالة آمنة");}
+<script>
+let voiceEnabled=false;
 
-  let resultDiv=document.getElementById("result");
-  resultDiv.innerHTML=`<span class="${color=="red"?"danger":color=="orange"?"warn":"safe"}">${level} — ${percent}%</span>`;
+// تفعيل الصوت أول مرة بأي حركة
+function enableVoiceAuto(){
+  if(voiceEnabled) return;
+  voiceEnabled=true;
+  speak("تم تفعيل المساعد الصوتي تلقائياً");
+  window.removeEventListener("mousemove",enableVoiceAuto);
+  window.removeEventListener("keydown",enableVoiceAuto);
+}
 
-  // تقرير مفصل
-  let reportHTML="<b>تقرير التحليل:</b><br>";
-  reasons.forEach(r=>reportHTML+="• "+r+"<br>");
-  if(mitreFound.length){
-    reportHTML+="<br><b>MITRE ATT&CK:</b><br>";
-    mitreFound.forEach(m=>reportHTML+="• "+m+"<br>");
-  }
-  document.getElementById("report").innerHTML=reportHTML;
+// الاستماع لحركة الماوس أو لوحة المفاتيح
+window.addEventListener("mousemove",enableVoiceAuto);
+window.addEventListener("keydown",enableVoiceAuto);
+
+function speak(text){
+  if(!voiceEnabled) return;
+  speechSynthesis.cancel();
+  const msg=new SpeechSynthesisUtterance(text);
+  msg.lang="ar-SA";
+  msg.rate=1;
+  speechSynthesis.speak(msg);
+}
+
+// hover يقرأ العناصر
+function describe(el,text){ el.addEventListener("mouseenter",()=>speak(text)); }
+const textInput=document.getElementById("textInput");
+const scanBtn=document.getElementById("scanBtn");
+const result=document.getElementById("result");
+const reportDiv=document.getElementById("report");
+
+describe(textInput,"هذا مربع إدخال الرسالة. الصق هنا الرسالة المشبوهة لفحصها");
+describe(scanBtn,"زر تحليل الرسالة. اضغط لمعرفة إذا كانت الرسالة احتيالية");
+describe(result,"هنا تظهر نتيجة الفحص");
+describe(reportDiv,"هذا تقرير تفصيلي عن سبب الاشتباه");
+
+// ===== التحليل =====
+const critical=["ايقاف","موقوف","تحذير","عاجل","verify","login"];
+const suspicious=["otp","رمز","password","account","حساب"];
+const mitre=[
+  {k:["login"],id:"T1566.002",name:"رابط تصيد",desc:"صفحة تسجيل مزيفة"},
+  {k:["otp","رمز"],id:"T1556",name:"سرقة رمز التحقق",desc:"محاولة الحصول على OTP"},
+  {k:["موقوف"],id:"T1098",name:"تهديد الحساب",desc:"إقناع المستخدم بإدخال البيانات تحت التهديد"}
+];
+
+scanBtn.onclick=()=>{
+  const text=textInput.value.toLowerCase();
+  let score=0,reportArr=[],mitreOut=[];
+  critical.forEach(w=>{if(text.includes(w)){score+=2;reportArr.push("كلمة خطرة: "+w)}})
+  suspicious.forEach(w=>{if(text.includes(w)){score+=1;reportArr.push("كلمة مشبوهة: "+w)}})
+  mitre.forEach(m=>{m.k.forEach(w=>{if(text.includes(w)){mitreOut.push(`${m.id} — ${m.name}: ${m.desc}`);score+=2}})})
+  let resultText="",cls="safe"
+  if(score>=4){resultText="🚨 رسالة احتيالية";cls="danger"}
+  else if(score>=2){resultText="⚠️ رسالة مشبوهة";cls="warn"}
+  else resultText="✅ الرسالة آمنة"
+  result.className=cls;result.innerText=resultText
+  speak(resultText)
+  reportDiv.innerHTML="<b>تفاصيل:</b><br>"+reportArr.join("<br>")+"<br><br><b>MITRE:</b><br>"+mitreOut.join("<br>")
 }
 </script>
-
 </body>
 </html>
