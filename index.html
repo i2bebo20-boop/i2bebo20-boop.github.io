@@ -1,156 +1,28 @@
 
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>Cyber Phishing Analyzer PRO</title>
-<style>
-body{
-  background:#0f172a;
-  color:#e5e7eb;
-  font-family:tahoma;
-  direction:rtl;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh
-}
-.card{
-  background:#020617;
-  padding:25px;
-  border-radius:16px;
-  width:430px;
-  box-shadow:0 0 25px rgba(56,189,248,.2)
-}
-textarea{
-  width:100%;
-  height:120px;
-  background:#020617;
-  border:1px solid #1e293b;
-  color:white;
-  padding:10px;
-  border-radius:10px
-}
-button{
-  margin-top:10px;
-  width:100%;
-  padding:12px;
-  border:none;
-  background:#38bdf8;
-  color:black;
-  border-radius:10px;
-  cursor:pointer
-}
-#result{margin-top:15px;font-weight:bold}
-#report{margin-top:10px;font-size:13px;color:#94a3b8;line-height:1.7}
-</style>
-</head>
-<body>
-
-<div class="card">
-<h2>Cyber Phishing Analyzer</h2>
-
-<textarea id="textInput" placeholder="الصق الرسالة أو الرابط هنا"></textarea>
-<button onclick="analyze()">🔍 تحليل</button>
-
-<div id="result"></div>
-<div id="report"></div>
-</div>
-
-<script>
-// ===== قواعد المشروع =====
-const criticalWords=["ايقاف","موقوف","تحذير","عاجل","verify","login"];
-const suspiciousWords=["otp","رمز","password","session","token","account","حساب"];
-const mitreMap=[
-  { k:["login","تسجيل"], id:"T1566.002", name:"Spearphishing Link", desc:"رابط مزيف لخداع المستخدم" },
-  { k:["otp","رمز"], id:"T1556", name:"Credential Access", desc:"محاولة سرقة رمز التحقق أو كلمة المرور" },
-  { k:["session","جلسة"], id:"T1539", name:"Session Hijacking", desc:"سرقة جلسة المستخدم للوصول للحساب" },
-  { k:["موقوف"], id:"T1098", name:"Account Manipulation", desc:"إقناع المستخدم بإدخال بياناته تحت التهديد" }
-];
-
-const shorteners=["bit.ly","tinyurl","t.co","goo.gl"];
-
-function extractURLs(text){
-  return text.match(/https?:\/\/[^\s]+/g)||[];
-}
-
-function isIP(url){
-  return /https?:\/\/\d{1,3}(\.\d{1,3}){3}/.test(url);
-}
-
-// ===== تحليل =====
-function analyze(){
-  let text=document.getElementById("textInput").value.toLowerCase();
-  let score=0;
-  let reasons=[];
-  let mitreFound=[];
-
-  // كلمات حرجة
-  criticalWords.forEach(w=>{
-    if(text.includes(w)){
-      score+=15;
-      reasons.push("كلمة خطرة: "+w);
-    }
-  });
-
-  suspiciousWords.forEach(w=>{
-    if(text.includes(w)){
-      score+=10;
-      reasons.push("كلمة مشبوهة: "+w);
-    }
-  });
-
-  // MITRE
-  mitreMap.forEach(m=>{
-    m.k.forEach(w=>{
-      if(text.includes(w)){
-        mitreFound.push(`${m.id} — ${m.name}: ${m.desc}`);
-        score+=20;
-      }
-    });
-  });
-
-  // روابط
-  let urls=extractURLs(text);
-  urls.forEach(url=>{
-    score+=10;
-    reasons.push("رابط مكتشف: "+url);
-    if(isIP(url)){
-      score+=15;
-      reasons.push("رابط يستخدم IP بدل دومين");
-    }
-    shorteners.forEach(s=>{
-      if(url.includes(s)){
-        score+=15;
-        reasons.push("رابط مختصر يخفي الوجهة");
-      }
-    });
-    if(!url.startsWith("https")){
-      score+=10;
-      reasons.push("رابط بدون HTTPS");
-    }
+includes(s)){score+=15; reasons.push("رابط مختصر يخفي الوجهة");}});
+    if(!url.startsWith("https")){score+=10; reasons.push("رابط بدون HTTPS");}
   });
 
   // ===== النتيجة =====
   let percent=Math.min(score,100);
-  let level="آمن";
-  let color="lightgreen";
-  if(percent>=70){level="🚨 احتيال مؤكد";color="red";}
-  else if(percent>=40){level="⚠️ مشبوه";color="orange";}
+  let level="آمن",color="lightgreen";
+  if(percent>=70){level="🚨 احتيال مؤكد";color="red"; speak("تحذير! الرسالة احتيال مؤكد");}
+  else if(percent>=40){level="⚠️ مشبوه";color="orange"; speak("تنبيه! الرسالة مشبوهة");}
+  else {level="✅ آمن"; color="lightgreen"; speak("الرسالة آمنة");}
 
-  document.getElementById("result").innerHTML=`<span style="color:${color}">نسبة الخطورة: ${percent}% — ${level}</span>`;
+  let resultDiv=document.getElementById("result");
+  resultDiv.innerHTML=`<span class="${color=="red"?"danger":color=="orange"?"warn":"safe"}">${level} — ${percent}%</span>`;
 
   // تقرير مفصل
   let reportHTML="<b>تقرير التحليل:</b><br>";
   reasons.forEach(r=>reportHTML+="• "+r+"<br>");
-
   if(mitreFound.length){
     reportHTML+="<br><b>MITRE ATT&CK:</b><br>";
     mitreFound.forEach(m=>reportHTML+="• "+m+"<br>");
   }
-
   document.getElementById("report").innerHTML=reportHTML;
 }
 </script>
+
 </body>
 </html>
