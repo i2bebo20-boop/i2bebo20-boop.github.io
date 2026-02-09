@@ -3,203 +3,172 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Phishing Analyzer</title>
+<title>Cyber Phishing Analyzer PRO</title>
 
 <style>
-:root {
-  --bg: #0f172a;
-  --card: #020617;
-  --primary: #38bdf8;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --safe: #22c55e;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
+body{
+background:#0f172a;
+color:#e5e7eb;
+font-family:tahoma;
+direction:rtl;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh
 }
-
-body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, sans-serif;
-  background: radial-gradient(circle at top, #020617, #0f172a);
-  color: var(--text);
-  direction: rtl;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.card{
+background:#020617;
+padding:25px;
+border-radius:16px;
+width:430px;
+box-shadow:0 0 25px rgba(56,189,248,.2)
 }
-
-/* ===== Card ===== */
-.card {
-  background: linear-gradient(180deg, #020617, #020617);
-  border: 1px solid #1e293b;
-  border-radius: 16px;
-  width: 420px;
-  max-width: 95%;
-  padding: 30px;
-  box-shadow: 0 0 30px rgba(56,189,248,0.15);
+textarea{
+width:100%;
+height:120px;
+background:#020617;
+border:1px solid #1e293b;
+color:white;
+padding:10px;
+border-radius:10px
 }
-
-/* ===== Header ===== */
-.header {
-  text-align: center;
-  margin-bottom: 20px;
+button{
+margin-top:10px;
+width:100%;
+padding:12px;
+border:none;
+background:#38bdf8;
+color:black;
+border-radius:10px;
+cursor:pointer
 }
-
-.header h1 {
-  margin: 0;
-  font-size: 22px;
-  color: var(--primary);
-}
-
-.header p {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-/* ===== Input ===== */
-textarea {
-  width: 100%;
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 10px;
-  padding: 14px;
-  color: var(--text);
-  font-size: 15px;
-  resize: none;
-}
-
-textarea::placeholder {
-  color: #64748b;
-}
-
-/* ===== Buttons ===== */
-.buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-button {
-  flex: 1;
-  background: #020617;
-  border: 1px solid var(--primary);
-  color: var(--primary);
-  padding: 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.2s;
-}
-
-button:hover {
-  background: var(--primary);
-  color: #020617;
-}
-
-/* ===== Result ===== */
-#result {
-  margin-top: 25px;
-  padding: 14px;
-  border-radius: 10px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.safe { background: rgba(34,197,94,0.15); color: var(--safe); }
-.warn { background: rgba(245,158,11,0.15); color: var(--warning); }
-.danger { background: rgba(239,68,68,0.15); color: var(--danger); }
-
-/* ===== MITRE ===== */
-#mitre {
-  margin-top: 15px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
+#result{margin-top:15px;font-weight:bold}
+#report{margin-top:10px;font-size:13px;color:#94a3b8;line-height:1.7}
 </style>
 </head>
 
 <body>
-
 <div class="card">
+<h2>Cyber Phishing Analyzer</h2>
 
-  <div class="header">
-    <h1>Cyber Phishing Analyzer</h1>
-    <p>تحليل رسائل وروابط احتيالية باستخدام MITRE ATT&CK</p>
-  </div>
+<textarea id="textInput" placeholder="الصق الرسالة أو الرابط هنا"></textarea>
+<button onclick="analyze()">تحليل</button>
 
-  <textarea id="textInput" rows="6"
-    placeholder="أدخل الرسالة أو الرابط المشكوك فيه هنا"></textarea>
-
-  <div class="buttons">
-    <button id="scanBtn">🔍 تحليل</button>
-    <button id="voiceBtn">🔊 تفعيل الصوت</button>
-  </div>
-
-  <div id="result"></div>
-  <div id="mitre"></div>
-
+<div id="result"></div>
+<div id="report"></div>
 </div>
 
 <script>
-// ===== الصوت =====
-let voiceEnabled = false;
-function speak(text){
-  if(!voiceEnabled) return;
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang="ar-SA";
-  speechSynthesis.speak(msg);
-}
 
-voiceBtn.onclick=()=>{
-  voiceEnabled=true;
-  speak("تم تفعيل المساعد الصوتي");
-};
-
-// ===== كلمات =====
-const critical=["ايقاف","موقوف","تحذير","verify","login"];
-const suspicious=["otp","رمز","تحديث","session","token","account","حساب"];
-
-const mitre=[
-  {k:["login","تسجيل"],id:"T1566.002"},
-  {k:["otp","رمز"],id:"T1556"},
-  {k:["session","جلسة"],id:"T1539"},
-  {k:["موقوف"],id:"T1098"}
+// كلمات خطيرة
+const dangerWords=[
+"ايقاف","موقوف","تحذير","عاجل","verify","login",
+"bank","update","security","suspend","account"
 ];
 
-scanBtn.onclick=()=>{
-  const text=textInput.value.toLowerCase();
-  let risk=0,found=[];
+const sensitiveWords=[
+"otp","رمز","كلمة المرور","password","session","token"
+];
 
-  critical.forEach(w=>{if(text.includes(w)) risk+=2});
-  suspicious.forEach(w=>{if(text.includes(w)) risk+=1});
-  mitre.forEach(m=>{
-    m.k.forEach(w=>{
-      if(text.includes(w)){found.push(m.id); risk+=2}
-    })
-  });
-
-  if(risk>=4){
-    result.className="danger";
-    result.innerText="🚨 رسالة احتيالية – خطر عالي";
-    speak("تحذير رسالة احتيالية خطر عالي");
-  }else if(risk>=2){
-    result.className="warn";
-    result.innerText="⚠️ رسالة مشبوهة";
-    speak("تنبيه رسالة مشبوهة");
-  }else{
-    result.className="safe";
-    result.innerText="✅ الرسالة تبدو آمنة";
-    speak("الرسالة تبدو آمنة");
-  }
-
-  mitreDiv=document.getElementById("mitre");
-  mitreDiv.innerHTML=found.length
-    ? "<b>MITRE ATT&CK:</b><br>"+[...new Set(found)].join(", ")
-    : "";
+// MITRE Database
+const mitreDB={
+"T1566.002":"تصيد عبر رابط مزيف",
+"T1556":"سرقة بيانات تسجيل الدخول",
+"T1598":"جمع معلومات الضحية",
+"T1204":"إقناع المستخدم بالضغط"
 };
-</script>
 
+// روابط مختصرة
+const shorteners=["bit.ly","tinyurl","t.co","goo.gl"];
+
+// استخراج الروابط
+function extractURLs(text){
+return text.match(/https?:\/\/[^\s]+/g)||[];
+}
+
+// فحص IP
+function isIP(url){
+return /https?:\/\/\d{1,3}(\.\d{1,3}){3}/.test(url);
+}
+
+// تحليل
+function analyze(){
+
+let text=textInput.value.toLowerCase();
+let score=0;
+let reasons=[];
+let mitre=[];
+
+/* كلمات */
+dangerWords.forEach(w=>{
+if(text.includes(w)){
+score+=15;
+reasons.push("كلمة ضغط: "+w);
+mitre.push("T1204");
+}
+});
+
+sensitiveWords.forEach(w=>{
+if(text.includes(w)){
+score+=20;
+reasons.push("طلب بيانات حساسة: "+w);
+mitre.push("T1556");
+}
+});
+
+/* روابط */
+let urls=extractURLs(text);
+
+urls.forEach(url=>{
+
+score+=10;
+mitre.push("T1566.002");
+
+if(isIP(url)){
+score+=25;
+reasons.push("رابط يستخدم IP بدل دومين");
+}
+
+shorteners.forEach(s=>{
+if(url.includes(s)){
+score+=25;
+reasons.push("رابط مختصر يخفي الوجهة");
+}
+});
+
+if(!url.startsWith("https")){
+score+=10;
+reasons.push("رابط بدون HTTPS");
+}
+
+});
+
+/* النتيجة */
+let percent=Math.min(score,100);
+let level="آمن";
+let color="lightgreen";
+
+if(percent>=70){level="احتيال مؤكد";color="red";}
+else if(percent>=40){level="مشبوه";color="orange";}
+
+result.innerHTML=`<span style="color:${color}">نسبة الخطورة: ${percent}% — ${level}</span>`;
+
+/* تقرير */
+let reportHTML="<b>تقرير التحليل:</b><br>";
+reasons.forEach(r=>reportHTML+="• "+r+"<br>");
+
+let mitreUnique=[...new Set(mitre)];
+if(mitreUnique.length){
+reportHTML+="<br><b>MITRE ATT&CK:</b><br>";
+mitreUnique.forEach(id=>{
+reportHTML+=`• ${id} — ${mitreDB[id]}<br>`;
+});
+}
+
+report.innerHTML=reportHTML;
+
+}
+
+</script>
 </body>
-</html
+</html>
