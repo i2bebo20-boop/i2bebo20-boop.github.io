@@ -1,34 +1,176 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <title>Phishing Detector</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<title>Phishing Threat Analyzer</title>
+
+<style>
+body{
+  background:#020617;
+  color:#e2e8f0;
+  font-family:Tahoma;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.container{
+  width:520px;
+  background:#020617;
+  border:1px solid #1e293b;
+  border-radius:18px;
+  padding:30px;
+  box-shadow:0 0 40px rgba(56,189,248,.25);
+}
+
+h1{
+  text-align:center;
+  color:#38bdf8;
+}
+
+textarea{
+  width:100%;
+  height:120px;
+  background:#020617;
+  border:1px solid #334155;
+  border-radius:12px;
+  padding:12px;
+  color:white;
+  font-size:15px;
+}
+
+button{
+  width:100%;
+  margin-top:15px;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  background:#38bdf8;
+  color:#020617;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#0ea5e9;
+}
+
+#output{
+  margin-top:20px;
+  padding:15px;
+  border-radius:12px;
+  display:none;
+}
+
+.safe{background:#052e16;color:#22c55e;}
+.medium{background:#3f2f05;color:#f59e0b;}
+.high{background:#3f1d1d;color:#ef4444;}
+.critical{background:#450a0a;color:#ff0000;}
+</style>
 </head>
 
 <body>
 
-  <h1 id="title">🔐 نظام كشف التصيد الاحتيالي</h1>
+<div class="container">
 
-  <textarea
-    id="message"
-    placeholder="أدخل الرسالة المراد تحليلها"
-    aria-label="مربع إدخال الرسالة"
-  ></textarea>
+<h1>🛡️ Cyber Phishing Analyzer</h1>
 
-  <br><br>
+<textarea id="message" placeholder="ضع الرسالة أو الرابط هنا"></textarea>
 
-  <button id="analyzeBtn" onclick="checkMessage()">
-    تحليل الرسالة
-  </button>
+<button onclick="checkMessage()" id="analyzeBtn">تحليل التهديد</button>
 
-  <div id="output">
-    <p><strong>النتيجة:</strong> <span id="status"></span></p>
-    <p><strong>نوع الهجوم (MITRE ATT&CK):</strong> <span id="technique"></span></p>
-    <p><strong>وصف العملية:</strong> <span id="description"></span></p>
-    <p><strong>سبب التصنيف:</strong> <span id="reason"></span></p>
-  </div>
+<div id="output">
+<p><b>الحالة:</b> <span id="status"></span></p>
+<p><b>تقنية MITRE:</b> <span id="technique"></span></p>
+<p><b>الوصف:</b> <span id="description"></span></p>
+<p><b>السبب:</b> <span id="reason"></span></p>
+</div>
 
-  <script src="script.js"></script>
+</div>
+
+<script>
+
+// ================= صوت تلقائي =================
+function speak(text){
+  window.speechSynthesis.cancel();
+  let msg=new SpeechSynthesisUtterance(text);
+  msg.lang="ar-SA";
+  msg.rate=1;
+  speechSynthesis.speak(msg);
+}
+
+window.onload=()=>{
+  speak("مرحباً بك في نظام كشف التصيد الاحتيالي");
+};
+
+// تفاعل الماوس
+message.onmouseenter=()=>speak("اكتب الرسالة المشبوهة هنا");
+analyzeBtn.onmouseenter=()=>speak("اضغط لتحليل الرسالة");
+
+// ================= التحليل =================
+function checkMessage(){
+
+let text=document.getElementById("message").value.toLowerCase();
+if(!text){speak("الرجاء إدخال رسالة");return;}
+
+let result={
+status:"آمن",
+technique:"لا يوجد",
+description:"لا يوجد سلوك ضار",
+reason:"الرسالة طبيعية",
+level:"safe"
+};
+
+// استعجال
+if(/عاجل|فورا|ايقاف|موقوف|suspended|urgent/.test(text)){
+result={
+status:"هندسة اجتماعية",
+technique:"T1598 - Phishing for Information",
+description:"الضغط على الضحية لاتخاذ قرار سريع",
+reason:"أسلوب تخويف أو استعجال",
+level:"medium"
+};
+}
+
+// رابط
+if(/http|bit\.ly|\.xyz|\.ru|verify/.test(text)){
+result={
+status:"تصيد عبر رابط",
+technique:"T1566.002 - Spearphishing Link",
+description:"إعادة توجيه إلى موقع مزيف",
+reason:"وجود رابط احتيالي",
+level:"high"
+};
+}
+
+// بيانات حساسة
+if(/otp|رمز|password|visa|cvv|bank|حسابك/.test(text)){
+result={
+status:"سرقة بيانات",
+technique:"T1556 - Credential Harvesting",
+description:"محاولة سرقة بيانات الدخول",
+reason:"طلب معلومات حساسة",
+level:"critical"
+};
+}
+
+// عرض
+output.style.display="block";
+output.className=result.level;
+
+status.innerText=result.status;
+technique.innerText=result.technique;
+description.innerText=result.description;
+reason.innerText=result.reason;
+
+// صوت
+speak(`نتيجة التحليل ${result.status}. السبب ${result.reason}`);
+
+}
+
+</script>
+
 </body>
+</html>
 </html>
