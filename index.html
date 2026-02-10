@@ -2,11 +2,9 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Threat Intelligence</title>
+<title>Cyber Threat Analyzer</title>
 
 <style>
-
-/* ===== خلفية متحركة ===== */
 body{
   margin:0;
   font-family:Consolas, monospace;
@@ -15,7 +13,7 @@ body{
   overflow:hidden;
 }
 
-/* Matrix rain */
+/* Matrix background */
 canvas{
   position:fixed;
   top:0;
@@ -23,7 +21,7 @@ canvas{
   z-index:-1;
 }
 
-/* الكارد */
+/* Panel */
 .panel{
   position:absolute;
   top:50%;
@@ -36,13 +34,8 @@ canvas{
   box-shadow:0 0 30px #00ff9c;
 }
 
-h1{
-  text-align:center;
-  margin-top:0;
-  letter-spacing:2px;
-}
+h1{text-align:center;}
 
-/* textarea */
 textarea{
   width:100%;
   height:120px;
@@ -50,10 +43,8 @@ textarea{
   border:1px solid #00ff9c;
   color:#00ff9c;
   padding:10px;
-  resize:none;
 }
 
-/* زر */
 button{
   width:100%;
   margin-top:15px;
@@ -62,7 +53,6 @@ button{
   border:1px solid #00ff9c;
   color:#00ff9c;
   cursor:pointer;
-  transition:.3s;
 }
 
 button:hover{
@@ -70,7 +60,6 @@ button:hover{
   color:black;
 }
 
-/* النتائج */
 #output{
   margin-top:20px;
   border-top:1px solid #00ff9c;
@@ -82,7 +71,6 @@ button:hover{
 .medium{color:orange;}
 .high{color:#ff3b3b;}
 .critical{color:red;font-weight:bold;}
-
 </style>
 </head>
 <body>
@@ -92,7 +80,7 @@ button:hover{
 <div class="panel">
 <h1>CYBER THREAT ANALYZER</h1>
 
-<textarea id="message" placeholder="أدخل الرسالة أو الرابط المشبوه"></textarea>
+<textarea id="message" placeholder="اكتب الرسالة أو الرابط المشبوه"></textarea>
 <button onclick="analyze()">SCAN TARGET</button>
 
 <div id="output">
@@ -101,7 +89,6 @@ button:hover{
 <p>DESCRIPTION: <span id="desc"></span></p>
 <p>REASON: <span id="reason"></span></p>
 </div>
-
 </div>
 
 <script>
@@ -112,13 +99,10 @@ const ctx=canvas.getContext("2d");
 canvas.height=window.innerHeight;
 canvas.width=window.innerWidth;
 
-let letters="01";
-letters=letters.split("");
-
+let letters="01".split("");
 let fontSize=14;
 let columns=canvas.width/fontSize;
 let drops=[];
-
 for(let x=0;x<columns;x++)drops[x]=1;
 
 function draw(){
@@ -144,9 +128,9 @@ m.lang="ar-SA";
 speechSynthesis.speak(m);
 }
 
-window.onload=()=>speak("نظام تحليل التهديدات السيبرانية جاهز");
+window.onload=()=>speak("نظام تحليل التهديدات جاهز");
 
-/* ===== تحليل ذكي ===== */
+/* ===== التحليل ===== */
 function analyze(){
 
 let text=document.getElementById("message").value.toLowerCase();
@@ -154,12 +138,13 @@ if(!text){speak("ادخل رسالة");return;}
 
 let score=0,reason=[],mitre=[];
 
+// سلوكيات
 if(/عاجل|موقوف|ايقاف|urgent/.test(text)){
 score+=2;reason.push("ضغط نفسي");mitre.push("T1598 Phishing");
 }
 
 if(/http/.test(text)){
-score+=3;reason.push("رابط");mitre.push("T1566.002 Spearphishing Link");
+score+=3;reason.push("رابط احتيالي");mitre.push("T1566.002 Spearphishing Link");
 }
 
 if(/otp|password|cvv|visa|حساب|bank/.test(text)){
@@ -170,25 +155,32 @@ if(/\.xyz|\.ru|bit\.ly|tinyurl/.test(text)){
 score+=4;reason.push("دومين مشبوه");mitre.push("T1583 Infrastructure");
 }
 
-let status="SAFE",level="safe",desc="No threat";
+// التصنيف
+let status="SAFE",level="safe",desc="لا يوجد تهديد";
 
-if(score>=8){status="CRITICAL PHISHING";level="critical";desc="Advanced credential theft";}
-else if(score>=5){status="PHISHING";level="high";desc="Fraud attempt";}
-else if(score>=2){status="SUSPICIOUS";level="medium";desc="Social engineering";}
+if(score>=8){status="CRITICAL PHISHING";level="critical";desc="هجوم متقدم";}
+else if(score>=5){status="PHISHING";level="high";desc="محاولة احتيال";}
+else if(score>=2){status="SUSPICIOUS";level="medium";desc="هندسة اجتماعية";}
+
+// عرض
+const statusEl=document.getElementById("status");
+const techEl=document.getElementById("tech");
+const descEl=document.getElementById("desc");
+const reasonEl=document.getElementById("reason");
+const output=document.getElementById("output");
 
 output.style.display="block";
 output.className=level;
 
 statusEl.innerText=status;
-tech.innerText=[...new Set(mitre)].join(" | ");
-desc.innerText=desc;
-reason.innerText=reason.join(" , ");
+techEl.innerText=[...new Set(mitre)].join(" | ");
+descEl.innerText=desc;
+reasonEl.innerText=reason.join(" , ");
 
-speak("النتيجة "+status);
-
+speak("نتيجة الفحص " + status);
 }
 
 </script>
-
 </body>
+</html>
 </html>
