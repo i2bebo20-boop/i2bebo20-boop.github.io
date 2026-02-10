@@ -2,185 +2,212 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Threat Analyzer</title>
+<title>Cyber Phishing Analyzer</title>
 
 <style>
 body{
-  margin:0;
-  font-family:Consolas, monospace;
-  background:black;
-  color:#00ff9c;
+    background:#020617;
+    color:#e5e7eb;
+    font-family:Tahoma;
+    text-align:center;
+    padding:40px;
+}
+
+/* عنوان */
+h1{
+    color:#22c55e;
+    text-shadow:0 0 15px #22c55e;
+}
+
+/* مربع الإدخال */
+textarea{
+    width:80%;
+    height:150px;
+    background:#020617;
+    border:1px solid #22c55e;
+    color:white;
+    padding:15px;
+    font-size:16px;
+    border-radius:10px;
+    outline:none;
+    box-shadow:0 0 15px #22c55e44;
+}
+
+/* زر التحليل */
+button{
+    margin-top:20px;
+    background:#22c55e;
+    color:black;
+    padding:12px 30px;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+    transition:.3s;
+}
+button:hover{
+    background:#4ade80;
+    box-shadow:0 0 20px #22c55e;
+}
+
+/* صندوق النتائج */
+#output{
+    margin-top:30px;
+    background:#020617;
+    border:1px solid #22c55e;
+    padding:20px;
+    border-radius:15px;
+    width:80%;
+    margin-left:auto;
+    margin-right:auto;
+    box-shadow:0 0 20px #22c55e33;
+}
+
+/* شريط الخطورة */
+.riskBox{
+  margin-top:20px;
+}
+.meter{
+  width:100%;
+  height:18px;
+  background:#111827;
+  border-radius:20px;
   overflow:hidden;
 }
-
-/* Matrix background */
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:-1;
+#meterBar{
+  height:100%;
+  width:0%;
+  background:red;
+  transition:0.4s;
 }
 
-/* Panel */
-.panel{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  width:600px;
-  background:rgba(0,0,0,.85);
-  border:1px solid #00ff9c;
-  padding:25px;
-  box-shadow:0 0 30px #00ff9c;
+/* نصوص */
+.label{
+    color:#22c55e;
+    font-weight:bold;
 }
-
-h1{text-align:center;}
-
-textarea{
-  width:100%;
-  height:120px;
-  background:black;
-  border:1px solid #00ff9c;
-  color:#00ff9c;
-  padding:10px;
-}
-
-button{
-  width:100%;
-  margin-top:15px;
-  padding:12px;
-  background:black;
-  border:1px solid #00ff9c;
-  color:#00ff9c;
-  cursor:pointer;
-}
-
-button:hover{
-  background:#00ff9c;
-  color:black;
-}
-
-#output{
-  margin-top:20px;
-  border-top:1px solid #00ff9c;
-  padding-top:10px;
-  display:none;
-}
-
-.safe{color:#00ff9c;}
-.medium{color:orange;}
-.high{color:#ff3b3b;}
-.critical{color:red;font-weight:bold;}
 </style>
 </head>
+
+
 <body>
 
-<canvas id="matrix"></canvas>
+<h1>🔐 نظام كشف التصيد الاحتيالي</h1>
 
-<div class="panel">
-<h1>CYBER THREAT ANALYZER</h1>
+<textarea id="message" placeholder="ضع الرسالة أو الرابط هنا"></textarea>
 
-<textarea id="message" placeholder="اكتب الرسالة أو الرابط المشبوه"></textarea>
-<button onclick="analyze()">SCAN TARGET</button>
+<br>
+<button onclick="analyze()">تحليل الرسالة</button>
+
+<div class="riskBox">
+<h3>تحليل الهندسة الاجتماعية</h3>
+درجة التلاعب النفسي: <span id="seScore">0</span>/100
+<div class="meter"><div id="meterBar"></div></div>
+</div>
 
 <div id="output">
-<p>STATUS: <span id="status"></span></p>
-<p>MITRE TECHNIQUE: <span id="tech"></span></p>
-<p>DESCRIPTION: <span id="desc"></span></p>
-<p>REASON: <span id="reason"></span></p>
-</div>
+<p><span class="label">النتيجة:</span> <span id="status"></span></p>
+<p><span class="label">MITRE ATT&CK:</span> <span id="technique"></span></p>
+<p><span class="label">الوصف:</span> <span id="description"></span></p>
+<p><span class="label">السبب:</span> <span id="reason"></span></p>
 </div>
 
 <script>
 
-/* ===== Matrix Effect ===== */
-const canvas=document.getElementById("matrix");
-const ctx=canvas.getContext("2d");
-canvas.height=window.innerHeight;
-canvas.width=window.innerWidth;
-
-let letters="01".split("");
-let fontSize=14;
-let columns=canvas.width/fontSize;
-let drops=[];
-for(let x=0;x<columns;x++)drops[x]=1;
-
-function draw(){
-ctx.fillStyle="rgba(0,0,0,0.05)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle="#00ff9c";
-ctx.font=fontSize+"px monospace";
-
-for(let i=0;i<drops.length;i++){
-let text=letters[Math.floor(Math.random()*letters.length)];
-ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-if(drops[i]*fontSize>canvas.height && Math.random()>0.975)drops[i]=0;
-drops[i]++;
-}
-}
-setInterval(draw,33);
-
-/* ===== صوت ===== */
-function speak(t){
-speechSynthesis.cancel();
-let m=new SpeechSynthesisUtterance(t);
-m.lang="ar-SA";
-speechSynthesis.speak(m);
+/* ================= الصوت ================= */
+function speak(text){
+  speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang="ar-SA";
+  msg.rate=1;
+  speechSynthesis.speak(msg);
 }
 
-window.onload=()=>speak("نظام تحليل التهديدات جاهز");
+/* ================= تحليل الهندسة الاجتماعية ================= */
+function socialScore(text){
+let score=0;
 
-/* ===== التحليل ===== */
+const urgency=["عاجل","فوراً","الآن","خلال 24 ساعة"];
+const threat=["سيتم ايقاف","تعليق حساب","حظر"];
+const reward=["ربحت","جائزة","هدية","مكافأة"];
+const sensitive=["رمز التحقق","otp","كلمة المرور","بطاقتك"];
+
+urgency.forEach(w=>{if(text.includes(w))score+=25});
+threat.forEach(w=>{if(text.includes(w))score+=25});
+reward.forEach(w=>{if(text.includes(w))score+=20});
+sensitive.forEach(w=>{if(text.includes(w))score+=30});
+
+if(score>100)score=100;
+return score;
+}
+
+/* تحديث مباشر */
+message.addEventListener("input",()=>{
+let score=socialScore(message.value);
+seScore.innerText=score;
+
+meterBar.style.width=score+"%";
+meterBar.style.background=score<30?"green":score<70?"orange":"red";
+});
+
+/* ================= تحليل التصيد ================= */
 function analyze(){
 
-let text=document.getElementById("message").value.toLowerCase();
-if(!text){speak("ادخل رسالة");return;}
+const text=message.value;
 
-let score=0,reason=[],mitre=[];
-
-// سلوكيات
-if(/عاجل|موقوف|ايقاف|urgent/.test(text)){
-score+=2;reason.push("ضغط نفسي");mitre.push("T1598 Phishing");
+if(!text){
+speak("الرجاء إدخال رسالة");
+return;
 }
 
-if(/http/.test(text)){
-score+=3;reason.push("رابط احتيالي");mitre.push("T1566.002 Spearphishing Link");
+let status="آمن";
+let technique="لا يوجد";
+let description="لا توجد مؤشرات هجوم";
+let reason="النص طبيعي";
+
+/* قواعد تعليمية */
+if(text.match(/http|www|\.com|\.net/)){
+status="تصيد محتمل";
+technique="T1566 - Phishing";
+description="إرسال رابط لخداع الضحية";
+reason="يحتوي على رابط";
 }
 
-if(/otp|password|cvv|visa|حساب|bank/.test(text)){
-score+=4;reason.push("طلب بيانات حساسة");mitre.push("T1556 Credential Harvesting");
+if(text.match(/رمز التحقق|otp|كلمة المرور/)){
+status="تصيد خطير";
+technique="T1056 - Credential Harvesting";
+description="سرقة بيانات الدخول";
+reason="طلب بيانات حساسة";
 }
 
-if(/\.xyz|\.ru|bit\.ly|tinyurl/.test(text)){
-score+=4;reason.push("دومين مشبوه");mitre.push("T1583 Infrastructure");
+if(text.match(/عاجل|سيتم ايقاف|خلال 24 ساعة/)){
+status="تصيد خطير";
+technique="T1204 - User Execution";
+description="ضغط نفسي لتنفيذ الضحية";
+reason="استعجال وتهديد";
 }
 
-// التصنيف
-let status="SAFE",level="safe",desc="لا يوجد تهديد";
+/* عرض */
+document.getElementById("status").innerText=status;
+document.getElementById("technique").innerText=technique;
+document.getElementById("description").innerText=description;
+document.getElementById("reason").innerText=reason;
+  /* قراءة صوتية */
+const score=socialScore(text);
 
-if(score>=8){status="CRITICAL PHISHING";level="critical";desc="هجوم متقدم";}
-else if(score>=5){status="PHISHING";level="high";desc="محاولة احتيال";}
-else if(score>=2){status="SUSPICIOUS";level="medium";desc="هندسة اجتماعية";}
+speak(
+`نتيجة التحليل ${status}.
+نسبة التلاعب النفسي ${score} بالمئة.
+نوع الهجوم ${technique}.
+${description}`
+);
 
-// عرض
-const statusEl=document.getElementById("status");
-const techEl=document.getElementById("tech");
-const descEl=document.getElementById("desc");
-const reasonEl=document.getElementById("reason");
-const output=document.getElementById("output");
-
-output.style.display="block";
-output.className=level;
-
-statusEl.innerText=status;
-techEl.innerText=[...new Set(mitre)].join(" | ");
-descEl.innerText=desc;
-reasonEl.innerText=reason.join(" , ");
-
-speak("نتيجة الفحص " + status);
 }
+
+/* ترحيب */
+window.onload=()=>speak("مرحباً بك في نظام كشف التصيد الاحتيالي");
 
 </script>
+
 </body>
-</html>
 </html>
