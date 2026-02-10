@@ -2,212 +2,166 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Phishing Analyzer</title>
+<title>Real‑Time Phishing SOC</title>
 
 <style>
 body{
-    background:#020617;
-    color:#e5e7eb;
-    font-family:Tahoma;
-    text-align:center;
-    padding:40px;
+background:#020617;
+color:#e5e7eb;
+font-family:Tahoma;
+direction:rtl;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+background:radial-gradient(circle at top,#0f172a,#020617);
 }
 
-/* عنوان */
-h1{
-    color:#22c55e;
-    text-shadow:0 0 15px #22c55e;
+.card{
+width:560px;
+background:#020617;
+border:1px solid #1e293b;
+border-radius:18px;
+padding:28px;
+box-shadow:0 0 50px rgba(56,189,248,.35);
 }
 
-/* مربع الإدخال */
+h1{color:#38bdf8;text-align:center;margin-bottom:10px}
+.subtitle{color:#94a3b8;text-align:center;font-size:13px}
+
 textarea{
-    width:80%;
-    height:150px;
-    background:#020617;
-    border:1px solid #22c55e;
-    color:white;
-    padding:15px;
-    font-size:16px;
-    border-radius:10px;
-    outline:none;
-    box-shadow:0 0 15px #22c55e44;
+width:100%;
+height:160px;
+background:#020617;
+border:1px solid #334155;
+border-radius:12px;
+padding:14px;
+color:white;
+margin-top:18px;
+font-size:15px;
 }
 
-/* زر التحليل */
-button{
-    margin-top:20px;
-    background:#22c55e;
-    color:black;
-    padding:12px 30px;
-    border:none;
-    border-radius:10px;
-    font-size:18px;
-    cursor:pointer;
-    transition:.3s;
-}
-button:hover{
-    background:#4ade80;
-    box-shadow:0 0 20px #22c55e;
-}
+.result{margin-top:18px;padding:15px;border-radius:12px;font-weight:bold;text-align:center}
+.safe{background:#052e16;color:#22c55e}
+.warn{background:#3f2a04;color:#f59e0b}
+.danger{background:#3b0a0a;color:#ef4444}
 
-/* صندوق النتائج */
-#output{
-    margin-top:30px;
-    background:#020617;
-    border:1px solid #22c55e;
-    padding:20px;
-    border-radius:15px;
-    width:80%;
-    margin-left:auto;
-    margin-right:auto;
-    box-shadow:0 0 20px #22c55e33;
-}
-
-/* شريط الخطورة */
-.riskBox{
-  margin-top:20px;
-}
-.meter{
-  width:100%;
-  height:18px;
-  background:#111827;
-  border-radius:20px;
-  overflow:hidden;
-}
-#meterBar{
-  height:100%;
-  width:0%;
-  background:red;
-  transition:0.4s;
-}
-
-/* نصوص */
-.label{
-    color:#22c55e;
-    font-weight:bold;
-}
+.details{margin-top:12px;font-size:14px;color:#94a3b8;line-height:1.7}
 </style>
 </head>
 
-
 <body>
 
-<h1>🔐 نظام كشف التصيد الاحتيالي</h1>
+<div class="card">
+<h1>🛡 SOC Phishing Detector</h1>
+<div class="subtitle">تحليل فوري باستخدام MITRE ATT&CK</div>
 
-<textarea id="message" placeholder="ضع الرسالة أو الرابط هنا"></textarea>
+<textarea id="msg" placeholder="ابدأ بكتابة الرسالة أو الرابط وسيتم التحليل مباشرة..."></textarea>
 
-<br>
-<button onclick="analyze()">تحليل الرسالة</button>
-
-<div class="riskBox">
-<h3>تحليل الهندسة الاجتماعية</h3>
-درجة التلاعب النفسي: <span id="seScore">0</span>/100
-<div class="meter"><div id="meterBar"></div></div>
-</div>
-
-<div id="output">
-<p><span class="label">النتيجة:</span> <span id="status"></span></p>
-<p><span class="label">MITRE ATT&CK:</span> <span id="technique"></span></p>
-<p><span class="label">الوصف:</span> <span id="description"></span></p>
-<p><span class="label">السبب:</span> <span id="reason"></span></p>
+<div id="result" class="result">بانتظار الإدخال...</div>
+<div id="details" class="details"></div>
 </div>
 
 <script>
-
-/* ================= الصوت ================= */
-function speak(text){
-  speechSynthesis.cancel();
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang="ar-SA";
-  msg.rate=1;
-  speechSynthesis.speak(msg);
+// ====== الصوت ======
+let lastSpeech="";
+function speak(t){
+if(t===lastSpeech) return;
+lastSpeech=t;
+speechSynthesis.cancel();
+let u=new SpeechSynthesisUtterance(t);
+u.lang="ar-SA";
+speechSynthesis.speak(u);
 }
 
-/* ================= تحليل الهندسة الاجتماعية ================= */
-function socialScore(text){
-let score=0;
+// ====== البنوك ======
+const banks=[
+{name:"الراجحي",domains:["alrajhibank.com.sa"]},
+{name:"الأهلي",domains:["alahli.com","snb.com.sa"]},
+{name:"الرياض",domains:["riyadbank.com"]},
+{name:"الإنماء",domains:["alinma.com"]},
+{name:"stc pay",domains:["stcpay.com.sa"]},
+{name:"مدى",domains:["mada.com.sa"]}
+];
 
-const urgency=["عاجل","فوراً","الآن","خلال 24 ساعة"];
-const threat=["سيتم ايقاف","تعليق حساب","حظر"];
-const reward=["ربحت","جائزة","هدية","مكافأة"];
-const sensitive=["رمز التحقق","otp","كلمة المرور","بطاقتك"];
+// ===== كلمات احتيال =====
+const dangerWords=["ايقاف","موقوف","تحذير","verify","login","password","otp","رمز","تحديث","حساب"];
 
-urgency.forEach(w=>{if(text.includes(w))score+=25});
-threat.forEach(w=>{if(text.includes(w))score+=25});
-reward.forEach(w=>{if(text.includes(w))score+=20});
-sensitive.forEach(w=>{if(text.includes(w))score+=30});
-
-if(score>100)score=100;
-return score;
+// استخراج رابط
+function extractURL(text){
+const m=text.match(/https?://[^\s]+/);
+return m?m[0]:null;
 }
 
-/* تحديث مباشر */
-message.addEventListener("input",()=>{
-let score=socialScore(message.value);
-seScore.innerText=score;
+// ===== التحليل المباشر =====
+document.getElementById("msg").addEventListener("input",analyze);
 
-meterBar.style.width=score+"%";
-meterBar.style.background=score<30?"green":score<70?"orange":"red";
-});
-
-/* ================= تحليل التصيد ================= */
 function analyze(){
 
-const text=message.value;
-
+let text=document.getElementById("msg").value.toLowerCase();
 if(!text){
-speak("الرجاء إدخال رسالة");
+document.getElementById("result").innerText="بانتظار الإدخال...";
+document.getElementById("details").innerHTML="";
 return;
 }
 
-let status="آمن";
-let technique="لا يوجد";
-let description="لا توجد مؤشرات هجوم";
-let reason="النص طبيعي";
+let risk=0;
+let reason=[];
+let mitre="";
 
-/* قواعد تعليمية */
-if(text.match(/http|www|\.com|\.net/)){
-status="تصيد محتمل";
-technique="T1566 - Phishing";
-description="إرسال رابط لخداع الضحية";
-reason="يحتوي على رابط";
+// كلمات خطرة
+dangerWords.forEach(w=>{
+if(text.includes(w)){
+risk+=2;
+reason.push("طلب بيانات حساسة");
+}
+});
+
+// انتحال بنك
+banks.forEach(bank=>{
+if(text.includes(bank.name)){
+risk+=3;
+reason.push("انتحال جهة مالية: "+bank.name);
+mitre="T1566 Phishing";
+
+let url=extractURL(text);
+if(url){
+let legit=bank.domains.some(d=>url.includes(d));
+if(!legit){
+risk+=3;
+reason.push("رابط مزيف لا يتبع الدومين الرسمي");
+}
+}
+}
+});
+
+// ===== النتيجة =====
+let res=document.getElementById("result");
+let det=document.getElementById("details");
+
+if(risk>=6){
+res.className="result danger";
+res.innerText="🚨 احتيال مؤكد";
+speak("تحذير احتيال إلكتروني");
+}
+else if(risk>=3){
+res.className="result warn";
+res.innerText="⚠️ رسالة مشبوهة";
+speak("تنبيه رسالة مشبوهة");
+}
+else{
+res.className="result safe";
+res.innerText="✅ آمنة غالباً";
+speak("الرسالة تبدو آمنة");
 }
 
-if(text.match(/رمز التحقق|otp|كلمة المرور/)){
-status="تصيد خطير";
-technique="T1056 - Credential Harvesting";
-description="سرقة بيانات الدخول";
-reason="طلب بيانات حساسة";
+det.innerHTML="<b>MITRE:</b> "+(mitre||"لا يوجد")+
+"<br><b>السبب:</b><br>"+reason.join("<br>");
 }
 
-if(text.match(/عاجل|سيتم ايقاف|خلال 24 ساعة/)){
-status="تصيد خطير";
-technique="T1204 - User Execution";
-description="ضغط نفسي لتنفيذ الضحية";
-reason="استعجال وتهديد";
-}
-
-/* عرض */
-document.getElementById("status").innerText=status;
-document.getElementById("technique").innerText=technique;
-document.getElementById("description").innerText=description;
-document.getElementById("reason").innerText=reason;
-  /* قراءة صوتية */
-const score=socialScore(text);
-
-speak(
-`نتيجة التحليل ${status}.
-نسبة التلاعب النفسي ${score} بالمئة.
-نوع الهجوم ${technique}.
-${description}`
-);
-
-}
-
-/* ترحيب */
-window.onload=()=>speak("مرحباً بك في نظام كشف التصيد الاحتيالي");
-
+window.onload=()=>speak("تم تشغيل نظام الحماية الفوري");
 </script>
 
 </body>
-</html>
+</htm
