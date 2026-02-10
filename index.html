@@ -2,166 +2,190 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Real‑Time Phishing SOC</title>
+<title>Cyber Phishing Analyzer</title>
 
 <style>
 body{
-background:#020617;
+margin:0;
+font-family:Segoe UI;
+background: radial-gradient(circle at center,#020617,#000);
 color:#e5e7eb;
-font-family:Tahoma;
-direction:rtl;
 display:flex;
 justify-content:center;
 align-items:center;
 height:100vh;
-margin:0;
-background:radial-gradient(circle at top,#0f172a,#020617);
+overflow:hidden;
 }
+
+/* خلفية سايبر */
+body::before{
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background:
+repeating-linear-gradient(
+90deg,
+transparent 0px,
+transparent 95px,
+rgba(0,255,170,.07) 100px
+);
+animation:move 10s linear infinite;
+}
+@keyframes move{from{transform:translateX(0)}to{transform:translateX(100px)}}
 
 .card{
-width:560px;
-background:#020617;
-border:1px solid #1e293b;
-border-radius:18px;
-padding:28px;
-box-shadow:0 0 50px rgba(56,189,248,.35);
+width:720px;
+background:rgba(2,6,23,.88);
+border:1px solid #0f766e;
+border-radius:20px;
+padding:40px;
+box-shadow:0 0 45px rgba(0,255,170,.2);
 }
 
-h1{color:#38bdf8;text-align:center;margin-bottom:10px}
-.subtitle{color:#94a3b8;text-align:center;font-size:13px}
+h1{
+text-align:center;
+color:#00ffa6;
+text-shadow:0 0 20px #00ffa6;
+}
 
 textarea{
 width:100%;
-height:160px;
+height:150px;
 background:#020617;
-border:1px solid #334155;
+border:1px solid #134e4a;
 border-radius:12px;
-padding:14px;
-color:white;
-margin-top:18px;
+padding:15px;
+color:#00ffa6;
 font-size:15px;
+resize:none;
+outline:none;
 }
 
-.result{margin-top:18px;padding:15px;border-radius:12px;font-weight:bold;text-align:center}
-.safe{background:#052e16;color:#22c55e}
-.warn{background:#3f2a04;color:#f59e0b}
-.danger{background:#3b0a0a;color:#ef4444}
+textarea:focus{box-shadow:0 0 20px rgba(0,255,170,.3)}
 
-.details{margin-top:12px;font-size:14px;color:#94a3b8;line-height:1.7}
+button{
+margin-top:20px;
+width:100%;
+padding:15px;
+background:linear-gradient(90deg,#00ffa6,#00c3ff);
+border:none;
+border-radius:12px;
+font-size:18px;
+cursor:pointer;
+font-weight:bold;
+transition:.3s;
+}
+button:hover{transform:scale(1.03);box-shadow:0 0 25px #00ffa6}
+
+.result{
+margin-top:25px;
+padding:18px;
+border-radius:14px;
+display:none;
+line-height:1.9;
+}
+
+.safe{background:rgba(34,197,94,.12);color:#4ade80}
+.warn{background:rgba(245,158,11,.12);color:#fbbf24}
+.danger{background:rgba(239,68,68,.12);color:#f87171}
+
+.label{color:#67e8f9;font-weight:bold}
+.percent{font-size:22px;font-weight:bold}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-<h1>🛡 SOC Phishing Detector</h1>
-<div class="subtitle">تحليل فوري باستخدام MITRE ATT&CK</div>
 
-<textarea id="msg" placeholder="ابدأ بكتابة الرسالة أو الرابط وسيتم التحليل مباشرة..."></textarea>
+<h1>🛡 Cyber Phishing Analyzer</h1>
 
-<div id="result" class="result">بانتظار الإدخال...</div>
-<div id="details" class="details"></div>
+<textarea id="msg" placeholder="ألصق الرسالة أو الرابط هنا"></textarea>
+<button onclick="analyze()">تحليل الرسالة</button>
+
+<div id="result" class="result">
+<div class="percent" id="percent"></div>
+<div><span class="label">الحالة:</span> <span id="status"></span></div>
+<div><span class="label">MITRE ATT&CK:</span> <span id="mitre"></span></div>
+<div><span class="label">الوصف:</span> <span id="desc"></span></div>
+<div><span class="label">السبب:</span> <span id="reason"></span></div>
+</div>
+
 </div>
 
 <script>
-// ====== الصوت ======
-let lastSpeech="";
-function speak(t){
-if(t===lastSpeech) return;
-lastSpeech=t;
-speechSynthesis.cancel();
-let u=new SpeechSynthesisUtterance(t);
-u.lang="ar-SA";
-speechSynthesis.speak(u);
-}
 
-// ====== البنوك ======
-const banks=[
-{name:"الراجحي",domains:["alrajhibank.com.sa"]},
-{name:"الأهلي",domains:["alahli.com","snb.com.sa"]},
-{name:"الرياض",domains:["riyadbank.com"]},
-{name:"الإنماء",domains:["alinma.com"]},
-{name:"stc pay",domains:["stcpay.com.sa"]},
-{name:"مدى",domains:["mada.com.sa"]}
+/* ===== الصوت ===== */
+function speak(text){
+speechSynthesis.cancel();
+const msg=new SpeechSynthesisUtterance(text);
+msg.lang="ar-SA";
+speechSynthesis.speak(msg);
+}
+window.onload=()=>speak("نظام كشف التصيد الاحتيالي جاهز");
+
+/* ===== البيانات ===== */
+const banks=["alrajhi","rajhi","riyadbank","alinma","saib","snb","ahli","bank"];
+
+const patterns=[
+{words:["verify","تحديث","update","login"],tech:"T1566.002",desc:"Phishing Link",score:20,reason:"طلب تسجيل دخول او تحديث"},
+{words:["otp","رمز","code"],tech:"T1556",desc:"Credential Harvesting",score:25,reason:"طلب رمز تحقق"},
+{words:["ايقاف","موقوف","suspended"],tech:"T1098",desc:"Account Manipulation",score:30,reason:"تخويف بإيقاف الحساب"},
+{words:["http://","https://","bit.ly","tinyurl"],tech:"T1566.001",desc:"Malicious Link",score:25,reason:"رابط خارجي"},
+{words:["urgent","عاجل","فورا"],tech:"T1204",desc:"Social Engineering Pressure",score:15,reason:"استعجال الضحية"}
 ];
 
-// ===== كلمات احتيال =====
-const dangerWords=["ايقاف","موقوف","تحذير","verify","login","password","otp","رمز","تحديث","حساب"];
-
-// استخراج رابط
-function extractURL(text){
-const m=text.match(/https?://[^\s]+/);
-return m?m[0]:null;
-}
-
-// ===== التحليل المباشر =====
-document.getElementById("msg").addEventListener("input",analyze);
-
+/* ===== التحليل ===== */
 function analyze(){
 
 let text=document.getElementById("msg").value.toLowerCase();
-if(!text){
-document.getElementById("result").innerText="بانتظار الإدخال...";
-document.getElementById("details").innerHTML="";
-return;
-}
+let risk=0,tech=[],reasons=[];
 
-let risk=0;
-let reason=[];
-let mitre="";
-
-// كلمات خطرة
-dangerWords.forEach(w=>{
+/* كشف الأنماط */
+patterns.forEach(p=>{
+p.words.forEach(w=>{
 if(text.includes(w)){
-risk+=2;
-reason.push("طلب بيانات حساسة");
+risk+=p.score;
+tech.push(p.tech+" - "+p.desc);
+reasons.push(p.reason);
+}
+})
+});
+
+/* كشف البنوك */
+banks.forEach(b=>{
+if(text.includes(b)){
+risk+=25;
+tech.push("T1583 - Impersonation");
+reasons.push("انتحال بنك معروف");
 }
 });
 
-// انتحال بنك
-banks.forEach(bank=>{
-if(text.includes(bank.name)){
-risk+=3;
-reason.push("انتحال جهة مالية: "+bank.name);
-mitre="T1566 Phishing";
+/* الحد الأقصى */
+if(risk>100) risk=100;
 
-let url=extractURL(text);
-if(url){
-let legit=bank.domains.some(d=>url.includes(d));
-if(!legit){
-risk+=3;
-reason.push("رابط مزيف لا يتبع الدومين الرسمي");
-}
-}
-}
-});
+/* التصنيف */
+let status,cls;
+if(risk>=70){status="🚨 تصيد احتيالي خطير";cls="danger"}
+else if(risk>=40){status="⚠️ رسالة مشبوهة";cls="warn"}
+else{status="✅ رسالة آمنة";cls="safe"}
 
-// ===== النتيجة =====
-let res=document.getElementById("result");
-let det=document.getElementById("details");
+/* عرض */
+document.getElementById("result").style.display="block";
+document.getElementById("result").className="result "+cls;
+document.getElementById("percent").innerText="نسبة الخطورة: "+risk+"%";
+  document.getElementById("status").innerText=status;
+document.getElementById("mitre").innerText=[...new Set(tech)].join(" | ")||"لا يوجد";
+document.getElementById("desc").innerText=tech.length?"تم اكتشاف سلوك مطابق لهجمات هندسة اجتماعية":"لا يوجد نشاط ضار";
+document.getElementById("reason").innerText=[...new Set(reasons)].join(" ، ")||"لا يوجد";
 
-if(risk>=6){
-res.className="result danger";
-res.innerText="🚨 احتيال مؤكد";
-speak("تحذير احتيال إلكتروني");
-}
-else if(risk>=3){
-res.className="result warn";
-res.innerText="⚠️ رسالة مشبوهة";
-speak("تنبيه رسالة مشبوهة");
-}
-else{
-res.className="result safe";
-res.innerText="✅ آمنة غالباً";
-speak("الرسالة تبدو آمنة");
+/* نطق */
+speak("نسبة الخطورة "+risk+" بالمئة. "+status);
+
 }
 
-det.innerHTML="<b>MITRE:</b> "+(mitre||"لا يوجد")+
-"<br><b>السبب:</b><br>"+reason.join("<br>");
-}
-
-window.onload=()=>speak("تم تشغيل نظام الحماية الفوري");
 </script>
 
 </body>
-</htm
+</html>
