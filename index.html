@@ -6,89 +6,16 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-
-body{
-    margin:0;
-    font-family:'Cairo',sans-serif;
-    background:#020b07;
-    color:#00ff9c;
-    overflow:hidden;
-}
-
-/* خلفية ماتريكس */
-canvas{
-    position:fixed;
-    top:0;
-    left:0;
-    z-index:-1;
-}
-
-/* الصندوق */
-.container{
-    width:700px;
-    max-width:90%;
-    margin:70px auto;
-    background:rgba(0,20,10,0.85);
-    padding:25px;
-    border-radius:15px;
-    box-shadow:0 0 25px #00ff9c44;
-    backdrop-filter:blur(6px);
-    animation:fadeIn 1.2s ease;
-}
-
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(40px)}
-    to{opacity:1; transform:translateY(0)}
-}
-
-h1{
-    text-align:center;
-    margin-bottom:15px;
-    text-shadow:0 0 12px #00ff9c;
-}
-
-textarea{
-    width:100%;
-    height:150px;
-    background:#001a0d;
-    border:1px solid #00ff9c55;
-    border-radius:10px;
-    padding:10px;
-    color:#00ff9c;
-    font-size:15px;
-    resize:none;
-}
-
-button{
-    width:100%;
-    margin-top:15px;
-    padding:12px;
-    background:#00ff9c;
-    border:none;
-    color:#002b19;
-    font-weight:bold;
-    border-radius:10px;
-    cursor:pointer;
-    transition:.3s;
-}
-
-button:hover{
-    box-shadow:0 0 15px #00ff9c;
-}
-
-/* النتائج */
-.result{
-    margin-top:20px;
-    padding:15px;
-    background:#001a0d;
-    border-radius:10px;
-    border:1px solid #00ff9c33;
-    line-height:2;
-}
-
-.danger{ color:#ff4d4d; font-weight:bold;}
-.medium{ color:#ffd633; font-weight:bold;}
-.safe{ color:#00ff9c; font-weight:bold;}
+body{margin:0;font-family:'Cairo',sans-serif;background:#020b07;color:#00ff9c}
+canvas{position:fixed;inset:0;z-index:-1}
+.container{width:750px;max-width:95%;margin:60px auto;background:rgba(0,20,10,.9);padding:25px;border-radius:16px;box-shadow:0 0 30px #00ff9c55}
+h1{text-align:center;text-shadow:0 0 15px #00ff9c}
+textarea{width:100%;height:150px;background:#001a0d;border:1px solid #00ff9c55;border-radius:10px;padding:12px;color:#00ff9c;font-size:15px}
+button{width:100%;margin-top:15px;padding:12px;background:#00ff9c;border:none;color:#002b19;font-weight:bold;border-radius:10px;cursor:pointer}
+.result{margin-top:20px;padding:15px;background:#001a0d;border-radius:10px;line-height:2}
+.high{color:#ff4d4d;font-weight:bold}
+.medium{color:#ffd633;font-weight:bold}
+.safe{color:#00ff9c;font-weight:bold}
 </style>
 </head>
 
@@ -105,88 +32,95 @@ button:hover{
 <div class="result">
 <p>النتيجة: <span id="result">—</span></p>
 <p>نسبة الخطورة: <span id="score">—</span></p>
-<p>السبب: <span id="reason">—</span></p>
+<p>نوع الهجوم: <span id="attack">—</span></p>
 <p>MITRE ATT&CK: <span id="mitre">—</span></p>
+<p>السبب: <span id="reason">—</span></p>
 </div>
 </div>
 
-<!-- صوت التنبيه -->
 <audio id="alarm">
 <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3">
 </audio>
 
 <script>
-/* خلفية الماتريكس */
-const canvas=document.getElementById('matrix');
-const ctx=canvas.getContext('2d');
-canvas.height=window.innerHeight;
-canvas.width=window.innerWidth;
+// ================= Matrix =================
+const c=document.getElementById("matrix"),x=c.getContext("2d");
+c.width=innerWidth;c.height=innerHeight;
+const letters="01",fs=14,cols=c.width/fs,drops=Array(Math.floor(cols)).fill(1);
+setInterval(()=>{x.fillStyle="rgba(0,0,0,.05)";
+x.fillRect(0,0,c.width,c.height);
+x.fillStyle="#00ff9c";x.font=fs+"px monospace";
+drops.forEach((y,i)=>{x.fillText(letters[Math.random()*2|0],i*fs,y*fs);
+if(y*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});},33);
 
-const letters="01";
-const fontSize=14;
-const columns=canvas.width/fontSize;
-const drops=Array(Math.floor(columns)).fill(1);
-
-function draw(){
-    ctx.fillStyle="rgba(0,0,0,0.05)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="#00ff9c";
-    ctx.font=fontSize+"px monospace";
-
-    drops.forEach((y,i)=>{
-        const text=letters[Math.floor(Math.random()*letters.length)];
-        ctx.fillText(text,i*fontSize,y*fontSize);
-        if(y*fontSize>canvas.height && Math.random()>0.975) drops[i]=0;
-        drops[i]++;
-    });
+// ================= Voice =================
+function speak(t){
+ speechSynthesis.cancel();
+ let s=new SpeechSynthesisUtterance(t);
+ s.lang="ar-SA";speechSynthesis.speak(s);
 }
-setInterval(draw,33);
 
-/* الكلمات */
-const phishingWords=["verify","account","bank","otp","password","suspend","login","urgent","تحديث","حسابك","ايقاف","رمز","البنك","الراجحي","الاهلي","stc pay"];
-const links=/https?:\/\/|\.ru|\.tk|\.xyz|bit\.ly|tinyurl/i;
+// ================= Threat Intelligence =================
+const indicators=[
+/* Phishing */
+{type:"Phishing",mitre:"T1566",score:20,words:[
+"verify","confirm","update","click","login","signin","تأكيد","تحقق","تحديث","اضغط","سجل دخولك"]},
 
-/* التحليل */
+/* Credential Harvesting */
+{type:"Credential Harvesting",mitre:"T1056",score:30,words:[
+"password","otp","token","pin","رمز","كلمة المرور","رمز التحقق","one time password"]},
+
+/* Impersonation / Brand Spoofing */
+{type:"Impersonation",mitre:"T1566.002",score:20,words:[
+"bank","paypal","amazon","apple","google","microsoft",
+"الراجحي","الاهلي","stc","ساب","بنك","حسابك البنكي"]},
+
+/* Urgency / Fear */
+{type:"Social Engineering",mitre:"T1204",score:15,words:[
+"urgent","immediately","suspend","blocked","warning",
+"عاجل","تم ايقاف","تحذير","خلال 24 ساعة"]},
+
+/* Financial Fraud */
+{type:"Financial Fraud",mitre:"T1110",score:25,words:[
+"invoice","payment","transfer","refund","فاتورة","دفع","تحويل","استرجاع"]},
+];
+
+// Links & Domains
+const linkPattern=/https?:\/\/|bit\.ly|tinyurl|\.ru|\.xyz|\.tk|\.cn/i;
+
+// ================= Analysis =================
 function analyze(){
-    let text=document.getElementById("msg").value.toLowerCase();
-    let score=0;
-    let reason=[];
-    let mitre=[];
+ let text=msg.value.toLowerCase();
+ let score=0,reasons=[],attacks=[],mitres=[];
 
-    phishingWords.forEach(w=>{
-        if(text.includes(w)){
-            score+=15;
-            reason.push("كلمة مشبوهة: "+w);
-            mitre.push("T1566 Phishing");
-        }
-    });
+ indicators.forEach(cat=>{
+  cat.words.forEach(w=>{
+   if(text.includes(w)){
+    score+=cat.score;
+    reasons.push(`كلمة مشبوهة: ${w}`);
+    attacks.push(cat.type);
+    mitres.push(cat.mitre);
+   }
+  });
+ });
 
-    if(links.test(text)){
-        score+=25;
-        reason.push("رابط مشبوه");
-        mitre.push("T1204 User Execution");
-    }
+ if(linkPattern.test(text)){
+  score+=25;
+  reasons.push("رابط مشبوه أو مختصر");
+  mitres.push("T1204");
+ }
 
-    if(text.includes("otp")||text.includes("رمز")){
-        score+=20;
-        mitre.push("T1056 Credential Harvesting");
-    }
+ let result="آمن",cls="safe";
+ if(score>=80){result="خطر عالي";cls="high";alarm.play();}
+ else if(score>=45){result="مشبوه";cls="medium";}
 
-    let result="آمن";
-    let color="safe";
+ document.getElementById("result").innerHTML=`<span class="${cls}">${result}</span>`;
+ document.getElementById("score").innerText=score+"%";
+ document.getElementById("attack").innerText=[...new Set(attacks)].join(", ")||"—";
+ document.getElementById("mitre").innerText=[...new Set(mitres)].join(", ")||"—";
+ document.getElementById("reason").innerText=reasons.join(" | ")||"لا يوجد";
 
-    if(score>=60){result="خطر عالي";color="danger";document.getElementById("alarm").play();}
-    else if(score>=30){result="مشبوه";color="medium";}
-
-    document.getElementById("result").innerHTML=`<span class="${color}">${result}</span>`;
-  document.getElementById("score").innerText=score+"%";
-    document.getElementById("reason").innerText=reason.join(" | ")||"لا يوجد";
-    document.getElementById("mitre").innerText=[...new Set(mitre)].join(" , ")||"—";
-
-    /* قراءة صوتية */
-    let speech=new SpeechSynthesisUtterance("نتيجة التحليل "+result+" بنسبة خطورة "+score+" بالمئة");
-    speech.lang="ar-SA";
-    speechSynthesis.speak(speech);
+ speak(`نتيجة التحليل ${result}. نسبة الخطورة ${score} بالمئة`);
 }
 </script>
 
