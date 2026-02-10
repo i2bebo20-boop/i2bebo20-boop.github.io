@@ -2,175 +2,193 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Phishing Threat Analyzer</title>
+<title>Cyber Threat Intelligence</title>
 
 <style>
+
+/* ===== خلفية متحركة ===== */
 body{
-  background:#020617;
-  color:#e2e8f0;
-  font-family:Tahoma;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+  margin:0;
+  font-family:Consolas, monospace;
+  background:black;
+  color:#00ff9c;
+  overflow:hidden;
 }
 
-.container{
-  width:520px;
-  background:#020617;
-  border:1px solid #1e293b;
-  border-radius:18px;
-  padding:30px;
-  box-shadow:0 0 40px rgba(56,189,248,.25);
+/* Matrix rain */
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:-1;
+}
+
+/* الكارد */
+.panel{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:600px;
+  background:rgba(0,0,0,.85);
+  border:1px solid #00ff9c;
+  padding:25px;
+  box-shadow:0 0 30px #00ff9c;
 }
 
 h1{
   text-align:center;
-  color:#38bdf8;
+  margin-top:0;
+  letter-spacing:2px;
 }
 
+/* textarea */
 textarea{
   width:100%;
   height:120px;
-  background:#020617;
-  border:1px solid #334155;
-  border-radius:12px;
-  padding:12px;
-  color:white;
-  font-size:15px;
+  background:black;
+  border:1px solid #00ff9c;
+  color:#00ff9c;
+  padding:10px;
+  resize:none;
 }
 
+/* زر */
 button{
   width:100%;
   margin-top:15px;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  background:#38bdf8;
-  color:#020617;
-  font-weight:bold;
+  padding:12px;
+  background:black;
+  border:1px solid #00ff9c;
+  color:#00ff9c;
   cursor:pointer;
+  transition:.3s;
 }
 
 button:hover{
-  background:#0ea5e9;
+  background:#00ff9c;
+  color:black;
 }
 
+/* النتائج */
 #output{
   margin-top:20px;
-  padding:15px;
-  border-radius:12px;
+  border-top:1px solid #00ff9c;
+  padding-top:10px;
   display:none;
 }
 
-.safe{background:#052e16;color:#22c55e;}
-.medium{background:#3f2f05;color:#f59e0b;}
-.high{background:#3f1d1d;color:#ef4444;}
-.critical{background:#450a0a;color:#ff0000;}
+.safe{color:#00ff9c;}
+.medium{color:orange;}
+.high{color:#ff3b3b;}
+.critical{color:red;font-weight:bold;}
+
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<canvas id="matrix"></canvas>
 
-<h1>🛡️ Cyber Phishing Analyzer</h1>
+<div class="panel">
+<h1>CYBER THREAT ANALYZER</h1>
 
-<textarea id="message" placeholder="ضع الرسالة أو الرابط هنا"></textarea>
-
-<button onclick="checkMessage()" id="analyzeBtn">تحليل التهديد</button>
+<textarea id="message" placeholder="أدخل الرسالة أو الرابط المشبوه"></textarea>
+<button onclick="analyze()">SCAN TARGET</button>
 
 <div id="output">
-<p><b>الحالة:</b> <span id="status"></span></p>
-<p><b>تقنية MITRE:</b> <span id="technique"></span></p>
-<p><b>الوصف:</b> <span id="description"></span></p>
-<p><b>السبب:</b> <span id="reason"></span></p>
+<p>STATUS: <span id="status"></span></p>
+<p>MITRE TECHNIQUE: <span id="tech"></span></p>
+<p>DESCRIPTION: <span id="desc"></span></p>
+<p>REASON: <span id="reason"></span></p>
 </div>
 
 </div>
 
 <script>
 
-// ================= صوت تلقائي =================
-function speak(text){
-  window.speechSynthesis.cancel();
-  let msg=new SpeechSynthesisUtterance(text);
-  msg.lang="ar-SA";
-  msg.rate=1;
-  speechSynthesis.speak(msg);
+/* ===== Matrix Effect ===== */
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+canvas.height=window.innerHeight;
+canvas.width=window.innerWidth;
+
+let letters="01";
+letters=letters.split("");
+
+let fontSize=14;
+let columns=canvas.width/fontSize;
+let drops=[];
+
+for(let x=0;x<columns;x++)drops[x]=1;
+
+function draw(){
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="#00ff9c";
+ctx.font=fontSize+"px monospace";
+
+for(let i=0;i<drops.length;i++){
+let text=letters[Math.floor(Math.random()*letters.length)];
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+if(drops[i]*fontSize>canvas.height && Math.random()>0.975)drops[i]=0;
+drops[i]++;
+}
+}
+setInterval(draw,33);
+
+/* ===== صوت ===== */
+function speak(t){
+speechSynthesis.cancel();
+let m=new SpeechSynthesisUtterance(t);
+m.lang="ar-SA";
+speechSynthesis.speak(m);
 }
 
-window.onload=()=>{
-  speak("مرحباً بك في نظام كشف التصيد الاحتيالي");
-};
+window.onload=()=>speak("نظام تحليل التهديدات السيبرانية جاهز");
 
-// تفاعل الماوس
-message.onmouseenter=()=>speak("اكتب الرسالة المشبوهة هنا");
-analyzeBtn.onmouseenter=()=>speak("اضغط لتحليل الرسالة");
-
-// ================= التحليل =================
-function checkMessage(){
+/* ===== تحليل ذكي ===== */
+function analyze(){
 
 let text=document.getElementById("message").value.toLowerCase();
-if(!text){speak("الرجاء إدخال رسالة");return;}
+if(!text){speak("ادخل رسالة");return;}
 
-let result={
-status:"آمن",
-technique:"لا يوجد",
-description:"لا يوجد سلوك ضار",
-reason:"الرسالة طبيعية",
-level:"safe"
-};
+let score=0,reason=[],mitre=[];
 
-// استعجال
-if(/عاجل|فورا|ايقاف|موقوف|suspended|urgent/.test(text)){
-result={
-status:"هندسة اجتماعية",
-technique:"T1598 - Phishing for Information",
-description:"الضغط على الضحية لاتخاذ قرار سريع",
-reason:"أسلوب تخويف أو استعجال",
-level:"medium"
-};
+if(/عاجل|موقوف|ايقاف|urgent/.test(text)){
+score+=2;reason.push("ضغط نفسي");mitre.push("T1598 Phishing");
 }
 
-// رابط
-if(/http|bit\.ly|\.xyz|\.ru|verify/.test(text)){
-result={
-status:"تصيد عبر رابط",
-technique:"T1566.002 - Spearphishing Link",
-description:"إعادة توجيه إلى موقع مزيف",
-reason:"وجود رابط احتيالي",
-level:"high"
-};
+if(/http/.test(text)){
+score+=3;reason.push("رابط");mitre.push("T1566.002 Spearphishing Link");
 }
 
-// بيانات حساسة
-if(/otp|رمز|password|visa|cvv|bank|حسابك/.test(text)){
-result={
-status:"سرقة بيانات",
-technique:"T1556 - Credential Harvesting",
-description:"محاولة سرقة بيانات الدخول",
-reason:"طلب معلومات حساسة",
-level:"critical"
-};
+if(/otp|password|cvv|visa|حساب|bank/.test(text)){
+score+=4;reason.push("طلب بيانات حساسة");mitre.push("T1556 Credential Harvesting");
 }
 
-// عرض
+if(/\.xyz|\.ru|bit\.ly|tinyurl/.test(text)){
+score+=4;reason.push("دومين مشبوه");mitre.push("T1583 Infrastructure");
+}
+
+let status="SAFE",level="safe",desc="No threat";
+
+if(score>=8){status="CRITICAL PHISHING";level="critical";desc="Advanced credential theft";}
+else if(score>=5){status="PHISHING";level="high";desc="Fraud attempt";}
+else if(score>=2){status="SUSPICIOUS";level="medium";desc="Social engineering";}
+
 output.style.display="block";
-output.className=result.level;
+output.className=level;
 
-status.innerText=result.status;
-technique.innerText=result.technique;
-description.innerText=result.description;
-reason.innerText=result.reason;
+statusEl.innerText=status;
+tech.innerText=[...new Set(mitre)].join(" | ");
+desc.innerText=desc;
+reason.innerText=reason.join(" , ");
 
-// صوت
-speak(`نتيجة التحليل ${result.status}. السبب ${result.reason}`);
+speak("النتيجة "+status);
 
 }
 
 </script>
 
 </body>
-</html>
 </html>
