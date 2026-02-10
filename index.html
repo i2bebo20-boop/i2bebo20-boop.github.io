@@ -6,16 +6,74 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-body{margin:0;font-family:'Cairo',sans-serif;background:#020b07;color:#00ff9c}
-canvas{position:fixed;inset:0;z-index:-1}
-.container{width:750px;max-width:95%;margin:60px auto;background:rgba(0,20,10,.9);padding:25px;border-radius:16px;box-shadow:0 0 30px #00ff9c55}
-h1{text-align:center;text-shadow:0 0 15px #00ff9c}
-textarea{width:100%;height:150px;background:#001a0d;border:1px solid #00ff9c55;border-radius:10px;padding:12px;color:#00ff9c;font-size:15px}
-button{width:100%;margin-top:15px;padding:12px;background:#00ff9c;border:none;color:#002b19;font-weight:bold;border-radius:10px;cursor:pointer}
-.result{margin-top:20px;padding:15px;background:#001a0d;border-radius:10px;line-height:2}
-.high{color:#ff4d4d;font-weight:bold}
-.medium{color:#ffd633;font-weight:bold}
-.safe{color:#00ff9c;font-weight:bold}
+
+body{
+    margin:0;
+    font-family:'Cairo',sans-serif;
+    background:#020b07;
+    color:#00ff9c;
+    overflow:hidden;
+}
+
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:-1;
+}
+
+.container{
+    width:740px;
+    max-width:94%;
+    margin:70px auto;
+    background:rgba(0,20,10,0.9);
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 0 35px #00ff9c66;
+    backdrop-filter:blur(6px);
+}
+
+h1{
+    text-align:center;
+    text-shadow:0 0 15px #00ff9c;
+}
+
+textarea{
+    width:100%;
+    height:170px;
+    background:#001a0d;
+    border:1px solid #00ff9c55;
+    border-radius:10px;
+    padding:12px;
+    color:#00ff9c;
+    font-size:15px;
+    resize:none;
+}
+
+button{
+    width:100%;
+    margin-top:15px;
+    padding:13px;
+    background:#00ff9c;
+    border:none;
+    color:#002b19;
+    font-weight:bold;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.result{
+    margin-top:20px;
+    padding:15px;
+    background:#001a0d;
+    border-radius:10px;
+    border:1px solid #00ff9c33;
+    line-height:2;
+}
+
+.danger{color:#ff4d4d;font-weight:bold;}
+.medium{color:#ffd633;font-weight:bold;}
+.safe{color:#00ff9c;font-weight:bold;}
 </style>
 </head>
 
@@ -29,12 +87,11 @@ button{width:100%;margin-top:15px;padding:12px;background:#00ff9c;border:none;co
 <textarea id="msg" placeholder="الصق الرسالة أو الإيميل هنا..."></textarea>
 <button onclick="analyze()">تحليل التهديد</button>
 
-<div class="result">
+<div class="result" onmouseover="readResult()">
 <p>النتيجة: <span id="result">—</span></p>
 <p>نسبة الخطورة: <span id="score">—</span></p>
-<p>نوع الهجوم: <span id="attack">—</span></p>
+<p>الوصف: <span id="reason">—</span></p>
 <p>MITRE ATT&CK: <span id="mitre">—</span></p>
-<p>السبب: <span id="reason">—</span></p>
 </div>
 </div>
 
@@ -43,84 +100,105 @@ button{width:100%;margin-top:15px;padding:12px;background:#00ff9c;border:none;co
 </audio>
 
 <script>
-// ================= Matrix =================
+/* Matrix */
 const c=document.getElementById("matrix"),x=c.getContext("2d");
 c.width=innerWidth;c.height=innerHeight;
-const letters="01",fs=14,cols=c.width/fs,drops=Array(Math.floor(cols)).fill(1);
-setInterval(()=>{x.fillStyle="rgba(0,0,0,.05)";
+const chars="01",fs=14,cols=c.width/fs,drops=Array(Math.floor(cols)).fill(1);
+setInterval(()=>{
+x.fillStyle="rgba(0,0,0,.05)";
 x.fillRect(0,0,c.width,c.height);
-x.fillStyle="#00ff9c";x.font=fs+"px monospace";
-drops.forEach((y,i)=>{x.fillText(letters[Math.random()*2|0],i*fs,y*fs);
-if(y*fs>c.height&&Math.random()>.975)drops[i]=0;drops[i]++;});},33);
+x.fillStyle="#00ff9c";
+x.font=fs+"px monospace";
+drops.forEach((y,i)=>{
+x.fillText(chars[Math.random()>0.5?1:0],i*fs,y*fs);
+if(y*fs>c.height&&Math.random()>0.975)drops[i]=0;
+drops[i]++;
+});
+},33);
 
-// ================= Voice =================
-function speak(t){
- speechSynthesis.cancel();
- let s=new SpeechSynthesisUtterance(t);
- s.lang="ar-SA";speechSynthesis.speak(s);
-}
+/* 🔥 كلمات تصيّد شاملة جدًا */
+const phishingWords = [
+/* استعجال وتهديد */
+"urgent","immediately","final notice","last warning","action required",
+"عاجل","تحذير","آخر إشعار","خلال 24 ساعة","سيتم إيقاف",
 
-// ================= Threat Intelligence =================
-const indicators=[
-/* Phishing */
-{type:"Phishing",mitre:"T1566",score:20,words:[
-"verify","confirm","update","click","login","signin","تأكيد","تحقق","تحديث","اضغط","سجل دخولك"]},
+/* بنوك ومدفوعات */
+"bank","account","payment","invoice","refund","transfer","iban","swift",
+"otp","pin","cvv","credit card",
+"الراجحي","الأهلي","ساب","الإنماء","البلاد","stc pay","مدى","ابل باي","سداد","تمارا","تابي",
 
-/* Credential Harvesting */
-{type:"Credential Harvesting",mitre:"T1056",score:30,words:[
-"password","otp","token","pin","رمز","كلمة المرور","رمز التحقق","one time password"]},
+/* حسابات وكلمات مرور */
+"password","username","login","verify","reset","recover","authentication",
+"كلمة المرور","اسم المستخدم","تسجيل الدخول","تأكيد","توثيق","إعادة تعيين",
 
-/* Impersonation / Brand Spoofing */
-{type:"Impersonation",mitre:"T1566.002",score:20,words:[
-"bank","paypal","amazon","apple","google","microsoft",
-"الراجحي","الاهلي","stc","ساب","بنك","حسابك البنكي"]},
+/* جهات حكومية */
+"absher","nafath","gov","moi","zakat","vat","sdaia","etimad",
+"أبشر","نفاذ","الزكاة","ضريبة","وزارة","الهوية","اعتماد",
 
-/* Urgency / Fear */
-{type:"Social Engineering",mitre:"T1204",score:15,words:[
-"urgent","immediately","suspend","blocked","warning",
-"عاجل","تم ايقاف","تحذير","خلال 24 ساعة"]},
+/* شحن وتوصيل */
+"shipment","delivery","customs","package","tracking",
+"سمسا","ارامكس","dhl","fedex","ups","الجمارك","الشحنة",
 
-/* Financial Fraud */
-{type:"Financial Fraud",mitre:"T1110",score:25,words:[
-"invoice","payment","transfer","refund","فاتورة","دفع","تحويل","استرجاع"]},
+/* روابط واختصارات */
+"http","https","bit.ly","tinyurl","t.co",".ru",".tk",".xyz",".zip",".exe",
+
+/* جوائز ووظائف */
+"winner","congratulations","reward","bonus","job offer","salary",
+"مبروك","فزت","جائزة","مكافأة","عرض وظيفة","راتب",
+
+/* تقنية وأمن */
+"security alert","unusual activity","breach","compromised",
+"تنبيه أمني","نشاط غير معتاد","اختراق","تم تعليق الحساب",
+
+/* هندسة اجتماعية */
+"support team","security team","administrator","IT department",
+"الدعم الفني","خدمة العملاء","مسؤول النظام","قسم التقنية"
 ];
 
-// Links & Domains
-const linkPattern=/https?:\/\/|bit\.ly|tinyurl|\.ru|\.xyz|\.tk|\.cn/i;
+const linkRegex=/https?:\/\/|\.ru|\.tk|\.xyz|bit\.ly|tinyurl|\.exe|\.zip/i;
+let lastSpeech="";
 
-// ================= Analysis =================
 function analyze(){
- let text=msg.value.toLowerCase();
- let score=0,reasons=[],attacks=[],mitres=[];
+let t=document.getElementById("msg").value.toLowerCase();
+let score=0,mitre=[],desc="لا يوجد تهديد واضح";
 
- indicators.forEach(cat=>{
-  cat.words.forEach(w=>{
-   if(text.includes(w)){
-    score+=cat.score;
-    reasons.push(`كلمة مشبوهة: ${w}`);
-    attacks.push(cat.type);
-    mitres.push(cat.mitre);
-   }
-  });
- });
+phishingWords.forEach(w=>{
+if(t.includes(w)){score+=6;mitre.push("T1566 Phishing");}
+});
 
- if(linkPattern.test(text)){
-  score+=25;
-  reasons.push("رابط مشبوه أو مختصر");
-  mitres.push("T1204");
- }
+if(linkRegex.test(t)){score+=20;mitre.push("T1204 User Execution");}
 
- let result="آمن",cls="safe";
- if(score>=80){result="خطر عالي";cls="high";alarm.play();}
- else if(score>=45){result="مشبوه";cls="medium";}
+let res="آمن",cls="safe";
+if(score>=70){
+res="خطر عالي";
+cls="danger";
+desc="رسالة تصيّد احتيالي عالية الخطورة تهدف لسرقة بيانات حساسة";
+document.getElementById("alarm").play();
+}
+else if(score>=35){
+res="مشبوه";
+cls="medium";
+desc="رسالة مشبوهة تعتمد على الهندسة الاجتماعية";
+}
 
- document.getElementById("result").innerHTML=`<span class="${cls}">${result}</span>`;
- document.getElementById("score").innerText=score+"%";
- document.getElementById("attack").innerText=[...new Set(attacks)].join(", ")||"—";
- document.getElementById("mitre").innerText=[...new Set(mitres)].join(", ")||"—";
- document.getElementById("reason").innerText=reasons.join(" | ")||"لا يوجد";
+document.getElementById("result").innerHTML=`<span class="${cls}">${res}</span>`;
+document.getElementById("score").innerText=score+"%";
+document.getElementById("reason").innerText=desc;
+document.getElementById("mitre").innerText=[...new Set(mitre)].join(", ")||"—";
 
- speak(`نتيجة التحليل ${result}. نسبة الخطورة ${score} بالمئة`);
+speak(`نتيجة التحليل ${res} بنسبة خطورة ${score} بالمئة`);
+lastSpeech=desc;
+}
+
+function speak(t){
+speechSynthesis.cancel();
+let s=new SpeechSynthesisUtterance(t);
+s.lang="ar-SA";
+speechSynthesis.speak(s);
+}
+
+function readResult(){
+if(lastSpeech)speak(lastSpeech);
 }
 </script>
 
