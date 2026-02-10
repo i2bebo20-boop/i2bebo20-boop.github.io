@@ -2,227 +2,191 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Cyber Phishing Analyzer</title>
+<title>Cyber Threat Analyzer</title>
+
 <style>
-:root {
-  --bg: #0f172a;
-  --card: #020617;
-  --primary: #38bdf8;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --safe: #22c55e;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+body{
+    margin:0;
+    font-family:'Cairo',sans-serif;
+    background:#020b07;
+    color:#00ff9c;
+    overflow:hidden;
 }
 
-body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, sans-serif;
-  background: radial-gradient(circle at top, #020617, #0f172a);
-  color: var(--text);
-  direction: rtl;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* خلفية ماتريكس */
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:-1;
 }
 
-.card {
-  background: linear-gradient(180deg, #020617, #020617);
-  border: 1px solid #1e293b;
-  border-radius: 16px;
-  width: 500px;
-  max-width: 95%;
-  padding: 30px;
-  box-shadow: 0 0 30px rgba(56,189,248,0.15);
+/* الصندوق */
+.container{
+    width:700px;
+    max-width:90%;
+    margin:70px auto;
+    background:rgba(0,20,10,0.85);
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 0 25px #00ff9c44;
+    backdrop-filter:blur(6px);
+    animation:fadeIn 1.2s ease;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 20px;
-  transition: 0.5s;
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(40px)}
+    to{opacity:1; transform:translateY(0)}
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 24px;
-  color: var(--safe);
-  transition: 0.5s;
+h1{
+    text-align:center;
+    margin-bottom:15px;
+    text-shadow:0 0 12px #00ff9c;
 }
 
-.header h1:hover {
-  background: linear-gradient(90deg, #22c55e, #38bdf8, #22c55e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: glow 1.5s infinite;
+textarea{
+    width:100%;
+    height:150px;
+    background:#001a0d;
+    border:1px solid #00ff9c55;
+    border-radius:10px;
+    padding:10px;
+    color:#00ff9c;
+    font-size:15px;
+    resize:none;
 }
 
-@keyframes glow {
-  0%,100%{text-shadow:0 0 5px #22c55e;}
-  50%{text-shadow:0 0 15px #38bdf8;}
+button{
+    width:100%;
+    margin-top:15px;
+    padding:12px;
+    background:#00ff9c;
+    border:none;
+    color:#002b19;
+    font-weight:bold;
+    border-radius:10px;
+    cursor:pointer;
+    transition:.3s;
 }
 
-.header p {
-  font-size: 14px;
-  color: var(--muted);
+button:hover{
+    box-shadow:0 0 15px #00ff9c;
 }
 
-textarea {
-  width: 100%;
-  height: 150px;
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 10px;
-  padding: 14px;
-  color: var(--text);
-  font-size: 15px;
-  resize: none;
-  outline: none;
+/* النتائج */
+.result{
+    margin-top:20px;
+    padding:15px;
+    background:#001a0d;
+    border-radius:10px;
+    border:1px solid #00ff9c33;
+    line-height:2;
 }
 
-textarea:focus {
-  box-shadow: 0 0 20px rgba(0,255,170,0.3);
-}
-
-button {
-  margin-top: 15px;
-  width: 100%;
-  background: var(--safe);
-  border: none;
-  border-radius: 10px;
-  padding: 12px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  color: #020617;
-  transition: 0.3s;
-}
-
-button:hover {
-  background: #22c55e;
-  transform: scale(1.05);
-}
-
-.result {
-  margin-top: 25px;
-  padding: 14px;
-  border-radius: 10px;
-  font-weight: bold;
-  text-align: right;
-  display: none;
-}
-
-.safe { background: rgba(34,197,94,0.15); color: var(--safe); }
-.warn { background: rgba(245,158,11,0.15); color: var(--warning); }
-.danger { background: rgba(239,68,68,0.15); color: var(--danger); }
-
-.label { color: var(--primary); font-weight: bold; }
-.percent { font-size: 18px; color: var(--primary); margin-bottom:5px; }
-
-.progress-container {
-  width: 100%;
-  height: 15px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 10px;
-  margin: 8px 0 15px 0;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  width: 0;
-  border-radius: 10px;
-  transition: width 1s ease, background 1s ease;
-}
+.danger{ color:#ff4d4d; font-weight:bold;}
+.medium{ color:#ffd633; font-weight:bold;}
+.safe{ color:#00ff9c; font-weight:bold;}
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <div class="header">
-    <h1>🛡 Cyber Phishing Analyzer</h1>
-    <p>تحليل رسائل وروابط احتيالية باستخدام MITRE ATT&CK</p>
-  </div>
+<canvas id="matrix"></canvas>
 
-  <textarea id="msg" placeholder="أدخل الرسالة أو الرابط هنا"></textarea>
-  <button onclick="analyze()">🔍 تحليل الرسالة</button>
+<div class="container">
+<h1>🛡 Cyber Threat Analyzer</h1>
 
-  <div id="result" class="result">
-    <div class="percent" id="percent"></div>
-    <div class="progress-container">
-      <div class="progress-bar" id="progress"></div>
-    </div>
-    <div><span class="label">الحالة:</span> <span id="status"></span></div>
-    <div><span class="label">MITRE ATT&CK:</span> <span id="mitre"></span></div>
-    <div><span class="label">الوصف:</span> <span id="desc"></span></div>
-    <div><span class="label">السبب:</span> <span id="reason"></span></div>
-  </div>
+<textarea id="msg" placeholder="الصق الرسالة أو الإيميل هنا..."></textarea>
+<button onclick="analyze()">تحليل التهديد</button>
+
+<div class="result">
+<p>النتيجة: <span id="result">—</span></p>
+<p>نسبة الخطورة: <span id="score">—</span></p>
+<p>السبب: <span id="reason">—</span></p>
+<p>MITRE ATT&CK: <span id="mitre">—</span></p>
+</div>
 </div>
 
+<!-- صوت التنبيه -->
+<audio id="alarm">
+<source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3">
+</audio>
+
 <script>
-function speak(text){
-  speechSynthesis.cancel();
-  const msg=new SpeechSynthesisUtterance(text);
-  msg.lang="ar-SA";
-  speechSynthesis.speak(msg);
-}
+/* خلفية الماتريكس */
+const canvas=document.getElementById('matrix');
+const ctx=canvas.getContext('2d');
+canvas.height=window.innerHeight;
+canvas.width=window.innerWidth;
 
-window.onload=()=>speak("مرحبًا بك في نظام كشف التصيد الاحتيالي. أدخل الرسالة لتحليلها.");
+const letters="01";
+const fontSize=14;
+const columns=canvas.width/fontSize;
+const drops=Array(Math.floor(columns)).fill(1);
 
-const banks=["alrajhi","rajhi","riyadbank","alinma","saib","snb","ahli","bank"];
-const patterns=[
-  {words:["verify","تحديث","update","login"],tech:"T1566.002",desc:"Phishing Link",score:20,reason:"طلب تسجيل دخول او تحديث"},
-  {words:["otp","رمز","code"],tech:"T1556",desc:"Credential Harvesting",score:25,reason:"طلب رمز تحقق"},
-  {words:["ايقاف","موقوف","suspended"],tech:"T1098",desc:"Account Manipulation",score:30,reason:"تخويف بإيقاف الحساب"},
-  {words:["http://","https://","bit.ly","tinyurl"],tech:"T1566.001",desc:"Malicious Link",score:25,reason:"رابط خارجي"},
-  {words:["urgent","عاجل","فورا"],tech:"T1204",desc:"Social Engineering Pressure",score:15,reason:"استعجال الضحية"}
-];
+function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#00ff9c";
+    ctx.font=fontSize+"px monospace";
 
-function analyze(){
-  let text=document.getElementById("msg").value.toLowerCase();
-  let risk=0,tech=[],reasons=[];
-
-  patterns.forEach(p=>{
-    p.words.forEach(w=>{
-      if(text.includes(w)){
-        risk+=p.score;
-        tech.push(p.tech+" - "+p.desc);
-        reasons.push(p.reason);
-      }
+    drops.forEach((y,i)=>{
+        const text=letters[Math.floor(Math.random()*letters.length)];
+        ctx.fillText(text,i*fontSize,y*fontSize);
+        if(y*fontSize>canvas.height && Math.random()>0.975) drops[i]=0;
+        drops[i]++;
     });
-  });
+}
+setInterval(draw,33);
 
-  banks.forEach(b=>{
-    if(text.includes(b)){
-      risk+=25;
-      tech.push("T1583 - Impersonation");
-      reasons.push("انتحال بنك معروف");
+/* الكلمات */
+const phishingWords=["verify","account","bank","otp","password","suspend","login","urgent","تحديث","حسابك","ايقاف","رمز","البنك","الراجحي","الاهلي","stc pay"];
+const links=/https?:\/\/|\.ru|\.tk|\.xyz|bit\.ly|tinyurl/i;
+
+/* التحليل */
+function analyze(){
+    let text=document.getElementById("msg").value.toLowerCase();
+    let score=0;
+    let reason=[];
+    let mitre=[];
+
+    phishingWords.forEach(w=>{
+        if(text.includes(w)){
+            score+=15;
+            reason.push("كلمة مشبوهة: "+w);
+            mitre.push("T1566 Phishing");
+        }
+    });
+
+    if(links.test(text)){
+        score+=25;
+        reason.push("رابط مشبوه");
+        mitre.push("T1204 User Execution");
     }
-  });
 
-  if(risk>100) risk=100;
+    if(text.includes("otp")||text.includes("رمز")){
+        score+=20;
+        mitre.push("T1056 Credential Harvesting");
+    }
 
-  let status,cls,color;
-  if(risk>=70){status="🚨 تصيد احتيالي خطير"; cls="danger"; color="#ef4444";}
-  else if(risk>=40){status="⚠️ رسالة مشبوهة"; cls="warn"; color="#f59e0b";}
-  else{status="✅ رسالة آمنة"; cls="safe"; color="#22c55e";}
+    let result="آمن";
+    let color="safe";
 
-  document.getElementById("result").style.display="block";
-  document.getElementById("result").className="result "+cls;
-  document.getElementById("percent").innerText="نسبة الخطورة: "+risk+"%";
+    if(score>=60){result="خطر عالي";color="danger";document.getElementById("alarm").play();}
+    else if(score>=30){result="مشبوه";color="medium";}
 
-  const progressBar=document.getElementById("progress");
-  progressBar.style.width="0";
-  progressBar.style.background=color;
-  setTimeout(()=>{ progressBar.style.width=risk+"%"; },50);
+    document.getElementById("result").innerHTML=`<span class="${color}">${result}</span>`;
+  document.getElementById("score").innerText=score+"%";
+    document.getElementById("reason").innerText=reason.join(" | ")||"لا يوجد";
+    document.getElementById("mitre").innerText=[...new Set(mitre)].join(" , ")||"—";
 
-  document.getElementById("status").innerText=status;
-  document.getElementById("mitre").innerText=[...new Set(tech)].join(" | ")||"لا يوجد";
-  document.getElementById("desc").innerText=tech.length?"تم اكتشاف سلوك مطابق لهجمات هندسة اجتماعية":"لا يوجد نشاط ضار";
-  document.getElementById("reason").innerText=[...new Set(reasons)].join(" ، ")||"لا يوجد";
-
-  speak(`نسبة الخطورة ${risk} بالمئة. ${status}`);
+    /* قراءة صوتية */
+    let speech=new SpeechSynthesisUtterance("نتيجة التحليل "+result+" بنسبة خطورة "+score+" بالمئة");
+    speech.lang="ar-SA";
+    speechSynthesis.speak(speech);
 }
 </script>
 
