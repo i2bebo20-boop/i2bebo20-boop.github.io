@@ -192,7 +192,7 @@ let mitre=[];
 
 phishingWords.forEach(w=>{
 if(t.includes(w)){
-    score+=7;
+    score+=10;
     mitre.push("T1566 – Phishing");
 }
 });
@@ -214,7 +214,7 @@ if(score>=65){
     advice="يوصى بعدم الضغط على أي رابط، وعدم مشاركة أي معلومات شخصية أو مالية، وحذف الرسالة فورًا، مع الإبلاغ عنها للجهة المختصة.";
     document.getElementById("alarm").play();
 }
-else if(score>=30){
+else if(score>=20){
     result="مشبوه";
     cls="medium";
     analysis="الرسالة تحتوي على مؤشرات محتملة للتصيّد الاحتيالي أو محاولات خداع غير مباشرة، وقد تستهدف إثارة الخوف أو الاستعجال.";
