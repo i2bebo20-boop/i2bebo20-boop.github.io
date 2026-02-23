@@ -2,112 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Aegis Sentinel™️ V2 Ultimate</title>
+<title>Aegis Sentinel™️ V5 – Full Accessibility</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-body{
-margin:0;
-font-family:'Cairo',sans-serif;
-background:radial-gradient(circle at top,#001a12,#000);
-color:#00ffb3;
-transition:0.3s;
-}
-
-header{
-text-align:center;
-padding:20px;
-border-bottom:1px solid #00ffb333;
-}
-
-.lang-switch{
-margin-top:10px;
-}
-
-button{
-background:#000;
-color:#00ffb3;
-border:1px solid #00ffb3;
-padding:6px 14px;
-border-radius:8px;
-cursor:pointer;
-margin:3px;
-}
-
-.container{
-max-width:1100px;
-margin:20px auto;
-padding:25px;
-background:rgba(0,20,15,0.9);
-border-radius:20px;
-}
-
-textarea{
-width:100%;
-height:130px;
-background:#000;
-border:2px solid #00ffb3;
-border-radius:15px;
-padding:15px;
-color:#00ffb3;
-font-size:15px;
-resize:none;
-transition: all 0.3s ease; /* Smooth animation */
-}
-
-textarea:hover{
-box-shadow:0 0 25px #00ffb3;
-transform: scale(1.02);
-border-color:#00fff0;
-}
-
-.flex{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-margin-top:20px;
-}
-
-.card{
-flex:1;
-min-width:280px;
-background:#000;
-padding:20px;
-border-radius:15px;
-box-shadow:0 0 20px #00ffb322;
-}
-
-.progress{
-height:12px;
-background:#111;
-border-radius:10px;
-margin-top:10px;
-}
-
-.bar{
-height:100%;
-width:0%;
-background:#00ffb3;
-border-radius:10px;
-transition:0.5s;
-}
-
-footer{
-text-align:center;
-padding:15px;
-font-size:12px;
-border-top:1px solid #00ffb333;
-}
+body{margin:0;font-family:'Cairo',sans-serif;background:radial-gradient(circle at top,#001a12,#000);color:#00ffb3;transition:0.3s;}
+header{text-align:center;padding:20px;border-bottom:1px solid #00ffb333;}
+.lang-switch{margin-top:10px;}
+button{background:#000;color:#00ffb3;border:1px solid #00ffb3;padding:6px 14px;border-radius:8px;cursor:pointer;margin:3px;}
+.container{max-width:1100px;margin:20px auto;padding:25px;background:rgba(0,20,15,0.9);border-radius:20px;}
+textarea{width:100%;height:130px;background:#000;border:2px solid #00ffb3;border-radius:15px;padding:15px;color:#00ffb3;font-size:15px;resize:none;transition: all 0.3s ease;}
+textarea:hover{box-shadow:0 0 25px #00ffb3;transform: scale(1.02);border-color:#00fff0;}
+.flex{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;}
+.card{flex:1;min-width:280px;background:#000;padding:20px;border-radius:15px;box-shadow:0 0 20px #00ffb322;}
+.progress{height:12px;background:#111;border-radius:10px;margin-top:10px;}
+.bar{height:100%;width:0%;background:#00ffb3;border-radius:10px;transition:0.5s;}
+footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ffb333;}
 </style>
 </head>
-
 <body>
 
 <header>
-<h1 id="title">🛡 Aegis Sentinel™️</h1>
-<p id="subtitle">Cyber Threat Intelligence Platform</p>
-
+<h1 id="title">🛡 Aegis Sentinel™️ V5</h1>
+<p id="subtitle">Full Accessibility SOC Simulation Platform</p>
 <div class="lang-switch">
 <button onclick="setLang('en')">English</button>
 <button onclick="setLang('ar')">العربية</button>
@@ -115,11 +32,8 @@ border-top:1px solid #00ffb333;
 </header>
 
 <div class="container">
-
-<textarea id="msg" placeholder="Paste suspicious message here for real-time analysis..."></textarea>
-
+<textarea id="msg" placeholder="Paste suspicious message here for analysis..."></textarea>
 <div class="flex">
-
 <div class="card">
 <h3 id="threatLabel">Threat Status</h3>
 <p id="status">—</p>
@@ -140,12 +54,11 @@ border-top:1px solid #00ffb333;
 <h3 id="statsLabel">Statistics</h3>
 <canvas id="chart"></canvas>
 </div>
-
 </div>
 </div>
 
 <footer>
-Aegis Sentinel™️ – Educational SOC Simulation Platform
+Aegis Sentinel™️ V5 – Full Accessibility SOC Simulation Platform
 </footer>
 
 <!-- Sounds -->
@@ -157,14 +70,14 @@ Aegis Sentinel™️ – Educational SOC Simulation Platform
 
 <script>
 // ====== Variables ======
-let lang = 'en'; // default
-let stats = {safe:0,medium:0,high:0};
+let lang='en';
+let stats={safe:0,medium:0,high:0};
 
-// ====== Language Data ======
-const texts = {
+// ====== Texts ======
+const texts={
 en:{
-title:"🛡 Aegis Sentinel™️",
-subtitle:"Cyber Threat Intelligence Platform",
+title:"🛡 Aegis Sentinel™️ V5",
+subtitle:"Full Accessibility SOC Simulation Platform",
 threatLabel:"Threat Status",
 riskText:"Risk Score",
 statsLabel:"Statistics",
@@ -175,11 +88,15 @@ statusHigh:"High Risk",
 classificationSafe:"Low Risk Content",
 classificationMedium:"Suspicious Social Engineering",
 classificationHigh:"Advanced Phishing Attack",
-feedReady:"System Ready..."
+feedReady:"System Ready...",
+adviceSafe:"Message appears safe.",
+adviceMedium:"Message may contain phishing/SCAM, verify source.",
+adviceHigh:"High risk! Do NOT click links or share information!",
+hoverMsg:"Type your message here..."
 },
 ar:{
-title:"🛡 أيجيس سنتينل™️",
-subtitle:"منصة استخبارات تهديدات سيبرانية",
+title:"🛡 أيجيس سنتينل™️ V5",
+subtitle:"منصة شاملة لاختبار التهديدات للمكفوفين",
 threatLabel:"حالة التهديد",
 riskText:"نسبة الخطورة",
 statsLabel:"الإحصائيات",
@@ -190,20 +107,64 @@ statusHigh:"خطر عالي",
 classificationSafe:"محتوى منخفض الخطورة",
 classificationMedium:"تصيد اجتماعي مشبوه",
 classificationHigh:"هجوم تصيّد متقدم",
-feedReady:"النظام جاهز..."
+feedReady:"النظام جاهز...",
+adviceSafe:"الرسالة آمنة.",
+adviceMedium:"قد تحتوي الرسالة على تصيّد/احتيال، تحقق من المصدر.",
+adviceHigh:"خطر عالي! لا تضغط على الروابط أو تشارك معلومات!",
+hoverMsg:"اكتب الرسالة هنا..."
 }
 };
 
+// ====== Suspicious Words List (All your words included) ======
+const words=[
+"قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
+"تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
+"حمل الآن","إشعار نهائي","برنامج مكافحة فيروسات مجاني","تجربة مجانية","تحديث هام",
+"يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن",
+"تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة",
+"تحذير من التصيد الاحتيالي","دفع آمن","خرق أمني","تحديث أمني","التحقق من الهوية","رسالة تحذير",
+"وصول","ادخل الآن","بادر بالتحرك فوراً","تم الآن","بادر بالتحرك الآن!","فعل","الإجراء المطلوب",
+"قدّم طلبك هنا","قدم الآن","قدم طلبك الآن!","قدم طلبك عبر الإنترنت","انضم إلى العضوية","قبل فوات الأوان",
+"كونك عضواً","يشتري","اشتر مباشرة","اشتري الآن","اشتر اليوم","يتصل","مكالمة مجانية","اتصل الآن مجاناً",
+"اتصل بي","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء","اطلب الآن",
+"انقر","انقر أدناه","انقر هنا للتحميل","الصفقة ستنتهي قريباً","افعل ذلك الآن","عرض حصري",
+"تاريخ الانتهاء","ينتهي العرض اليوم","النداء الأخير","للوصول الفوري","بسعر فقط","لك","يوم الجمعة الذي يسبق","أبعده","احصل عليه الآن",
+"احصل على أموالك","ابدأ الآن","عرض رائع","أسرع","في الحال","مرة واحدة في العمر","فقط",
+"رقم 1","مجاني 100%","خصم 100%","دخل إضافي","مندهش","مدهش","عرض مذهل","أشياء رائعة",
+"اندهش","كن متفاجئاً","كن مدير نفسك","أفضل صفقة","أفضل عرض","أفضل سعر","أفضل الأسعار","مبالغ طائلة",
+"علاوة","لا أستطيع العيش بدونها","توحيد الديون","ضاعف أموالك","ضاعف دخلك","تم تخفيضها بشكل كبير",
+"اكسب أموالاً إضافية","اكسب المال","توقع أن تربح","إضافي","نقود إضافية","دخل إضافي","رائع",
+"عرض رائع","سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني","انضم إلى الملايين","أقل سعر",
+"مليون دولار","ضمان استرداد الأموال","جائزة","ربح صافٍ","خالٍ من المخاطر","رضاكم مضمون","وفر حتى",
+"عرض ترويجي خاص","الأفضل","الآلاف","عرض لا يُضاهى","لا يصدق","غير محدود","مضمون بنسبة 100%",
+"بادر بالتحرك سريعاً","كما شاهدتم على","انقر هنا","هذا لن يدوم","عاجل","لن أصدق","$$$","€€€","جنيه إسترليني",
+"خصم 50%","بنك","الإفلاس","مساومة","الفواتير","مليار","مليار دولار","ملياردير","البطاقة مقبولة",
+"نقدي","مكافأة نقدية","سحب نقدي","كازينو","احصل على خصمك","الدولار","دخل إضافي"
+];
+const patterns=new RegExp(words.join("|"),"i");
+
+// ====== Domain Reputation ======
+function domainReputation(text){
+let match=text.match(/https?:\/\/([^\/\s]+)/);
+if(!match) return lang==='ar'?"لا يوجد دومين":"No Domain Detected";
+let domain=match[1];
+if(domain.includes(".ru")||domain.includes(".xyz")) return lang==='ar'?"نطاق عالي الخطورة":"High Risk TLD";
+if(domain.includes("xn--")) return lang==='ar'?"مريب Punycode":"Punycode Suspicious";
+if(domain.includes("secure")||domain.includes("verify")) return lang==='ar'?"تلاعب بالكلمات":"Keyword Manipulation";
+return lang==='ar'?"مجهول / متوسط الخطورة":"Unknown / Medium Risk";
+}
+
 // ====== Set Language ======
 function setLang(l){
-lang = l;
-document.getElementById("title").innerText = texts[lang].title;
-document.getElementById("subtitle").innerText = texts[lang].subtitle;
-document.getElementById("threatLabel").innerText = texts[lang].threatLabel;
-document.getElementById("riskText").innerText = texts[lang].riskText;
-document.getElementById("statsLabel").innerText = texts[lang].statsLabel;
-document.getElementById("feedLabel").innerText = texts[lang].feedLabel;
-document.getElementById("feed").innerText = texts[lang].feedReady;
+lang=l;
+document.getElementById("title").innerText=texts[lang].title;
+document.getElementById("subtitle").innerText=texts[lang].subtitle;
+document.getElementById("threatLabel").innerText=texts[lang].threatLabel;
+document.getElementById("riskText").innerText=texts[lang].riskText;
+document.getElementById("statsLabel").innerText=texts[lang].statsLabel;
+document.getElementById("feedLabel").innerText=texts[lang].feedLabel;
+document.getElementById("feed").innerText=texts[lang].feedReady;
+document.getElementById("msg").placeholder=texts[lang].hoverMsg;
 playSound('switch');
 }
 
@@ -218,87 +179,52 @@ else if(type==='hover') audio=document.getElementById('hoverSound');
 if(audio){ audio.currentTime=0; audio.play();}
 }
 
-// ====== Text-to-Speech ======
+// ====== Speech ======
 function speak(text){
-let s = new SpeechSynthesisUtterance(text);
-s.lang = lang==='ar' ? 'ar-SA' : 'en-US';
+let s=new SpeechSynthesisUtterance(text);
+s.lang=lang==='ar'?'ar-SA':'en-US';
 speechSynthesis.cancel();
 speechSynthesis.speak(s);
 }
 
-// ====== Patterns ======
-const patterns = {
-urgency:/verify your account|تحقق من حسابك الآن|سيتم إيقاف حسابك|نشاط غير معتاد/i,
-sensitive:/otp|cvv|رقم البطاقة|كلمة المرور|iban/i,
-links:/https?:\/\/|\.ru|\.xyz|bit\.ly|secure-login|verify-now/i,
-financial:/استرداد|refund|دفعة معلقة/i,
-puny:/xn--/i
-};
-
-// ====== Domain Reputation ======
-function domainReputation(text){
-let match=text.match(/https?:\/\/([^\/\s]+)/);
-if(!match) return lang==='ar'?"لا يوجد دومين":"No Domain Detected";
-let domain=match[1];
-if(domain.includes(".ru")||domain.includes(".xyz")) return lang==='ar'?"نطاق عالي الخطورة":"High Risk TLD";
-if(domain.includes("xn--")) return lang==='ar'?"مريب Punycode":"Punycode Suspicious";
-if(domain.includes("secure")||domain.includes("verify")) return lang==='ar'?"تلاعب بالكلمات":"Keyword Manipulation";
-return lang==='ar'?"مجهول / متوسط الخطورة":"Unknown / Medium Risk";
-}
-
-// ====== Analyze Function ======
+// ====== Analyze ======
 function analyze(){
 let t=document.getElementById("msg").value.toLowerCase();
-if(t.length<5) return;
+if(t.length<3) return;
 
-let score=0, mitre=[];
-
-if(patterns.urgency.test(t)){score+=25; mitre.push("T1566");}
-if(patterns.sensitive.test(t)){score+=30; mitre.push("T1555");}
-if(patterns.links.test(t)){score+=25; mitre.push("T1204");}
-if(patterns.financial.test(t)){score+=20;}
-if(patterns.puny.test(t)){score+=20;}
-
+let score=0;
+if(patterns.test(t)) score+=40;
 let domainStatus=domainReputation(t);
 if(domainStatus==="High Risk TLD"||domainStatus==="نطاق عالي الخطورة") score+=25;
 if(domainStatus==="Punycode Suspicious"||domainStatus==="مريب Punycode") score+=30;
 
-if(score>100) score=100;
-
-let status="", classification="";
-
-if(score>=75){status=texts[lang].statusHigh;classification=texts[lang].classificationHigh; stats.high++; playSound('high');}
-else if(score>=40){status=texts[lang].statusMedium;classification=texts[lang].classificationMedium; stats.medium++; playSound('medium');}
-else{status=texts[lang].statusSafe; classification=texts[lang].classificationSafe; stats.safe++; playSound('safe');}
+let status="", classification="", advice="";
+if(score>=60){status=texts[lang].statusHigh;classification=texts[lang].classificationHigh;advice=texts[lang].adviceHigh;stats.high++;playSound('high');}
+else if(score>=30){status=texts[lang].statusMedium;classification=texts[lang].classificationMedium;advice=texts[lang].adviceMedium;stats.medium++;playSound('medium');}
+else{status=texts[lang].statusSafe;classification=texts[lang].classificationSafe;advice=texts[lang].adviceSafe;stats.safe++;playSound('safe');}
 
 document.getElementById("status").innerText=status;
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
 document.getElementById("classification").innerText=classification;
-document.getElementById("mitre").innerText=mitre.join(", ")||"—";
+document.getElementById("mitre").innerText="T1566, T1555"; // Example MITRE
 document.getElementById("domainRep").innerText=domainStatus;
-document.getElementById("feed").innerText = status + " (" + score + "%) - " + new Date().toLocaleTimeString();
-
-speak(`${status}. ${classification}. Score ${score}%.`);
-
+document.getElementById("feed").innerText=status+" ("+score+"%) - "+new Date().toLocaleTimeString();
+speak(`${status}. ${classification}. ${advice} Score ${score}%.`);
 updateChart();
 }
 
-// ====== Event Listener ======
-const msgBox = document.getElementById("msg");
+// ====== Event Listeners ======
+const msgBox=document.getElementById("msg");
 msgBox.addEventListener("input",analyze);
-msgBox.addEventListener("mouseenter", ()=>playSound('hover'));
+msgBox.addEventListener("mouseenter",()=>{playSound('hover'); speak(texts[lang].hoverMsg);});
 
 // ====== Chart ======
 let chart=new Chart(document.getElementById("chart"),{
 type:'doughnut',
-data:{
-labels:['Safe','Suspicious','High Risk'],
-datasets:[{data:[0,0,0], backgroundColor:['#00ffb3','#ffd633','#ff4d4d'] }]
-}
+data:{labels:['Safe','Suspicious','High Risk'],datasets:[{data:[0,0,0], backgroundColor:['#00ffb3','#ffd633','#ff4d4d']}]}
 });
-function updateChart(){ chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high]; chart.update();}
+function updateChart(){chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];chart.update();}
 </script>
-
 </body>
 </html>
