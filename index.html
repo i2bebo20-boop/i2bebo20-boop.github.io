@@ -1,3 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aegis Sentinel™️ V2 Ultimate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+margin:0;
+font-family:'Cairo',sans-serif;
+background:radial-gradient(circle at top,#001a12,#000);
+color:#00ffb3;
+transition:0.3s;
+}
+
+header{
+text-align:center;
+padding:20px;
+border-bottom:1px solid #00ffb333;
+}
+
+.lang-switch{
+margin-top:10px;
+}
+
+button{
+background:#000;
+color:#00ffb3;
+border:1px solid #00ffb3;
+padding:6px 14px;
+border-radius:8px;
+cursor:pointer;
+margin:3px;
+}
+
+.container{
+max-width:1100px;
+margin:20px auto;
+padding:25px;
+background:rgba(0,20,15,0.9);
+border-radius:20px;
+}
+
+textarea{
+width:100%;
+height:130px;
+background:#000;
+border:2px solid #00ffb3;
+border-radius:15px;
+padding:15px;
+color:#00ffb3;
+font-size:15px;
+resize:none;
+transition: all 0.3s ease; /* Smooth animation */
+}
+
+textarea:hover{
+box-shadow:0 0 25px #00ffb3;
+transform: scale(1.02);
+border-color:#00fff0;
+}
+
+.flex{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+margin-top:20px;
+}
+
+.card{
+flex:1;
+min-width:280px;
+background:#000;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 20px #00ffb322;
+}
+
+.progress{
+height:12px;
+background:#111;
+border-radius:10px;
+margin-top:10px;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:#00ffb3;
+border-radius:10px;
+transition:0.5s;
+}
+
+footer{
+text-align:center;
+padding:15px;
+font-size:12px;
+border-top:1px solid #00ffb333;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1 id="title">🛡 Aegis Sentinel™️</h1>
+<p id="subtitle">Cyber Threat Intelligence Platform</p>
+
+<div class="lang-switch">
+<button onclick="setLang('en')">English</button>
+<button onclick="setLang('ar')">العربية</button>
+</div>
+</header>
+
+<div class="container">
+
+<textarea id="msg" placeholder="Paste suspicious message here for real-time analysis..."></textarea>
+
+<div class="flex">
+
+<div class="card">
+<h3 id="threatLabel">Threat Status</h3>
+<p id="status">—</p>
+<p><span id="riskText">Risk Score</span>: <span id="score">0</span>%</p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<p id="classification"></p>
+<p><strong>Domain Reputation:</strong> <span id="domainRep">—</span></p>
+</div>
+
+<div class="card">
+<h3>MITRE Mapping</h3>
+<p id="mitre">—</p>
+<h3 id="feedLabel">Live Feed</h3>
+<p id="feed">System Ready...</p>
+</div>
+
+<div class="card">
+<h3 id="statsLabel">Statistics</h3>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+</div>
+
+<footer>
+Aegis Sentinel™️ – Educational SOC Simulation Platform
+</footer>
+
+<!-- Sounds -->
+<audio id="highSound"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+<audio id="mediumSound"><source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="safeSound"><source src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
+<audio id="switchSound"><source src="https://assets.mixkit.co/active_storage/sfx/2562/2562-preview.mp3"></audio>
+<audio id="hoverSound"><source src="https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3"></audio>
+
+<script>
+// ====== Variables ======
+let lang = 'en'; // default
+let stats = {safe:0,medium:0,high:0};
+
+// ====== Language Data ======
+const texts = {
+en:{
+title:"🛡 Aegis Sentinel™️",
+subtitle:"Cyber Threat Intelligence Platform",
+threatLabel:"Threat Status",
+riskText:"Risk Score",
+statsLabel:"Statistics",
+feedLabel:"Live Feed",
+statusSafe:"Safe",
+statusMedium:"Suspicious",
+statusHigh:"High Risk",
+classificationSafe:"Low Risk Content",
+classificationMedium:"Suspicious Social Engineering",
+classificationHigh:"Advanced Phishing Attack",
+feedReady:"System Ready..."
+},
+ar:{
+title:"🛡 أيجيس سنتينل™️",
+subtitle:"منصة استخبارات تهديدات سيبرانية",
+threatLabel:"حالة التهديد",
+riskText:"نسبة الخطورة",
+statsLabel:"الإحصائيات",
+feedLabel:"التغذية المباشرة",
+statusSafe:"آمن",
+statusMedium:"مشبوه",
+statusHigh:"خطر عالي",
+classificationSafe:"محتوى منخفض الخطورة",
+classificationMedium:"تصيد اجتماعي مشبوه",
 classificationHigh:"هجوم تصيّد متقدم",
 feedReady:"النظام جاهز..."
 }
@@ -101,7 +292,8 @@ msgBox.addEventListener("mouseenter", ()=>playSound('hover'));
 // ====== Chart ======
 let chart=new Chart(document.getElementById("chart"),{
 type:'doughnut',
-data:{labels:['Safe','Suspicious','High Risk'],
+data:{
+labels:['Safe','Suspicious','High Risk'],
 datasets:[{data:[0,0,0], backgroundColor:['#00ffb3','#ffd633','#ff4d4d'] }]
 }
 });
