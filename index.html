@@ -1,155 +1,42 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>Aegis Sentinel™ – Cyber Threat Intelligence Platform</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+classificationHigh:"هجوم تصيّد متقدم",
+feedReady:"النظام جاهز..."
+}
+};
 
-<style>
-body{
-margin:0;
-font-family:'Cairo',sans-serif;
-background:radial-gradient(circle at top,#001a12,#000);
-color:#00ffb3;
+// ====== Set Language ======
+function setLang(l){
+lang = l;
+document.getElementById("title").innerText = texts[lang].title;
+document.getElementById("subtitle").innerText = texts[lang].subtitle;
+document.getElementById("threatLabel").innerText = texts[lang].threatLabel;
+document.getElementById("riskText").innerText = texts[lang].riskText;
+document.getElementById("statsLabel").innerText = texts[lang].statsLabel;
+document.getElementById("feedLabel").innerText = texts[lang].feedLabel;
+document.getElementById("feed").innerText = texts[lang].feedReady;
+playSound('switch');
 }
 
-header{
-text-align:center;
-padding:25px;
-border-bottom:1px solid #00ffb333;
+// ====== Sounds ======
+function playSound(type){
+let audio;
+if(type==='high') audio=document.getElementById('highSound');
+else if(type==='medium') audio=document.getElementById('mediumSound');
+else if(type==='safe') audio=document.getElementById('safeSound');
+else if(type==='switch') audio=document.getElementById('switchSound');
+else if(type==='hover') audio=document.getElementById('hoverSound');
+if(audio){ audio.currentTime=0; audio.play();}
 }
 
-header h1{
-margin:0;
-font-size:32px;
-letter-spacing:1px;
+// ====== Text-to-Speech ======
+function speak(text){
+let s = new SpeechSynthesisUtterance(text);
+s.lang = lang==='ar' ? 'ar-SA' : 'en-US';
+speechSynthesis.cancel();
+speechSynthesis.speak(s);
 }
 
-header p{
-margin:5px 0;
-color:#8affda;
-font-size:14px;
-}
-
-.container{
-max-width:1200px;
-margin:20px auto;
-padding:30px;
-background:rgba(0,20,15,0.9);
-border-radius:25px;
-box-shadow:0 0 60px #00ffb344;
-}
-
-textarea{
-width:100%;
-height:140px;
-background:#000;
-border:2px solid #00ffb3;
-border-radius:15px;
-padding:15px;
-color:#00ffb3;
-font-size:16px;
-resize:none;
-}
-
-.flex{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-margin-top:20px;
-}
-
-.card{
-flex:1;
-min-width:280px;
-background:#000;
-padding:20px;
-border-radius:15px;
-box-shadow:0 0 20px #00ffb322;
-}
-
-.progress{
-height:14px;
-background:#111;
-border-radius:10px;
-margin-top:10px;
-}
-.bar{
-height:100%;
-width:0%;
-background:#00ffb3;
-border-radius:10px;
-transition:0.5s;
-}
-
-footer{
-text-align:center;
-padding:15px;
-margin-top:20px;
-font-size:12px;
-color:#8affda;
-border-top:1px solid #00ffb333;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-<h1>🛡 Aegis Sentinel™</h1>
-<p>Cyber Threat Intelligence & SOC Simulation Platform</p>
-<p>Version 1.0 – Conference Edition</p>
-</header>
-
-<div class="container">
-
-<textarea id="msg" placeholder="Paste suspicious message here for real-time analysis..."></textarea>
-
-<div class="flex">
-
-<div class="card">
-<h3>Threat Status</h3>
-<p id="status">—</p>
-<p>Risk Score: <span id="score">0</span>%</p>
-<div class="progress"><div class="bar" id="bar"></div></div>
-<p id="classification"></p>
-<p><strong>Domain Reputation:</strong> <span id="domainRep">—</span></p>
-</div>
-
-<div class="card">
-<h3>MITRE Technique Mapping</h3>
-<p id="mitre">—</p>
-<h3>Live Threat Feed</h3>
-<p id="feed">System Ready...</p>
-</div>
-
-<div class="card">
-<h3>Detection Statistics</h3>
-<canvas id="chart"></canvas>
-</div>
-
-</div>
-</div>
-
-<footer>
-Aegis Sentinel™ is a simulated Threat Intelligence & Detection Engine inspired by MITRE ATT&CK framework and OWASP security principles.  
-This platform is developed for academic and research demonstration purposes.
-</footer>
-
-<audio id="highSound">
-<source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3">
-</audio>
-
-<audio id="mediumSound">
-<source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3">
-</audio>
-
-<script>
-
-let stats={safe:0,medium:0,high:0};
-
-const patterns={
+// ====== Patterns ======
+const patterns = {
 urgency:/verify your account|تحقق من حسابك الآن|سيتم إيقاف حسابك|نشاط غير معتاد/i,
 sensitive:/otp|cvv|رقم البطاقة|كلمة المرور|iban/i,
 links:/https?:\/\/|\.ru|\.xyz|bit\.ly|secure-login|verify-now/i,
@@ -157,41 +44,69 @@ financial:/استرداد|refund|دفعة معلقة/i,
 puny:/xn--/i
 };
 
+// ====== Domain Reputation ======
 function domainReputation(text){
 let match=text.match(/https?:\/\/([^\/\s]+)/);
-if(!match) return "No Domain Detected";
+if(!match) return lang==='ar'?"لا يوجد دومين":"No Domain Detected";
 let domain=match[1];
-
-if(domain.includes(".ru")||domain.includes(".xyz"))
-return "High Risk TLD";
-
-if(domain.includes("xn--"))
-return "Punycode Suspicious";
-
-if(domain.includes("secure")||domain.includes("verify"))
-return "Keyword Manipulation";
-
-return "Unknown / Medium Risk";
+if(domain.includes(".ru")||domain.includes(".xyz")) return lang==='ar'?"نطاق عالي الخطورة":"High Risk TLD";
+if(domain.includes("xn--")) return lang==='ar'?"مريب Punycode":"Punycode Suspicious";
+if(domain.includes("secure")||domain.includes("verify")) return lang==='ar'?"تلاعب بالكلمات":"Keyword Manipulation";
+return lang==='ar'?"مجهول / متوسط الخطورة":"Unknown / Medium Risk";
 }
 
+// ====== Analyze Function ======
 function analyze(){
 let t=document.getElementById("msg").value.toLowerCase();
 if(t.length<5) return;
 
-let score=0;
-let mitre=[];
+let score=0, mitre=[];
 
-if(patterns.urgency.test(t)){score+=25; mitre.push("T1566 Phishing");}
-if(patterns.sensitive.test(t)){score+=30; mitre.push("T1555 Credential Access");}
-if(patterns.links.test(t)){score+=25; mitre.push("T1204 User Execution");}
+if(patterns.urgency.test(t)){score+=25; mitre.push("T1566");}
+if(patterns.sensitive.test(t)){score+=30; mitre.push("T1555");}
+if(patterns.links.test(t)){score+=25; mitre.push("T1204");}
 if(patterns.financial.test(t)){score+=20;}
 if(patterns.puny.test(t)){score+=20;}
 
 let domainStatus=domainReputation(t);
-if(domainStatus==="High Risk TLD") score+=25;
-if(domainStatus==="Punycode Suspicious") score+=30;
+if(domainStatus==="High Risk TLD"||domainStatus==="نطاق عالي الخطورة") score+=25;
+if(domainStatus==="Punycode Suspicious"||domainStatus==="مريب Punycode") score+=30;
 
 if(score>100) score=100;
 
-let status="Safe";
-if(score>=75){status="High Risk";stats.
+let status="", classification="";
+
+if(score>=75){status=texts[lang].statusHigh;classification=texts[lang].classificationHigh; stats.high++; playSound('high');}
+else if(score>=40){status=texts[lang].statusMedium;classification=texts[lang].classificationMedium; stats.medium++; playSound('medium');}
+else{status=texts[lang].statusSafe; classification=texts[lang].classificationSafe; stats.safe++; playSound('safe');}
+
+document.getElementById("status").innerText=status;
+document.getElementById("score").innerText=score;
+document.getElementById("bar").style.width=score+"%";
+document.getElementById("classification").innerText=classification;
+document.getElementById("mitre").innerText=mitre.join(", ")||"—";
+document.getElementById("domainRep").innerText=domainStatus;
+document.getElementById("feed").innerText = status + " (" + score + "%) - " + new Date().toLocaleTimeString();
+
+speak(`${status}. ${classification}. Score ${score}%.`);
+
+updateChart();
+}
+
+// ====== Event Listener ======
+const msgBox = document.getElementById("msg");
+msgBox.addEventListener("input",analyze);
+msgBox.addEventListener("mouseenter", ()=>playSound('hover'));
+
+// ====== Chart ======
+let chart=new Chart(document.getElementById("chart"),{
+type:'doughnut',
+data:{labels:['Safe','Suspicious','High Risk'],
+datasets:[{data:[0,0,0], backgroundColor:['#00ffb3','#ffd633','#ff4d4d'] }]
+}
+});
+function updateChart(){ chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high]; chart.update();}
+</script>
+
+</body>
+</html>
