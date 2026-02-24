@@ -7,40 +7,65 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* ===== Body & Animation Background ===== */
 body{
 margin:0;
 font-family:'Cairo',sans-serif;
-background:radial-gradient(circle at top,#1a0000,#000);
-color:#ff1a1a;
+background:linear-gradient(270deg,#001a00,#003300,#001a00);
+background-size:600% 600%;
+animation:gradientBG 15s ease infinite;
+color:#00ff7f;
 transition:0.5s;
 }
-header{text-align:center;padding:20px;border-bottom:1px solid #ff1a1a33;}
+
+/* ===== Header & Buttons ===== */
+header{text-align:center;padding:20px;border-bottom:1px solid #00ff7f33;}
 button{
-background:#000;color:#ff1a1a;border:1px solid #ff1a1a;
+background:#000;color:#00ff7f;border:1px solid #00ff7f;
 padding:6px 14px;border-radius:8px;cursor:pointer;margin:3px;
 transition:0.3s;
 }
-button:hover{background:#ff1a1a;color:#000;box-shadow:0 0 15px #ff1a1a;}
+button:hover{background:#00ff7f;color:#000;box-shadow:0 0 20px #00ff7f;}
+
+/* ===== Container & Cards ===== */
 .container{
 max-width:1200px;margin:20px auto;padding:25px;
-background:#0a0a0a;border-radius:20px;
+background:rgba(0,20,0,0.9);
+border-radius:20px;
+animation:fadeIn 1s ease-in;
 }
 textarea{
 width:100%;height:140px;background:#000;
-border:2px solid #ff1a1a;border-radius:15px;
-padding:15px;color:#ff1a1a;font-size:15px;
-resize:none;
+border:2px solid #00ff7f;border-radius:15px;
+padding:15px;color:#00ff7f;font-size:15px;resize:none;
+transition:0.3s;
 }
-textarea:focus{outline:none;box-shadow:0 0 20px #ff1a1a;}
+textarea:focus{outline:none;box-shadow:0 0 20px #00ff7f;}
+textarea:hover{transform:scale(1.02);}
 .card{
-background:#111;padding:20px;border-radius:15px;
-box-shadow:0 0 20px #ff000022;margin-top:15px;
+background:#001a00;padding:20px;border-radius:15px;
+box-shadow:0 0 20px #00ff7f22;margin-top:15px;
+animation:cardPulse 5s ease-in-out infinite;
 }
-.progress{height:12px;background:#1a1a1a;border-radius:10px;margin-top:10px;}
-.bar{height:100%;width:0%;background:#ff1a1a;border-radius:10px;transition:0.5s;}
-.log{max-height:150px;overflow:auto;font-size:12px;background:#0a0a0a;padding:10px;border-radius:10px;}
-footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #ff1a1a33;}
-.alertMode{background:radial-gradient(circle at top,#330000,#000)!important;color:#ff4d4d!important;}
+.progress{height:12px;background:#003300;border-radius:10px;margin-top:10px;}
+.bar{height:100%;width:0%;background:#00ff7f;border-radius:10px;transition:1s ease;width:0%;box-shadow:0 0 10px #00ff7f;}
+footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7f33;}
+.alertMode{background:linear-gradient(270deg,#003300,#001a00,#003300)!important;color:#00ff7f!important;}
+
+/* ===== Animations ===== */
+@keyframes gradientBG{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+@keyframes fadeIn{
+0%{opacity:0;transform:translateY(10px);}
+100%{opacity:1;transform:translateY(0);}
+}
+@keyframes cardPulse{
+0%,100%{box-shadow:0 0 15px #00ff7f22;}
+50%{box-shadow:0 0 35px #00ff7f44;}
+}
 </style>
 </head>
 
@@ -49,7 +74,6 @@ footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #ff1a1
 <header>
 <h1>🦅 BlackFalcon SOC™</h1>
 <p id="subtitle">Advanced SOC Simulation Platform</p>
-
 <button onclick="setLang('en')">English</button>
 <button onclick="setLang('ar')">العربية</button>
 <button onclick="exportReport()">Export Report</button>
@@ -89,42 +113,15 @@ footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #ff1a1
 BlackFalcon SOC™ – Enterprise Simulation Platform
 </footer>
 
-<audio id="alarmSound">
-<source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3">
-</audio>
+<audio id="alarmSound"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-
 let lang="en";
 let stats={safe:0,medium:0,high:0};
 
 const texts={
-en:{
-subtitle:"Advanced SOC Simulation Platform",
-threat:"Threat Status",
-risk:"Risk Score",
-incident:"Incident ID",
-feed:"Threat Intelligence Feed",
-stats:"Statistics",
-ready:"System Ready...",
-hover:"Type your suspicious message here",
-safe:"SAFE",
-medium:"SUSPICIOUS",
-high:"HIGH RISK"
-},
-ar:{
-subtitle:"منصة محاكاة مركز العمليات الأمنية",
-threat:"حالة التهديد",
-risk:"نسبة الخطورة",
-incident:"رقم الحادثة",
-feed:"التغذية المباشرة للتهديدات",
-stats:"الإحصائيات",
-ready:"النظام جاهز...",
-hover:"اكتبي الرسالة المشبوهة هنا",
-safe:"آمن",
-medium:"مشبوه",
-high:"خطر عالي"
-}
+en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Risk Score",incident:"Incident ID",feed:"Threat Intelligence Feed",stats:"Statistics",ready:"System Ready...",hover:"Type your suspicious message here",safe:"SAFE",medium:"SUSPICIOUS",high:"HIGH RISK"},
+ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
 function setLang(l){
@@ -143,108 +140,50 @@ document.getElementById("msg").placeholder=texts[l].hover;
 
 function speak(text){
 let utter=new SpeechSynthesisUtterance(text);
-utter.rate=0.9;
-utter.pitch=1;
-utter.volume=1;
+utter.rate=0.9;utter.pitch=1;utter.volume=1;
 utter.lang=lang==="ar"?"ar-SA":"en-US";
-
 let voices=speechSynthesis.getVoices();
 let selected=voices.find(v=>v.lang===utter.lang);
-if(selected) utter.voice=selected;
-
-speechSynthesis.cancel();
-speechSynthesis.speak(utter);
+if(selected)utter.voice=selected;
+speechSynthesis.cancel();speechSynthesis.speak(utter);
 }
 
-const suspiciousWords=[
-"verify","urgent","bank","password","free","bitcoin","reset",
-"click here","limited","act now","secure",
-"تحديث الحساب","تحقق","بنك","كلمة المرور","اربح","اضغط هنا","عاجل","تأكيد الهوية"
-];
+const suspiciousWords=["verify","urgent","bank","password","free","bitcoin","reset","click here","limited","act now","secure","تحديث الحساب","تحقق","بنك","كلمة المرور","اربح","اضغط هنا","عاجل","تأكيد الهوية"];
 
-function generateIncident(){
-return "INC-"+Date.now().toString().slice(-6);
-}
+function generateIncident(){return "INC-"+Date.now().toString().slice(-6);}
 
 function analyze(){
 let t=document.getElementById("msg").value.toLowerCase();
 if(t.length<3) return;
 
-let score=0;
-
-suspiciousWords.forEach(w=>{
-if(t.includes(w.toLowerCase())) score+=10;
-});
-
+let score=0;suspiciousWords.forEach(w=>{if(t.includes(w.toLowerCase())) score+=10;});
 let links=t.match(/https?:\/\/[^\s]+/g);
 if(links && links.length>1) score+=20;
-
 if(t.includes("bit.ly")||t.includes("tinyurl")) score+=25;
-
 if(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/.test(t)) score+=35;
 
 let statusText="";
-if(score>=80){
-statusText=texts[lang].high;
-stats.high++;
-document.body.classList.add("alertMode");
-document.getElementById("alarmSound").play();
-}
-else if(score>=40){
-statusText=texts[lang].medium;
-stats.medium++;
-document.body.classList.remove("alertMode");
-}
-else{
-statusText=texts[lang].safe;
-stats.safe++;
-document.body.classList.remove("alertMode");
-}
+if(score>=80){statusText=texts[lang].high;stats.high++;document.body.classList.add("alertMode");document.getElementById("alarmSound").play();}
+else if(score>=40){statusText=texts[lang].medium;stats.medium++;document.body.classList.remove("alertMode");}
+else{statusText=texts[lang].safe;stats.safe++;document.body.classList.remove("alertMode");}
 
 document.getElementById("status").innerText=statusText;
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
-
 document.getElementById("mitre").innerText="MITRE: T1566, T1204";
-
-let inc=generateIncident();
-document.getElementById("incident").innerText=inc;
-
-let log=document.getElementById("log");
-log.innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${statusText} (${score}%)<br>`;
-
+let inc=generateIncident();document.getElementById("incident").innerText=inc;
 document.getElementById("feed").innerText=statusText+" - "+new Date().toLocaleTimeString();
-
+document.getElementById("log").innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${statusText} (${score}%)<br>`;
 speak(statusText+" "+score+" percent");
-
 updateChart();
 }
 
 document.getElementById("msg").addEventListener("input",analyze);
 document.getElementById("msg").addEventListener("mouseenter",()=>{speak(texts[lang].hover);});
 
-let chart=new Chart(document.getElementById("chart"),{
-type:'doughnut',
-data:{
-labels:['Safe','Suspicious','High'],
-datasets:[{data:[0,0,0],backgroundColor:['#00ffb3','#ffd633','#ff4d4d']}]
-}
-});
-
-function updateChart(){
-chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];
-chart.update();
-}
-
-function exportReport(){
-let data={platform:"BlackFalcon SOC™",stats:stats,timestamp:new Date()};
-let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="BlackFalcon_Report.json";
-a.click();
-}
-
+let chart=new Chart(document.getElementById("chart"),{type:'doughnut',data:{labels:['Safe','Suspicious','High'],datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#33ff33']}]}});
+function updateChart(){chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];chart.update();}
+function exportReport(){let data={platform:"BlackFalcon SOC™",stats:stats,timestamp:new Date()};let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BlackFalcon_Report.json";a.click();}
 </script>
 </body>
 </html>
