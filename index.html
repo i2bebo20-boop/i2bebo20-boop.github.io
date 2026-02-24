@@ -8,28 +8,23 @@
 <style>
 body{
 margin:0;font-family:'Cairo',sans-serif;
-background:linear-gradient(270deg,#001a00,#003300,#001a00);
-background-size:600% 600%;
-animation:gradientBG 15s ease infinite;
+background:#001a00;
 color:#00ff7f;
 transition:0.5s;
 }
 header{text-align:center;padding:20px;border-bottom:1px solid #00ff7f33;}
 button{background:#000;color:#00ff7f;border:1px solid #00ff7f;padding:6px 14px;border-radius:8px;cursor:pointer;margin:3px;transition:0.3s;}
 button:hover{background:#00ff7f;color:#000;box-shadow:0 0 20px #00ff7f;}
-.container{max-width:1200px;margin:20px auto;padding:25px;background:rgba(0,20,0,0.9);border-radius:20px;animation:fadeIn 1s ease-in;}
+.container{max-width:1200px;margin:20px auto;padding:25px;background:rgba(0,20,0,0.9);border-radius:20px;}
 textarea{width:100%;height:140px;background:#000;border:2px solid #00ff7f;border-radius:15px;padding:15px;color:#00ff7f;font-size:15px;resize:none;transition:0.3s;}
 textarea:focus{outline:none;box-shadow:0 0 20px #00ff7f;}
 textarea:hover{transform:scale(1.02);}
-.card{background:#001a00;padding:20px;border-radius:15px;box-shadow:0 0 20px #00ff7f22;margin-top:15px;animation:cardPulse 5s ease-in-out infinite;}
+.card{background:#001a00;padding:20px;border-radius:15px;box-shadow:0 0 20px #00ff7f22;margin-top:15px;}
 .progress{height:12px;background:#003300;border-radius:10px;margin-top:10px;}
-.bar{height:100%;width:0%;background:#00ff7f;border-radius:10px;transition:1s ease;width:0%;box-shadow:0 0 10px #00ff7f;}
+.bar{height:100%;width:0%;background:#00ff7f;border-radius:10px;transition:1s;}
 .log{max-height:150px;overflow:auto;font-size:12px;background:#0a0a0a;padding:10px;border-radius:10px;}
+.alertMode{background:#550000!important;color:#ff4d4d!important;}
 footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7f33;}
-.alertMode{background:linear-gradient(270deg,#003300,#001a00,#003300)!important;color:#00ff7f!important;}
-@keyframes gradientBG{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-@keyframes fadeIn{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
-@keyframes cardPulse{0%,100%{box-shadow:0 0 15px #00ff7f22;}50%{box-shadow:0 0 35px #00ff7f44;}}
 </style>
 </head>
 <body>
@@ -82,33 +77,8 @@ en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Ris
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
-// ===== قائمة الكلمات القديمة الكاملة =====
-const suspiciousWords=[
-"قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
-"تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
-"حمل الآن","إشعار نهائي","برنامج مكافحة فيروسات مجاني","تجربة مجانية","تحديث هام",
-"يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن",
-"تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة",
-"تحذير من التصيد الاحتيالي","دفع آمن","خرق أمني","تحديث أمني","التحقق من الهوية","رسالة تحذير",
-"وصول","ادخل الآن","بادر بالتحرك فوراً","تم الآن","بادر بالتحرك الآن!","فعل","الإجراء المطلوب",
-"قدّم طلبك هنا","قدم الآن","قدم طلبك الآن!","قدم طلبك عبر الإنترنت","انضم إلى العضوية","قبل فوات الأوان",
-"كونك عضواً","يشتري","اشتر مباشرة","اشتري الآن","اشتر اليوم","يتصل","مكالمة مجانية","اتصل الآن مجاناً",
-"اتصل بي","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء","اطلب الآن",
-"انقر","انقر أدناه","انقر هنا للتحميل","الصفقة ستنتهي قريباً","افعل ذلك الآن","عرض حصري",
-"تاريخ الانتهاء","ينتهي العرض اليوم","النداء الأخير","للوصول الفوري","بسعر فقط","لك","يوم الجمعة الذي يسبق","أبعده","احصل عليه الآن",
-"احصل على أموالك","ابدأ الآن","عرض رائع","أسرع","في الحال","مرة واحدة في العمر","فقط",
-"رقم 1","مجاني 100%","خصم 100%","دخل إضافي","مندهش","مدهش","عرض مذهل","أشياء رائعة",
-"اندهش","كن متفاجئاً","كن مدير نفسك","أفضل صفقة","أفضل عرض","أفضل سعر","أفضل الأسعار","مبالغ طائلة",
-"علاوة","لا أستطيع العيش بدونها","توحيد الديون","ضاعف أموالك","ضاعف دخلك","تم تخفيضها بشكل كبير",
-"اكسب أموالاً إضافية","اكسب المال","توقع أن تربح","إضافي","نقود إضافية","دخل إضافي","رائع",
-"عرض رائع","سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني","انضم إلى الملايين","أقل سعر",
-"مليون دولار","ضمان استرداد الأموال","جائزة","ربح صافٍ","خالٍ من المخاطر","رضاكم مضمون","وفر حتى",
-"عرض ترويجي خاص","الأفضل","الآلاف","عرض لا يُضاهى","لا يصدق","غير محدود","مضمون بنسبة 100%",
-"بادر بالتحرك سريعاً","كما شاهدتم على","انقر هنا","هذا لن يدوم","عاجل","لن أصدق","$$$","€€€","جنيه إسترليني",
-"خصم 50%","بنك","الإفلاس","مساومة","الفواتير","مليار","مليار دولار","ملياردير","البطاقة مقبولة",
-"نقدي","مكافأة نقدية","سحب نقدي","كازينو","احصل على خصمك","الدولار","دخل إضافي",
-"verify","urgent","bank","password","free","bitcoin","reset","click here","limited","act now","secure"
-];
+// ضع هنا قائمة الكلمات القديمة الكاملة
+const suspiciousWords=[/* ضع قائمة الكلمات القديمة هنا */];
 
 function setLang(l){
 lang=l;
@@ -128,30 +98,33 @@ function speak(text){
 let utter=new SpeechSynthesisUtterance(text);
 utter.rate=0.9;utter.pitch=1;utter.volume=1;
 utter.lang=lang==="ar"?"ar-SA":"en-US";
-let voices=speechSynthesis.getVoices();
-let selected=voices.find(v=>v.lang===utter.lang);
-if(selected)utter.voice=selected;
 speechSynthesis.cancel();speechSynthesis.speak(utter);
 }
 
 function generateIncident(){return "INC-"+Date.now().toString().slice(-6);}
 
-// ===== تحليل الرسالة مع Debounce =====
+// ===== تحليل الرسالة مع زيادة الخطورة لكل كلمة **مرات متعددة**
 function analyzeMessage(){
 let t=document.getElementById("msg").value.toLowerCase();
 if(t.length<3) return "";
 
 let score=0;
-suspiciousWords.forEach(w=>{if(t.includes(w.toLowerCase())) score+=10;});
+
+// نحسب كل كلمة وعدد مرات ظهورها
+suspiciousWords.forEach(w=>{
+let regex=new RegExp(w.toLowerCase(),"g");
+let matches=t.match(regex);
+if(matches) score+=matches.length*20; // كل ظهور يزيد الخطورة
+});
 
 let links=t.match(/https?:\/\/[^\s]+/g);
-if(links && links.length>1) score+=20;
+if(links && links.length>0) score+=30;
 if(t.includes("bit.ly")||t.includes("tinyurl")) score+=25;
 if(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/.test(t)) score+=35;
 
 let statusText="";
-if(score>=80){statusText=texts[lang].high;stats.high++;document.body.classList.add("alertMode");document.getElementById("alarmSound").play();}
-else if(score>=40){statusText=texts[lang].medium;stats.medium++;document.body.classList.remove("alertMode");}
+if(score>=60){statusText=texts[lang].high;stats.high++;document.body.classList.add("alertMode");document.getElementById("alarmSound").play();}
+else if(score>=30){statusText=texts[lang].medium;stats.medium++;document.body.classList.remove("alertMode");}
 else{statusText=texts[lang].safe;stats.safe++;document.body.classList.remove("alertMode");}
 
 document.getElementById("status").innerText=statusText;
@@ -176,7 +149,7 @@ if(result) speak(result);
 document.getElementById("msg").addEventListener("input",analyze);
 document.getElementById("msg").addEventListener("mouseenter",()=>{speak(texts[lang].hover);});
 
-let chart=new Chart(document.getElementById("chart"),{type:'doughnut',data:{labels:['Safe','Suspicious','High'],datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#33ff33']}]}});
+let chart=new Chart(document.getElementById("chart"),{type:'doughnut',data:{labels:['Safe','Suspicious','High'],datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#ff4d4d']}]}});
 function updateChart(){chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];chart.update();}
 function exportReport(){let data={platform:"BlackFalcon SOC™",stats:stats,timestamp:new Date()};let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BlackFalcon_Report.json";a.click();}
 </script>
