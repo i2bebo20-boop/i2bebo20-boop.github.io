@@ -15,15 +15,26 @@ transition:0.5s;
 header{text-align:center;padding:20px;border-bottom:1px solid #00ff7f33;}
 button{background:#000;color:#00ff7f;border:1px solid #00ff7f;padding:6px 14px;border-radius:8px;cursor:pointer;margin:3px;transition:0.3s;}
 button:hover{background:#00ff7f;color:#000;box-shadow:0 0 20px #00ff7f;}
-.container{max-width:1200px;margin:20px auto;padding:25px;background:rgba(0,20,0,0.9);border-radius:20px;}
+.container{max-width:1200px;margin:20px auto;padding:25px;background:rgba(0,20,0,0.9);border-radius:20px;transition:0.3s;}
 textarea{width:100%;height:140px;background:#000;border:2px solid #00ff7f;border-radius:15px;padding:15px;color:#00ff7f;font-size:15px;resize:none;transition:0.3s;}
 textarea:focus{outline:none;box-shadow:0 0 20px #00ff7f;}
 textarea:hover{transform:scale(1.02);}
-.card{background:#001a00;padding:20px;border-radius:15px;box-shadow:0 0 20px #00ff7f22;margin-top:15px;}
+.card{background:#001a00;padding:20px;border-radius:15px;box-shadow:0 0 20px #00ff7f22;margin-top:15px;transition:0.3s;}
 .progress{height:12px;background:#003300;border-radius:10px;margin-top:10px;}
-.bar{height:100%;width:0%;background:#00ff7f;border-radius:10px;transition:1s;}
+.bar{height:100%;width:0%;background:#00ff7f;border-radius:10px;transition:0.5s;}
+.bar.alert{animation:barPulse 1s infinite;}
+@keyframes barPulse{
+0%{background:#ff4d4d;width:100%;}
+50%{background:#ff0000;width:95%;}
+100%{background:#ff4d4d;width:100%;}
+}
 .log{max-height:150px;overflow:auto;font-size:12px;background:#0a0a0a;padding:10px;border-radius:10px;}
-.alertMode{background:#550000!important;color:#ff4d4d!important;}
+.alertMode{animation:alertPulse 1s infinite; color:#ff4d4d!important;}
+@keyframes alertPulse{
+0%{background:#330000;}
+50%{background:#550000;}
+100%{background:#330000;}
+}
 footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7f33;}
 </style>
 </head>
@@ -77,8 +88,32 @@ en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Ris
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
-// ضع هنا قائمة الكلمات القديمة الكاملة
-const suspiciousWords=[/* ضع قائمة الكلمات القديمة هنا */];
+// ===== القائمة القديمة للكلمات المشبوهة =====
+const suspiciousWords=[
+"قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
+"تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
+"حمل الآن","إشعار نهائي","برنامج مكافحة فيروسات مجاني","تجربة مجانية","تحديث هام",
+"يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن",
+"تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة",
+"تحذير من التصيد الاحتيالي","دفع آمن","خرق أمني","تحديث أمني","التحقق من الهوية","رسالة تحذير",
+"وصول","ادخل الآن","بادر بالتحرك فوراً","تم الآن","بادر بالتحرك الآن!","فعل","الإجراء المطلوب",
+"قدّم طلبك هنا","قدم الآن","قدم طلبك الآن!","قدم طلبك عبر الإنترنت","انضم إلى العضوية","قبل فوات الأوان",
+"كونك عضواً","يشتري","اشتر مباشرة","اشتري الآن","اشتر اليوم","يتصل","مكالمة مجانية","اتصل الآن مجاناً",
+"اتصل بي","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء","اطلب الآن",
+"انقر","انقر أدناه","انقر هنا للتحميل","الصفقة ستنتهي قريباً","افعل ذلك الآن","عرض حصري",
+"تاريخ الانتهاء","ينتهي العرض اليوم","النداء الأخير","للوصول الفوري","بسعر فقط","لك","يوم الجمعة الذي يسبق","أبعده","احصل عليه الآن",
+"احصل على أموالك","ابدأ الآن","عرض رائع","أسرع","في الحال","مرة واحدة في العمر","فقط",
+"رقم 1","مجاني 100%","خصم 100%","دخل إضافي","مندهش","مدهش","عرض مذهل","أشياء رائعة",
+"اندهش","كن متفاجئاً","كن مدير نفسك","أفضل صفقة","أفضل عرض","أفضل سعر","أفضل الأسعار","مبالغ طائلة",
+"علاوة","لا أستطيع العيش بدونها","توحيد الديون","ضاعف أموالك","ضاعف دخلك","تم تخفيضها بشكل كبير",
+"اكسب أموالاً إضافية","اكسب المال","توقع أن تربح","إضافي","نقود إضافية","دخل إضافي","رائع",
+"عرض رائع","سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني","انضم إلى الملايين","أقل سعر",
+"مليون دولار","ضمان استرداد الأموال","جائزة","ربح صافٍ","خالٍ من المخاطر","رضاكم مضمون","وفر حتى",
+"عرض ترويجي خاص","الأفضل","الآلاف","عرض لا يُضاهى","لا يصدق","غير محدود","مضمون بنسبة 100%",
+"بادر بالتحرك سريعاً","كما شاهدتم على","انقر هنا","هذا لن يدوم","عاجل","لن أصدق","$$$","€€€","جنيه إسترليني",
+"خصم 50%","بنك","الإفلاس","مساومة","الفواتير","مليار","مليار دولار","ملياردير","البطاقة مقبولة",
+"نقدي","مكافأة نقدية","سحب نقدي","كازينو","احصل على خصمك","الدولار","دخل إضافي"
+];
 
 function setLang(l){
 lang=l;
@@ -103,14 +138,11 @@ speechSynthesis.cancel();speechSynthesis.speak(utter);
 
 function generateIncident(){return "INC-"+Date.now().toString().slice(-6);}
 
-// ===== تحليل الرسالة مع زيادة الخطورة لكل كلمة **مرات متعددة**
 function analyzeMessage(){
 let t=document.getElementById("msg").value.toLowerCase();
 if(t.length<3) return "";
 
 let score=0;
-
-// نحسب كل كلمة وعدد مرات ظهورها
 suspiciousWords.forEach(w=>{
 let regex=new RegExp(w.toLowerCase(),"g");
 let matches=t.match(regex);
@@ -123,13 +155,29 @@ if(t.includes("bit.ly")||t.includes("tinyurl")) score+=25;
 if(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/.test(t)) score+=35;
 
 let statusText="";
-if(score>=60){statusText=texts[lang].high;stats.high++;document.body.classList.add("alertMode");document.getElementById("alarmSound").play();}
-else if(score>=30){statusText=texts[lang].medium;stats.medium++;document.body.classList.remove("alertMode");}
-else{statusText=texts[lang].safe;stats.safe++;document.body.classList.remove("alertMode");}
+let bar=document.getElementById("bar");
+
+if(score>=60){
+statusText=texts[lang].high;
+stats.high++;
+document.body.classList.add("alertMode");
+bar.classList.add("alert");
+document.getElementById("alarmSound").play();
+}else if(score>=30){
+statusText=texts[lang].medium;
+stats.medium++;
+document.body.classList.remove("alertMode");
+bar.classList.remove("alert");
+}else{
+statusText=texts[lang].safe;
+stats.safe++;
+document.body.classList.remove("alertMode");
+bar.classList.remove("alert");
+}
 
 document.getElementById("status").innerText=statusText;
 document.getElementById("score").innerText=score;
-document.getElementById("bar").style.width=score+"%";
+bar.style.width=score+"%";
 document.getElementById("mitre").innerText="MITRE: T1566, T1204";
 let inc=generateIncident();document.getElementById("incident").innerText=inc;
 document.getElementById("feed").innerText=statusText+" - "+new Date().toLocaleTimeString();
