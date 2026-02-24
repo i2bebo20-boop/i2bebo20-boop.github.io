@@ -7,8 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{
-margin:0;font-family:'Cairo',sans-serif;
-background:#001a00;color:#00ff7f;transition:0.5s;
+  margin:0;font-family:'Cairo',sans-serif;
+  background:#001a00;color:#00ff7f;transition:0.5s;
 }
 header{text-align:center;padding:20px;border-bottom:1px solid #00ff7f33;}
 button{background:#000;color:#00ff7f;border:1px solid #00ff7f;padding:6px 14px;border-radius:8px;cursor:pointer;margin:3px;transition:0.3s;}
@@ -22,17 +22,12 @@ textarea:hover{transform:scale(1.02);}
 .bar{height:100%;width:0%;background:#00ff7f;border-radius:10px;transition:0.5s;}
 .bar.alert{animation:barPulse 1s infinite;}
 @keyframes barPulse{
-0%{background:#ff4d4d;width:100%;}
-50%{background:#ff0000;width:95%;}
-100%{background:#ff4d4d;width:100%;}
+  0%{background:#ff4d4d;width:100%;}
+  50%{background:#ff0000;width:95%;}
+  100%{background:#ff4d4d;width:100%;}
 }
 .log{max-height:150px;overflow:auto;font-size:12px;background:#0a0a0a;padding:10px;border-radius:10px;}
-.alertMode{animation:alertPulse 1s infinite;color:#ff4d4d!important;}
-@keyframes alertPulse{
-0%{background:#330000;}
-50%{background:#550000;}
-100%{background:#330000;}
-}
+body.alertMode{background:#550000 !important; color:#fff !important;}
 footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7f33;}
 </style>
 </head>
@@ -87,7 +82,6 @@ en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Ris
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
-// القائمة القديمة للكلمات المشبوهة
 const suspiciousWords=[
 "قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
 "تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
@@ -141,33 +135,27 @@ if(t.length<3) return "";
 
 let score=0;
 suspiciousWords.forEach(w=>{
-if(t.normalize("NFC").includes(w.toLowerCase())) score+=60; // كل كلمة تعطيل خطر عالي مباشرة
+if(t.normalize("NFC").includes(w.toLowerCase())) score+=100; // أي كلمة → HIGH
 });
-
-let links=t.match(/https?:\/\/[^\s]+/g);
-if(links) score+=30;
-if(t.includes("bit.ly")||t.includes("tinyurl")) score+=25;
-if(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/.test(t)) score+=35;
 
 let statusText="",bar=document.getElementById("bar");
 if(score>=60){statusText=texts[lang].high;stats.high++;document.body.classList.add("alertMode");bar.classList.add("alert");document.getElementById("alarmSound").play();}
-else if(score>=30){statusText=texts[lang].medium;stats.medium++;document.body.classList.remove("alertMode");bar.classList.remove("alert");}
 else{statusText=texts[lang].safe;stats.safe++;document.body.classList.remove("alertMode");bar.classList.remove("alert");}
 
 document.getElementById("status").innerText=statusText;
-document.getElementById("score").innerText=score;
-bar.style.width=score+"%";
+document.getElementById("score").innerText=score>100?100:score;
+bar.style.width=(score>100?100:score)+"%";
 document.getElementById("mitre").innerText="MITRE: T1566, T1204";
 let inc=generateIncident();document.getElementById("incident").innerText=inc;
 document.getElementById("feed").innerText=statusText+" - "+new Date().toLocaleTimeString();
-document.getElementById("log").innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${statusText} (${score}%)<br>`;
+document.getElementById("log").innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${statusText} (${score>100?100:score}%)<br>`;
 updateChart();
-return statusText+" - "+score+"%";
+return statusText+" - "+(score>100?100:score)+"%";
 }
 
 function analyze(){
 clearTimeout(debounceTimer);
-debounceTimer=setTimeout(()=>{let r=analyzeMessage();if(r) speak(r);},700);
+debounceTimer=setTimeout(()=>{analyzeMessage();},700);
 }
 
 document.getElementById("msg").addEventListener("input",analyze);
@@ -175,6 +163,7 @@ document.getElementById("msg").addEventListener("mouseenter",()=>{speak(texts[la
 
 let chart=new Chart(document.getElementById("chart"),{type:'doughnut',data:{labels:['Safe','Suspicious','High'],datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#ff4d4d']}]}});
 function updateChart(){chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];chart.update();}
+
 function exportReport(){let d={platform:"BlackFalcon SOC™",stats:stats,timestamp:new Date()};let blob=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BlackFalcon_Report.json";a.click();}
 </script>
 </body>
