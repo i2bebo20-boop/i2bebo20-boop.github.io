@@ -82,7 +82,6 @@ let lang="en";
 let stats={safe:0,medium:0,high:0};
 let debounceTimer=null;
 
-// نصوص عربي وانجليزي
 const texts={
 en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Risk Score",incident:"Incident ID",feed:"Threat Intelligence Feed",stats:"Statistics",ready:"System Ready...",hover:"Type your suspicious message here",safe:"SAFE",medium:"SUSPICIOUS",high:"HIGH RISK"},
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
@@ -142,7 +141,7 @@ if(t.length<3) return "";
 
 let score=0;
 suspiciousWords.forEach(w=>{
-if(t.normalize("NFC").includes(w.toLowerCase())) score+=40;
+if(t.normalize("NFC").includes(w.toLowerCase())) score+=60; // كل كلمة تعطيل خطر عالي مباشرة
 });
 
 let links=t.match(/https?:\/\/[^\s]+/g);
