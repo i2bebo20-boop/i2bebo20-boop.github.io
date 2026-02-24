@@ -71,19 +71,21 @@ footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7
 
 <footer>BlackFalcon SOC™ – Enterprise Simulation Platform</footer>
 
+<!-- صوت التحذير -->
 <audio id="alarmSound"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
 let lang="en";
 let stats={safe:0,medium:0,high:0};
 let debounceTimer=null;
-let hoverSpoken=false; // لمنع تكرار الصوت عند الماوس
 
+// النصوص
 const texts={
 en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Risk Score",incident:"Incident ID",feed:"Threat Intelligence Feed",stats:"Statistics",ready:"System Ready...",hover:"Type your suspicious message here",safe:"SAFE",medium:"SUSPICIOUS",high:"HIGH RISK"},
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
+// الكلمات المشبوهة القديمة
 const suspiciousWords=[
 "قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
 "تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
@@ -110,6 +112,7 @@ const suspiciousWords=[
 "نقدي","مكافأة نقدية","سحب نقدي","كازينو","احصل على خصمك","الدولار","دخل إضافي"
 ];
 
+// اللغة
 function setLang(l){
 lang=l;document.documentElement.lang=l;
 document.body.dir=l==="ar"?"rtl":"ltr";
@@ -123,6 +126,7 @@ document.getElementById("feed").innerText=texts[l].ready;
 document.getElementById("msg").placeholder=texts[l].hover;
 }
 
+// كلام صوت
 function speak(text){
 let u=new SpeechSynthesisUtterance(text);
 u.lang=lang==="ar"?"ar-SA":"en-US";u.rate=0.9;u.pitch=1;u.volume=1;
@@ -131,68 +135,81 @@ speechSynthesis.cancel();speechSynthesis.speak(u);
 
 function generateIncident(){return "INC-"+Date.now().toString().slice(-6);}
 
+// تحليل الرسالة
 function analyzeMessage(){
-let t=document.getElementById("msg").value.toLowerCase();
-if(t.length<3) return "";
+  let t=document.getElementById("msg").value.toLowerCase().normalize("NFC");
+  if(t.length<3) return;
 
-let score=0;
-suspiciousWords.forEach(w=>{
-if(t.normalize("NFC").includes(w.toLowerCase())) score+=100;
-});
+  let score=0;
 
-let statusText="",bar=document.getElementById("bar");
-if(score>=60){
+  suspiciousWords.forEach(w=>{
+    if(t.includes(w.toLowerCase())) score+=100; // أي كلمة → HIGH
+  });
+
+  // روابط قصيرة وخطرة
+  if(t.includes("bit.ly") || t.includes("tinyurl")) score +=50;
+  // نموذج إدخال بيانات
+  if(t.includes("<form") || t.includes("input type=")) score +=50;
+  // punycode
+  if(t.includes("xn--")) score +=50;
+
+  let statusText="";
+  let bar=document.getElementById("bar");
+
+  if(score>=60){
     statusText=texts[lang].high;
     stats.high++;
     document.body.classList.add("alertMode");
     bar.classList.add("alert");
-    document.getElementById("alarmSound").play();
-}else{
+    let alarm=document.getElementById("alarmSound");
+    alarm.currentTime=0; alarm.play();
+  } else if(score>=30){
+    statusText=texts[lang].medium;
+    stats.medium++;
+    document.body.classList.remove("alertMode");
+    bar.classList.remove("alert");
+  } else {
     statusText=texts[lang].safe;
     stats.safe++;
     document.body.classList.remove("alertMode");
     bar.classList.remove("alert");
+  }
+
+  document.getElementById("status").innerText=statusText;
+  document.getElementById("score").innerText=score>100?100:score;
+  bar.style.width=(score>100?100:score)+"%";
+  document.getElementById("mitre").innerText="MITRE: T1566, T1204";
+  let inc=generateIncident();
+  document.getElementById("incident").innerText=inc;
+  document.getElementById("feed").innerText=statusText+" - "+new Date().toLocaleTimeString();
+  document.getElementById("log").innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${statusText} (${score>100?100:score}%)<br>`;
+
+  updateChart();
+  return statusText+" - "+(score>100?100:score)+"%";
 }
 
-document.getElementById("status").innerText=statusText;
-document.getElementById("score").innerText=score>100?100:score;
-bar.style.width=(score>100?100:score)+"%";
-document.getElementById("mitre").innerText="MITRE: T1566, T1204";
-let inc=generateIncident();document.getElementById("incident").innerText=inc;
-document.getElementById("feed").innerText=statusText+" - "+new Date().toLocaleTimeString();
-document.getElementById("log").innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${statusText} (${score>100?100:score}%)<br>`;
-updateChart();
-return statusText+" - "+(score>100?100:score)+"%";
-}
-
+// تأخير التحليل لتفادي الصوت مع كل حرف
 function analyze(){
-clearTimeout(debounceTimer);
-debounceTimer=setTimeout(()=>{analyzeMessage();},700);
+  clearTimeout(debounceTimer);
+  debounceTimer=setTimeout(()=>{analyzeMessage();},700);
 }
 
 document.getElementById("msg").addEventListener("input",analyze);
+document.getElementById("msg").addEventListener("mouseenter",()=>{speak(texts[lang].hover);});
 
-// صوت عند وضع الماوس
-document.getElementById("msg").addEventListener("mouseenter",()=>{
-    if(!hoverSpoken){speak(texts[lang].hover); hoverSpoken=true;}
-});
-document.getElementById("msg").addEventListener("mouseleave",()=>{hoverSpoken=false;});
-
-// Chart
+// المخطط
 let chart=new Chart(document.getElementById("chart"),{
-type:'doughnut',
-data:{
-labels:['Safe','Suspicious','High'],
-datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#ff4d4d']}]
-}
+  type:'doughnut',
+  data:{labels:['Safe','Suspicious','High'],datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#ff4d4d']}]}
 });
 function updateChart(){chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];chart.update();}
 
-// Export
+// تصدير التقرير
 function exportReport(){
-let d={platform:"BlackFalcon SOC™",stats:stats,timestamp:new Date()};
-let blob=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});
-let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="BlackFalcon_Report.json";a.click();
+  let d={platform:"BlackFalcon SOC™",stats:stats,timestamp:new Date()};
+  let blob=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});
+  let a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="BlackFalcon_Report.json";a.click();
 }
 </script>
 </body>
