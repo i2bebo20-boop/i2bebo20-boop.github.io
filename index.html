@@ -35,6 +35,8 @@ textarea:hover{transform:scale(1.02);}
 }
 .log{max-height:150px;overflow:auto;font-size:12px;background:#0a0a0a;padding:10px;border-radius:10px;}
 body.alertMode{background:#550000 !important; color:#fff !important;}
+body.mediumMode{background:#555500 !important; color:#fff !important;}
+body.safeMode{background:#003300 !important; color:#fff !important;}
 footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7f33;}
 </style>
 </head>
@@ -79,8 +81,8 @@ footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7
 <footer>BlackFalcon SOC™ – Enterprise Simulation Platform</footer>
 
 <!-- الأصوات -->
-<audio id="alarmSound"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 <audio id="hoverSound"><source src="https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3"></audio>
+<audio id="resultSound"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
 let lang="en";
@@ -92,6 +94,7 @@ en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Ris
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
+// كلماتك المشبوهة القديمة كاملة
 const suspiciousWords=[
 "قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
 "تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
@@ -131,10 +134,11 @@ function setLang(l){
   document.getElementById("msg").placeholder=texts[l].hover;
 }
 
-function speak(text){
+function speak(text,voice=true){
   let u=new SpeechSynthesisUtterance(text);
-  u.lang=lang==="ar"?"ar-SA":"en-US";u.rate=0.9;u.pitch=1;u.volume=1;
-  speechSynthesis.cancel();speechSynthesis.speak(u);
+  u.lang=lang==="ar"?"ar-SA":"en-US";
+  u.rate=0.9; u.pitch=1; u.volume=1;
+  if(voice){speechSynthesis.cancel();speechSynthesis.speak(u);}
 }
 
 function generateIncident(){return "INC-"+Date.now().toString().slice(-6);}
@@ -147,39 +151,35 @@ function analyzeMessage(){
   let triggered=false;
 
   suspiciousWords.forEach(w=>{
-    if(t.includes(w.toLowerCase())) {
+    if(t.includes(w.toLowerCase())){
       score+=100;
       triggered=true;
     }
   });
 
-  if(t.includes("bit.ly")||t.includes("tinyurl")) score+=50;
-  if(t.includes("<form")||t.includes("input type=")) score+=50;
-  if(t.includes("xn--")) score+=50;
-
-  let statusText="";
-  let bar=document.getElementById("bar");
+  let statusText="",bar=document.getElementById("bar");
 
   if(score>=60){
     statusText=texts[lang].high;
     stats.high++;
     document.body.classList.add("alertMode");
+    document.body.classList.remove("mediumMode","safeMode");
     bar.classList.add("alert");
-    if(triggered){ 
-      document.getElementById("alarmSound").currentTime=0;
-      document.getElementById("alarmSound").play();
-      speak(statusText+"!");
-    }
+    if(triggered){ document.getElementById("resultSound").currentTime=0; document.getElementById("resultSound").play(); speak(statusText); }
   } else if(score>=30){
     statusText=texts[lang].medium;
     stats.medium++;
-    document.body.classList.remove("alertMode");
+    document.body.classList.add("mediumMode");
+    document.body.classList.remove("alertMode","safeMode");
     bar.classList.remove("alert");
+    document.getElementById("resultSound").currentTime=0; document.getElementById("resultSound").play(); speak(statusText);
   } else {
     statusText=texts[lang].safe;
     stats.safe++;
-    document.body.classList.remove("alertMode");
+    document.body.classList.add("safeMode");
+    document.body.classList.remove("alertMode","mediumMode");
     bar.classList.remove("alert");
+    document.getElementById("resultSound").currentTime=0; document.getElementById("resultSound").play(); speak(statusText);
   }
 
   document.getElementById("status").innerText=statusText;
@@ -199,7 +199,11 @@ function analyze(){
 }
 
 document.getElementById("msg").addEventListener("input",analyze);
-document.getElementById("msg").addEventListener("mouseenter",()=>{speak(texts[lang].hover);});
+document.getElementById("msg").addEventListener("mouseenter",()=>{
+  document.getElementById("hoverSound").currentTime=0;
+  document.getElementById("hoverSound").play();
+  speak(texts[lang].hover,false); // الصوت عند المرور فقط
+});
 
 let chart=new Chart(document.getElementById("chart"),{type:'doughnut',data:{labels:['Safe','Suspicious','High'],datasets:[{data:[0,0,0],backgroundColor:['#00ff7f','#ffff33','#ff4d4d']}]}});
 function updateChart(){chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];chart.update();}
