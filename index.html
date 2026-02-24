@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Aegis Sentinel™️ V6 Enterprise</title>
+<title>BlackFalcon SOC™</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -48,10 +48,9 @@ color:#ff4d4d!important;
 <body>
 
 <header>
-<h1>🛡 Aegis Sentinel™️ V6 Enterprise</h1>
+<h1>🦅 BlackFalcon SOC™</h1>
 <p>Advanced SOC Simulation Platform</p>
 <button onclick="exportReport()">Export Report</button>
-<button onclick="toggleAdmin()">Admin Mode</button>
 </header>
 
 <div class="container">
@@ -85,13 +84,12 @@ color:#ff4d4d!important;
 </div>
 
 <footer>
-Aegis Sentinel™️ V6 Enterprise – Simulation Only
+BlackFalcon SOC™ – Enterprise Simulation Platform
 </footer>
 
 <script>
 
 let stats={safe:0,medium:0,high:0};
-let admin=false;
 
 const suspiciousWords=[
 "verify","urgent","bank","password","free","bitcoin",
@@ -115,25 +113,19 @@ if(t.length<3) return;
 
 let score=0;
 
-// keyword detection
 suspiciousWords.forEach(w=>{
 if(t.includes(w)) score+=10;
 });
 
-// multi links
 let links=t.match(/https?:\/\/[^\s]+/g);
 if(links && links.length>2) score+=20;
 
-// shorteners
 if(t.includes("bit.ly")||t.includes("tinyurl")) score+=25;
 
-// credit card
 if(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/.test(t)) score+=35;
 
-// html injection
 if(t.includes("<form")||t.includes("input type=")) score+=30;
 
-// unicode spoof
 if(t.includes("xn--")) score+=30;
 
 let status="";
@@ -183,6 +175,7 @@ chart.update();
 
 function exportReport(){
 let data={
+platform:"BlackFalcon SOC™",
 stats:stats,
 timestamp:new Date(),
 };
@@ -190,13 +183,8 @@ let blob=new Blob([JSON.stringify(data,null,2)],
 {type:"application/json"});
 let a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
-a.download="Aegis_Report.json";
+a.download="BlackFalcon_Report.json";
 a.click();
-}
-
-function toggleAdmin(){
-admin=!admin;
-alert(admin?"Admin Mode Enabled":"Admin Mode Disabled");
 }
 
 </script>
