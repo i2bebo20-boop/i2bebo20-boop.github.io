@@ -35,8 +35,6 @@ textarea:hover{transform:scale(1.02);}
 }
 .log{max-height:150px;overflow:auto;font-size:12px;background:#0a0a0a;padding:10px;border-radius:10px;}
 body.alertMode{background:#550000 !important; color:#fff !important;}
-body.mediumMode{background:#555500 !important; color:#fff !important;}
-body.safeMode{background:#003300 !important; color:#fff !important;}
 footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ff7f33;}
 </style>
 </head>
@@ -94,31 +92,8 @@ en:{subtitle:"Advanced SOC Simulation Platform",threat:"Threat Status",risk:"Ris
 ar:{subtitle:"منصة محاكاة مركز العمليات الأمنية",threat:"حالة التهديد",risk:"نسبة الخطورة",incident:"رقم الحادثة",feed:"التغذية المباشرة للتهديدات",stats:"الإحصائيات",ready:"النظام جاهز...",hover:"اكتبي الرسالة المشبوهة هنا",safe:"آمن",medium:"مشبوه",high:"خطر عالي"}
 };
 
-// كلماتك المشبوهة القديمة كاملة
 const suspiciousWords=[
-"قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
-"تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات",
-"حمل الآن","إشعار نهائي","برنامج مكافحة فيروسات مجاني","تجربة مجانية","تحديث هام",
-"يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن",
-"تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة",
-"تحذير من التصيد الاحتيالي","دفع آمن","خرق أمني","تحديث أمني","التحقق من الهوية","رسالة تحذير",
-"وصول","ادخل الآن","بادر بالتحرك فوراً","تم الآن","بادر بالتحرك الآن!","فعل","الإجراء المطلوب",
-"قدّم طلبك هنا","قدم الآن","قدم طلبك الآن!","قدم طلبك عبر الإنترنت","انضم إلى العضوية","قبل فوات الأوان",
-"كونك عضواً","يشتري","اشتر مباشرة","اشتري الآن","اشتر اليوم","يتصل","مكالمة مجانية","اتصل الآن مجاناً",
-"اتصل بي","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء","اطلب الآن",
-"انقر","انقر أدناه","انقر هنا للتحميل","الصفقة ستنتهي قريباً","افعل ذلك الآن","عرض حصري",
-"تاريخ الانتهاء","ينتهي العرض اليوم","النداء الأخير","للوصول الفوري","بسعر فقط","لك","يوم الجمعة الذي يسبق","أبعده","احصل عليه الآن",
-"احصل على أموالك","ابدأ الآن","عرض رائع","أسرع","في الحال","مرة واحدة في العمر","فقط",
-"رقم 1","مجاني 100%","خصم 100%","دخل إضافي","مندهش","مدهش","عرض مذهل","أشياء رائعة",
-"اندهش","كن متفاجئاً","كن مدير نفسك","أفضل صفقة","أفضل عرض","أفضل سعر","أفضل الأسعار","مبالغ طائلة",
-"علاوة","لا أستطيع العيش بدونها","توحيد الديون","ضاعف أموالك","ضاعف دخلك","تم تخفيضها بشكل كبير",
-"اكسب أموالاً إضافية","اكسب المال","توقع أن تربح","إضافي","نقود إضافية","دخل إضافي","رائع",
-"عرض رائع","سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني","انضم إلى الملايين","أقل سعر",
-"مليون دولار","ضمان استرداد الأموال","جائزة","ربح صافٍ","خالٍ من المخاطر","رضاكم مضمون","وفر حتى",
-"عرض ترويجي خاص","الأفضل","الآلاف","عرض لا يُضاهى","لا يصدق","غير محدود","مضمون بنسبة 100%",
-"بادر بالتحرك سريعاً","كما شاهدتم على","انقر هنا","هذا لن يدوم","عاجل","لن أصدق","$$$","€€€","جنيه إسترليني",
-"خصم 50%","بنك","الإفلاس","مساومة","الفواتير","مليار","مليار دولار","ملياردير","البطاقة مقبولة",
-"نقدي","مكافأة نقدية","سحب نقدي","كازينو","احصل على خصمك","الدولار","دخل إضافي"
+"انضم إلى الملايين","تحقق من حسابك","قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب"
 ];
 
 function setLang(l){
@@ -163,21 +138,18 @@ function analyzeMessage(){
     statusText=texts[lang].high;
     stats.high++;
     document.body.classList.add("alertMode");
-    document.body.classList.remove("mediumMode","safeMode");
     bar.classList.add("alert");
     if(triggered){ document.getElementById("resultSound").currentTime=0; document.getElementById("resultSound").play(); speak(statusText); }
   } else if(score>=30){
     statusText=texts[lang].medium;
     stats.medium++;
-    document.body.classList.add("mediumMode");
-    document.body.classList.remove("alertMode","safeMode");
+    document.body.classList.remove("alertMode");
     bar.classList.remove("alert");
     document.getElementById("resultSound").currentTime=0; document.getElementById("resultSound").play(); speak(statusText);
   } else {
     statusText=texts[lang].safe;
     stats.safe++;
-    document.body.classList.add("safeMode");
-    document.body.classList.remove("alertMode","mediumMode");
+    document.body.classList.remove("alertMode");
     bar.classList.remove("alert");
     document.getElementById("resultSound").currentTime=0; document.getElementById("resultSound").play(); speak(statusText);
   }
