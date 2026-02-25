@@ -16,17 +16,8 @@ transition:0.4s;
 }
 
 body.alertHigh{
-background:#550000 !important;
-color:#fff;
-animation:shake 0.3s;
-}
-
-@keyframes shake{
-0%{transform:translateX(0);}
-25%{transform:translateX(-5px);}
-50%{transform:translateX(5px);}
-75%{transform:translateX(-5px);}
-100%{transform:translateX(0);}
+background:#7a0000 !important;
+color:#fff !important;
 }
 
 header{
@@ -39,13 +30,13 @@ border-bottom:1px solid #00ff7f33;
 max-width:1000px;
 margin:20px auto;
 padding:25px;
-background:rgba(0,20,0,0.9);
+background:rgba(0,20,0,0.92);
 border-radius:20px;
 }
 
 textarea{
 width:100%;
-height:120px;
+height:140px;
 background:#000;
 border:2px solid #00ff7f;
 border-radius:15px;
@@ -55,14 +46,9 @@ font-size:16px;
 resize:none;
 }
 
-button{
-background:#00aa55;
-border:none;
-padding:10px 20px;
-color:#fff;
-border-radius:10px;
-cursor:pointer;
-margin-top:10px;
+textarea:focus{
+outline:none;
+box-shadow:0 0 20px #00ff7f;
 }
 
 .card{
@@ -74,7 +60,7 @@ box-shadow:0 0 15px #00ff7f22;
 }
 
 .progress{
-height:10px;
+height:12px;
 background:#003300;
 border-radius:10px;
 margin-top:10px;
@@ -85,7 +71,7 @@ height:100%;
 width:0%;
 background:#00ff7f;
 border-radius:10px;
-transition:0.5s;
+transition:0.4s;
 }
 
 .log{
@@ -110,15 +96,12 @@ font-size:12px;
 
 <textarea id="msg" placeholder="اكتبي الرسالة هنا للتحليل..."></textarea>
 
-<button onclick="startSimulation()">تشغيل وضع المحاكاة</button>
-
 <div class="card">
 <h3>Threat Status</h3>
 <p id="status">—</p>
 <p>Risk Score: <span id="score">0</span>%</p>
 <div class="progress"><div class="bar" id="bar"></div></div>
 <p>Incident ID: <span id="incident">—</span></p>
-<p>Live Threat Counter: <span id="counter">0</span></p>
 </div>
 
 <div class="card">
@@ -139,78 +122,115 @@ font-size:12px;
 
 <script>
 let stats={safe:0,high:0};
-let counter=0;
-let simulationRunning=false;
+let lastStatus="";
+let selectedVoice=null;
 
-const suspiciousWords=[
-"تحقق من كلمة المرور",
-"تحقق من حسابك البنكي",
-"قم بالدخول إلى حسابك",
-"تحديث الحساب",
-"انقر للتحقق",
-"أكد بياناتك"
-];
+// 🎙️ اختيار صوت أنثوي ناعم قريب من Siri
+function loadVoices(){
+let voices=speechSynthesis.getVoices();
 
-const pattern=new RegExp(suspiciousWords.join("|"),"i");
+selectedVoice = voices.find(v =>
+v.lang.includes("ar") &&
+(v.name.toLowerCase().includes("female") ||
+ v.name.toLowerCase().includes("woman") ||
+ v.name.toLowerCase().includes("sara") ||
+ v.name.toLowerCase().includes("hoda"))
+);
+
+if(!selectedVoice){
+selectedVoice = voices.find(v =>
+v.lang.includes("en") &&
+(v.name.toLowerCase().includes("female") ||
+ v.name.toLowerCase().includes("zira"))
+);
+}
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
 
 function speak(text){
 let u=new SpeechSynthesisUtterance(text);
-u.lang="ar-SA";
+u.voice=selectedVoice;
+u.lang=selectedVoice ? selectedVoice.lang : "ar-SA";
+
+// 🔥 إعدادات صوت ناعم جداً
+u.rate=0.78;
+u.pitch=1.1;
+u.volume=1;
+
 speechSynthesis.cancel();
 speechSynthesis.speak(u);
 }
 
+function generateIncident(){
+return "INC-"+Date.now().toString().slice(-6);
+}
+
+// 🔴 كل الكلمات المشبوهة القديمة + إضافات قوية
+const suspiciousWords=[
+"تحقق من كلمة المرور",
+"تحقق من حسابك",
+"تحقق من حسابك البنكي",
+"حسابك البنكي",
+"تحديث الحساب",
+"قم بالدخول إلى حسابك",
+"إعادة تعيين كلمة المرور",
+"تغيير كلمة المرور",
+"انقر للتحقق",
+"اضغط هنا",
+"الإجراء المطلوب",
+"معلومات سرية",
+"بياناتك الشخصية",
+"اختراق الحساب",
+"اختراق البيانات",
+"تم تعليق حسابك",
+"تم تجميد حسابك",
+"تأكيد الهوية",
+"رمز التحقق",
+"شارك رمز التحقق",
+"استلمت حوالة",
+"مكافأة مالية",
+"انضم إلى الملايين",
+"فرصة استثمار فوري"
+];
+
+const pattern=new RegExp(suspiciousWords.join("|"),"i");
+
 function analyze(){
-let text=document.getElementById("msg").value;
+let text=document.getElementById("msg").value.toLowerCase().normalize("NFC").trim();
+if(text.length<3) return;
+
+let bar=document.getElementById("bar");
+document.body.classList.remove("alertHigh");
 
 if(pattern.test(text)){
-triggerHighThreat();
-}else{
-document.getElementById("status").innerText="آمن";
-document.getElementById("score").innerText="0";
-document.getElementById("bar").style.width="0%";
-stats.safe++;
-updateChart();
-speak("الرسالة آمنة.");
-}
-}
-
-document.getElementById("msg").addEventListener("input",analyze);
-
-function triggerHighThreat(){
-counter++;
 document.body.classList.add("alertHigh");
 document.getElementById("status").innerText="خطر عالي";
 document.getElementById("score").innerText="100";
-document.getElementById("bar").style.width="100%";
-document.getElementById("counter").innerText=counter;
+bar.style.width="100%";
 document.getElementById("alertSound").play();
 stats.high++;
-updateChart();
-speak("تحذير. تهديد عالي الخطورة.");
-logIncident("هجوم تصيد إلكتروني محتمل");
+speak("تحذير. تم اكتشاف رسالة خطيرة.");
+logIncident("تهديد تصيد إلكتروني محتمل");
+}else{
+document.getElementById("status").innerText="آمن";
+document.getElementById("score").innerText="0";
+bar.style.width="0%";
+stats.safe++;
+speak("الرسالة آمنة.");
+logIncident("لا يوجد تهديد");
 }
+
+updateChart();
+}
+
+document.getElementById("msg").addEventListener("input",analyze);
 
 function logIncident(text){
 let id="INC-"+Date.now().toString().slice(-6);
 document.getElementById("incident").innerText=id;
 document.getElementById("log").innerHTML+=
 `[${new Date().toLocaleTimeString()}] ${id} - ${text}<br>`;
-}
-
-function startSimulation(){
-if(simulationRunning) return;
-simulationRunning=true;
-
-speak("تنبيه. يتم حالياً رصد نشاط مشبوه متصاعد.");
-
-let interval=setInterval(()=>{
-triggerHighThreat();
-if(counter>=5){
-clearInterval(interval);
-simulationRunning=false;
-}
-},2000);
 }
 
 let chart=new Chart(document.getElementById("chart"),{
