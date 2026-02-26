@@ -37,15 +37,18 @@ font-size:16px;
 }
 
 button{
-display:block;
-margin:20px auto;
-padding:12px 30px;
+display:inline-block;
+margin:10px;
+padding:10px 25px;
 background:#00ffcc;
 border:none;
 border-radius:15px;
 font-weight:bold;
 cursor:pointer;
+cursor:pointer;
 }
+
+.center{text-align:center;}
 
 .card{
 width:85%;
@@ -74,96 +77,90 @@ transition:0.5s;
 .bar.danger{
 background:#ff0000;
 }
+
+/* 🔥 مربع التوصية */
+.recommendation{
+width:85%;
+margin:20px auto;
+padding:20px;
+border-radius:15px;
+font-weight:bold;
+background:#002b24;
+border:2px solid #00ffcc;
+box-shadow:0 0 20px #00ffcc33;
+transition:0.5s;
+}
+
+.recommendation.danger{
+background:#330000;
+border:2px solid #ff0000;
+box-shadow:0 0 25px #ff000066;
+color:#ffb3b3;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>🦅 BlackFalcon SOC™</h1>
-<p>Advanced SOC Simulation Platform</p>
+<h1 class="speakable">🦅 BlackFalcon SOC</h1>
+<p class="speakable">Advanced Security Operations Platform</p>
 </header>
 
-<textarea id="msg" placeholder="Paste suspicious message here..."></textarea>
-
-<button onclick="exportReport()">Export Report</button>
-
-<div class="card">
-<h3>Threat Status</h3>
-<p id="status">—</p>
-<p>Risk Score: <span id="score">0</span>%</p>
-<div class="progress"><div class="bar" id="bar"></div></div>
-<p>MITRE: <span id="mitre">—</span></p>
-<p>Incident ID: <span id="incident">—</span></p>
+<div class="center">
+<button onclick="window.print()" class="speakable">Export Report</button>
 </div>
 
-<audio id="alertSound">
-<source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3">
-</audio>
+<textarea id="msg" placeholder="Paste suspicious message here..." class="speakable"></textarea>
+
+<div class="card">
+<h3 class="speakable">Threat Status</h3>
+<p id="status" class="speakable">—</p>
+<p class="speakable">Risk Score: <span id="score">0</span>%</p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<p class="speakable">MITRE: <span id="mitre">—</span></p>
+<p class="speakable">Incident ID: <span id="incident">—</span></p>
+</div>
+
+<!-- 🔥 مربع التوصية الأمنية -->
+<div id="recommendationBox" class="recommendation speakable">
+Security recommendation will appear here.
+</div>
 
 <script>
 
 let debounceTimer=null;
-let incidentID="";
-let mitreID="";
-let riskScore=0;
-
-/* 🔥🔥🔥 قائمة ضخمة جداً (القديمة + توسعة) */
 
 const suspiciousWords=[
-
-// عربي بنكي
-"تحقق من حسابك","تحقق من حسابك البنكي","تحقق من كلمة المرور",
-"ادخل بياناتك","ادخل بياناتك البنكية","رقم البطاقة",
-"الرقم السري","رمز التحقق","رمز otp",
-"تحديث الحساب","تحديث بياناتك",
-"تم تجميد حسابك","حسابك موقوف",
-"عملية مشبوهة","نشاط غير معتاد",
-"تحويل فوري","دفعة مستحقة","فاتورة غير مدفوعة",
-"استرجاع الحساب","استعادة الحساب",
-"تأكيد الهوية","تغيير كلمة المرور",
-"حماية الحساب","تسجيل دخول غير مصرح",
-"تم سحب مبلغ","كشف حساب عاجل",
-
-// عربي تسويقي احتيالي
-"مبروك لقد ربحت","اربح الآن","جائزة مالية",
-"استلم جائزتك","عرض حصري",
-"لفترة محدودة","فرصة محدودة",
-"انضم الآن","اضغط هنا فوراً",
-"هدية مجانية","بطاقة هدايا",
-"ربح فوري","مجانا الآن",
-
-// تهديد واختراق
-"تم اختراق جهازك","اختراق البيانات",
-"فيروس خطير","ملف تجسس",
-"سنقوم بحظر حسابك","إغلاق الحساب نهائياً",
-
-// English Banking
-"verify your account","verify your password",
-"confirm your identity","account suspended",
-"account locked","security alert",
-"reset your password","update payment info",
-"credit card update","bank login",
-"paypal verification","wire transfer",
-"confirm billing","urgent action required",
-"login immediately","unusual activity detected",
-
-// English Scam
-"claim your prize","you won",
-"congratulations winner","limited time offer",
-"free gift card","exclusive offer",
-"act now","instant reward",
-"crypto investment","bitcoin profit",
-"double your money","investment opportunity",
-"guaranteed return","earn money fast",
-
-// Threat
-"malware detected","your device is infected",
-"unauthorized access attempt",
-"click here to secure","download attachment immediately"
+"تحقق من حسابك","تحقق من كلمة المرور","ادخل بياناتك",
+"رقم البطاقة","رمز التحقق","تم تجميد حسابك",
+"verify your account","account suspended",
+"reset your password","claim your prize",
+"free gift card","urgent action required"
 ];
 
 const pattern=new RegExp(suspiciousWords.join("|"),"i");
+
+/* 🎙 اختيار صوت ناعم */
+function getSoftVoice(){
+let voices=window.speechSynthesis.getVoices();
+return voices.find(v =>
+v.name.toLowerCase().includes("female") ||
+v.name.toLowerCase().includes("zira") ||
+v.name.toLowerCase().includes("google")
+) || voices[0];
+}
+
+function speak(text){
+if(!text) return;
+window.speechSynthesis.cancel();
+let speech=new SpeechSynthesisUtterance(text);
+speech.rate=0.95;
+speech.pitch=1;
+speech.voice=getSoftVoice();
+window.speechSynthesis.speak(speech);
+}
 
 function generateID(){
 return "INC-"+Math.floor(Math.random()*999999);
@@ -171,89 +168,79 @@ return "INC-"+Math.floor(Math.random()*999999);
 
 function analyze(){
 
-let text=document.getElementById("msg").value;
+let text=document.getElementById("msg").value.trim();
 if(text.length<3) return;
 
+let statusEl=document.getElementById("status");
+let bar=document.getElementById("bar");
+let score=document.getElementById("score");
+let mitre=document.getElementById("mitre");
+let incident=document.getElementById("incident");
+let recBox=document.getElementById("recommendationBox");
+
 document.body.classList.remove("alert");
-document.getElementById("bar").classList.remove("danger");
+bar.classList.remove("danger");
+recBox.classList.remove("danger");
 
 if(pattern.test(text)){
 
-riskScore=100;
-incidentID=generateID();
-mitreID="T1566 - Phishing";
-document.getElementById("status").innerText="HIGH RISK";
-document.getElementById("score").innerText=riskScore;
-document.getElementById("bar").style.width="100%";
-document.getElementById("bar").classList.add("danger");
-document.getElementById("mitre").innerText=mitreID;
-document.getElementById("incident").innerText=incidentID;
+statusEl.innerText="HIGH RISK";
+score.innerText="100";
+bar.style.width="100%";
+bar.classList.add("danger");
+mitre.innerText="T1566 - Phishing";
+incident.innerText=generateID();
 document.body.classList.add("alert");
-document.getElementById("alertSound").play();
+
+recBox.innerText="⚠️ SECURITY RECOMMENDATION: Do NOT click any links. Block the sender immediately and report to cybersecurity team.";
+recBox.classList.add("danger");
+
+setTimeout(()=>{
+speak("Warning. High risk message detected.");
+setTimeout(()=>{
+speak("Security recommendation. Do not click any links. Block sender immediately.");
+},1500);
+},500);
 
 }else{
 
-riskScore=0;
-incidentID=generateID();
-mitreID="None";
-document.getElementById("status").innerText="SAFE";
-document.getElementById("score").innerText=riskScore;
-document.getElementById("bar").style.width="0%";
-document.getElementById("mitre").innerText=mitreID;
-document.getElementById("incident").innerText=incidentID;
+statusEl.innerText="SAFE";
+score.innerText="0";
+bar.style.width="0%";
+mitre.innerText="None";
+incident.innerText=generateID();
+
+recBox.innerText="✔ Security recommendation: No malicious indicators detected. Continue monitoring only.";
+recBox.classList.remove("danger");
+
+setTimeout(()=>{
+speak("Message is safe.");
+setTimeout(()=>{
+speak("No malicious indicators detected.");
+},1200);
+},500);
+}
 
 }
-}
 
+/* تحليل بعد التوقف فقط */
 document.getElementById("msg").addEventListener("input",()=>{
 clearTimeout(debounceTimer);
-debounceTimer=setTimeout(analyze,1500);
+debounceTimer=setTimeout(analyze,2000);
 });
 
-function exportReport(){
-
-let message=document.getElementById("msg").value;
-let status=document.getElementById("status").innerText;
-let date=new Date().toLocaleString();
-
-let recommendation = status==="HIGH RISK" ?
-"Immediate investigation required. Block sender and prevent interaction." :
-"No malicious indicators detected. Continue monitoring.";
-
-let w=window.open('','','width=900,height=700');
-
-w.document.write(`
-<html>
-<head>
-<title>BlackFalcon SOC Report</title>
-<style>
-body{font-family:Arial;padding:40px;color:#000;}
-h1{color:#0a7d5c;}
-.box{border:1px solid #ccc;padding:15px;border-radius:8px;margin-top:10px;}
-</style>
-</head>
-<body>
-
-<h1>BlackFalcon SOC™ Security Report</h1>
-<p><b>Date:</b> ${date}</p>
-<p><b>Incident ID:</b> ${incidentID}</p>
-<p><b>Status:</b> ${status}</p>
-<p><b>Risk Score:</b> ${riskScore}%</p>
-<p><b>MITRE:</b> ${mitreID}</p>
-
-<h2>Analyzed Message</h2>
-<div class="box">${message}</div>
-
-<h2>Recommendation</h2>
-<div class="box">${recommendation}</div>
-
-</body>
-</html>
-`);
-
-w.document.close();
-w.print();
+/* قراءة أي عنصر يمر عليه الماوس */
+document.addEventListener("mouseover",(e)=>{
+let text=e.target.innerText || e.target.placeholder;
+if(e.target.classList.contains("speakable") || e.target.tagName==="BUTTON"){
+speak(text);
 }
+});
+
+/* قراءة مربع النص عند الدخول */
+document.getElementById("msg").addEventListener("focus",()=>{
+speak("Text input box. Paste message to analyze.");
+});
 
 </script>
 
