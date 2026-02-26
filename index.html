@@ -27,11 +27,26 @@ border-bottom:1px solid #00ff7f33;
 }
 
 .container{
-max-width:900px;
+max-width:1000px;
 margin:20px auto;
 padding:25px;
 background:rgba(0,20,0,0.9);
 border-radius:20px;
+}
+
+.langSwitch{
+text-align:center;
+margin-bottom:15px;
+}
+
+.langSwitch button{
+padding:8px 15px;
+margin:5px;
+background:#00ff7f;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
 }
 
 textarea{
@@ -51,14 +66,12 @@ outline:none;
 box-shadow:0 0 20px #00ff7f;
 }
 
-button{
-margin-top:10px;
-padding:10px 20px;
-background:#00ff7f;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-weight:bold;
+.card{
+background:#001a00;
+padding:20px;
+border-radius:15px;
+margin-top:15px;
+box-shadow:0 0 15px #00ff7f22;
 }
 
 .progress{
@@ -87,7 +100,13 @@ background:#0a0a0a;
 padding:10px;
 border-radius:10px;
 font-size:12px;
-margin-top:10px;
+}
+
+footer{
+text-align:center;
+padding:15px;
+font-size:12px;
+border-top:1px solid #00ff7f33;
 }
 </style>
 </head>
@@ -96,22 +115,34 @@ margin-top:10px;
 
 <header>
 <h1>🦅 BlackFalcon SOC™</h1>
-<p>Advanced Phishing Detection Simulation</p>
+<p id="subtitle">نظام تحليل التهديدات السيبرانية</p>
 </header>
 
 <div class="container">
 
-<textarea id="msg" placeholder="اكتبي الرسالة هنا للتحليل..."></textarea>
-<button onclick="analyzeMessage()">تحليل</button>
+<div class="langSwitch">
+<button onclick="setLang('ar')">العربية</button>
+<button onclick="setLang('en')">English</button>
+</div>
 
+<textarea id="msg" placeholder="اكتبي الرسالة هنا للتحليل..."></textarea>
+
+<div class="card">
 <h3 id="status">—</h3>
 <p>Risk Score: <span id="score">0</span>%</p>
 <div class="progress"><div class="bar" id="bar"></div></div>
+</div>
 
-<h4>Incident Log</h4>
+<div class="card">
+<h3>Incident Log</h3>
 <div class="log" id="log"></div>
+</div>
 
 </div>
+
+<footer>
+BlackFalcon SOC™
+</footer>
 
 <audio id="alertSound">
 <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3">
@@ -119,57 +150,36 @@ margin-top:10px;
 
 <script>
 
-let lastSpoken="";
+let currentLang="ar";
 let lastStatus="";
+let lastSpoken="";
+let debounceTimer=null;
 
-// 🔥🔥🔥 قائمة ضخمة جداً
 const suspiciousWords=[
 
-// عربي مالي وبنكي
+// عربي شامل ضخم
 "تحقق من حسابك","تحقق من حسابك البنكي","تحقق من كلمة المرور",
 "ادخل كلمة المرور","ادخل بياناتك","ادخل بياناتك البنكية",
-"رقم البطاقة","رقم سري","الرقم السري","رمز التحقق",
-"رمز otp","كود التفعيل","تم تجميد حسابك","حسابك موقوف",
-"تحديث الحساب","تحديث بياناتك","بيانات الدفع",
-"تحويل فوري","تحويل مالي","دفعة مستحقة","فاتورة غير مدفوعة",
-"تم سحب مبلغ","عملية مشبوهة","نشاط غير معتاد",
-"حسابك معرض للخطر","حماية الحساب","تأكيد الهوية",
-"استرجاع الحساب","استعادة الحساب","تغيير كلمة المرور",
-
-// عربي تسويقي احتيالي
-"اربح الآن","مبروك لقد ربحت","انضم الآن",
-"فرصة محدودة","عرض حصري","جائزة مالية",
+"رقم البطاقة","الرقم السري","رمز التحقق","رمز otp",
+"تم تجميد حسابك","حسابك موقوف","تحديث الحساب",
+"بيانات الدفع","تحويل فوري","عملية مشبوهة",
+"نشاط غير معتاد","تأكيد الهوية","استرجاع الحساب",
+"تغيير كلمة المرور","اربح الآن","مبروك لقد ربحت",
+"انضم الآن","عرض حصري","جائزة مالية",
 "استلم جائزتك","اضغط هنا فوراً",
-"سارع الآن","لفترة محدودة","مجانا الآن",
-"هدية مجانية","بطاقة هدايا","ربح فوري",
-
-// اختراق وتهديد
 "تم اختراق جهازك","اختراق البيانات",
-"فيروس خطير","ملف تجسس","تم تسجيل دخول غير مصرح",
-"سنقوم بحظر حسابك","إغلاق الحساب نهائياً",
+"سنقوم بحظر حسابك","إغلاق الحساب",
 
-// English Banking
+// English
 "verify your account","verify your password",
-"bank account verification","confirm your identity",
-"account suspended","account locked","security alert",
-"reset your password","update payment info",
-"credit card update","bank login","paypal verification",
-"wire transfer","confirm billing","urgent action required",
-"login immediately","unusual activity detected",
-
-// English Scam Marketing
-"claim your prize","you won","congratulations winner",
-"limited time offer","free gift card","exclusive offer",
-"act now","instant reward","crypto investment",
-"bitcoin profit","double your money",
-"investment opportunity","guaranteed return",
-"no risk profit","earn money fast",
-
-// Threat
-"your device is infected",
-"malware detected",
-"click here to secure",
-"unauthorized access attempt"
+"confirm your identity","account suspended",
+"account locked","reset your password",
+"update payment info","credit card update",
+"urgent action required","claim your prize",
+"free gift card","limited time offer",
+"bitcoin investment","double your money",
+"unauthorized access attempt",
+"malware detected","security alert"
 ];
 
 const suspiciousPattern=new RegExp(suspiciousWords.join("|"),"i");
@@ -179,15 +189,11 @@ if(text===lastSpoken) return;
 lastSpoken=text;
 
 let u=new SpeechSynthesisUtterance(text);
-u.lang="ar-SA";
+u.lang=currentLang==="ar"?"ar-SA":"en-US";
 u.rate=0.95;
 u.pitch=1.2;
 speechSynthesis.cancel();
 speechSynthesis.speak(u);
-}
-
-function generateIncident(){
-return "INC-"+Date.now().toString().slice(-6);
 }
 
 function analyzeMessage(){
@@ -207,23 +213,26 @@ bar.classList.remove("alert");
 
 if(suspiciousPattern.test(text)){
 score=100;
-status="خطر عالي";
+status=currentLang==="ar"?"خطر عالي":"High Risk";
 document.body.classList.add("alertHigh");
 bar.classList.add("alert");
 document.getElementById("alertSound").play();
 
 if(lastStatus!=="high"){
-speak("تحذير. تم اكتشاف رسالة تصيد احتيالي عالية الخطورة.");
+speak(currentLang==="ar"
+?"تحذير. تم اكتشاف رسالة تصيد احتيالي عالية الخطورة."
+:"Warning. High risk phishing message detected.");
 lastStatus="high";
 }
 
 }else{
-
 score=0;
-status="آمن";
+status=currentLang==="ar"?"آمن":"Safe";
 
 if(lastStatus!=="safe"){
-speak("الرسالة تبدو آمنة.");
+speak(currentLang==="ar"
+?"الرسالة تبدو آمنة."
+:"Message appears safe.");
 lastStatus="safe";
 }
 }
@@ -232,14 +241,36 @@ document.getElementById("status").innerText=status;
 document.getElementById("score").innerText=score;
 bar.style.width=score+"%";
 
-let inc=generateIncident();
 document.getElementById("log").innerHTML+=
-`[${new Date().toLocaleTimeString()}] ${inc} - ${status} (${score}%)<br>`;
+`[${new Date().toLocaleTimeString()}] ${status} (${score}%)<br>`;
 }
 
+function analyzeAuto(){
+clearTimeout(debounceTimer);
+debounceTimer=setTimeout(analyzeMessage,600);
+}
+
+document.getElementById("msg").addEventListener("input",analyzeAuto);
+
 document.getElementById("msg").addEventListener("focus",()=>{
-speak("تم تحديد مربع إدخال الرسالة.");
+speak(currentLang==="ar"
+?"تم تحديد مربع إدخال الرسالة."
+:"Message input field selected.");
 });
+
+function setLang(lang){
+currentLang=lang;
+
+if(lang==="ar"){
+document.body.style.direction="rtl";
+document.getElementById("subtitle").innerText="نظام تحليل التهديدات السيبرانية";
+document.getElementById("msg").placeholder="اكتبي الرسالة هنا للتحليل...";
+}else{
+document.body.style.direction="ltr";
+document.getElementById("subtitle").innerText="Cyber Threat Analysis System";
+document.getElementById("msg").placeholder="Type message here for analysis...";
+}
+}
 
 </script>
 
