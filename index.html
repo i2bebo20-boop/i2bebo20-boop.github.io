@@ -1,63 +1,120 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BlackFalcon SOC Elite</title>
+<title>BlackFalcon SOC™ Ultimate</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 body{
 margin:0;
 font-family:'Orbitron',sans-serif;
-background:black;
 color:#00f5d4;
-overflow:hidden;
-transition:1s;
+overflow-x:hidden;
 }
 
 body.alert{
-background:#140000;
-color:#ff4d6d;
+background:#1a0000;
 }
 
 header{
 text-align:center;
-padding:40px;
+padding:40px 20px;
+position:relative;
+z-index:2;
+}
+
+.controls{
+text-align:center;
+margin-bottom:20px;
+z-index:2;
+position:relative;
+}
+
+button{
+padding:10px 25px;
+margin:5px;
+border-radius:30px;
+border:1px solid #00f5d4;
+background:rgba(0,0,0,0.6);
+color:#00f5d4;
+font-weight:bold;
+cursor:pointer;
+backdrop-filter:blur(6px);
 }
 
 textarea{
 width:85%;
-height:160px;
+height:150px;
 display:block;
 margin:30px auto;
-background:rgba(0,0,0,0.6);
+background:rgba(0,0,0,0.5);
 border:1px solid #00f5d4;
 border-radius:20px;
 padding:20px;
 color:#00f5d4;
-font-size:16px;
-}
-
-body.alert textarea{
-border:1px solid #ff0033;
-color:#ff9aa2;
+font-size:15px;
+backdrop-filter:blur(8px);
+z-index:2;
+position:relative;
 }
 
 .card{
 width:85%;
 margin:20px auto;
-background:rgba(0,0,0,0.5);
+background:rgba(0,0,0,0.4);
 border-radius:25px;
 padding:25px;
-text-align:center;
-box-shadow:0 0 30px #00f5d422;
+backdrop-filter:blur(12px);
+box-shadow:0 0 40px #00f5d422;
+z-index:2;
+position:relative;
+}
+
+.progress{
+height:8px;
+background:#111;
+border-radius:10px;
+margin-top:15px;
+overflow:hidden;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:#00f5d4;
+transition:0.5s;
+}
+
+.bar.danger{
+background:#ff0033;
+}
+
+.recommendation{
+width:85%;
+margin:20px auto;
+padding:20px;
+border-radius:20px;
+background:rgba(0,0,0,0.4);
+border:1px solid #00f5d4;
+backdrop-filter:blur(10px);
+box-shadow:0 0 25px #00f5d422;
+font-weight:bold;
+position:relative;
+z-index:2;
+}
+
+.recommendation.danger{
+border:1px solid #ff0033;
+box-shadow:0 0 30px #ff003344;
+color:#ff9aa2;
 }
 
 canvas{
 position:fixed;
 top:0;
 left:0;
-z-index:-1;
+z-index:0;
 }
 </style>
 </head>
@@ -68,102 +125,94 @@ z-index:-1;
 
 <header>
 <h1 class="speakable">🦅 BlackFalcon SOC</h1>
-<p class="speakable">AI Accessibility Threat Detection</p>
+<p id="subtitle" class="speakable">Advanced Security Operations Platform</p>
 </header>
 
-<textarea id="msg" class="speakable" placeholder="الصق الرسالة هنا للتحليل..."></textarea>
+<div class="controls">
+<button onclick="toggleLang()" class="speakable">🌍 Language</button>
+<button onclick="window.print()" class="speakable">Export Report</button>
+</div>
 
-<div class="card speakable">
-<h3>حالة التهديد</h3>
-<p id="status">—</p>
-<p>Incident ID: <span id="incident">—</span></p>
+<textarea id="msg" class="speakable" placeholder="Paste suspicious message here..."></textarea>
+
+<div class="card">
+<h3 id="threatTitle" class="speakable">Threat Status</h3>
+<p id="status" class="speakable">—</p>
+<p class="speakable"><span id="riskLabel">Risk Score</span>: <span id="score">0</span>%</p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<p class="speakable">MITRE: <span id="mitre">—</span></p>
+<p class="speakable">Incident ID: <span id="incident">—</span></p>
+</div>
+
+<div id="recommendationBox" class="recommendation speakable">
+Security recommendation will appear here.
 </div>
 
 <script>
 
-/* ===== Digital Rain ===== */
-const canvas=document.getElementById("matrix");
-const ctx=canvas.getContext("2d");
-canvas.height=window.innerHeight;
-canvas.width=window.innerWidth;
+/* ===== Digital Rain Background ===== */
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
 
-const letters="01";
-const fontSize=14;
-const columns=canvas.width/fontSize;
-const drops=[];
-for(let x=0;x<columns;x++){drops[x]=1;}
+const letters = "01";
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = [];
 
-let rainColor="#00f5d4";
+for(let x=0;x<columns;x++){ drops[x]=1; }
 
 function draw(){
 ctx.fillStyle="rgba(0,0,0,0.08)";
 ctx.fillRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle=rainColor;
+ctx.fillStyle="#00f5d4";
 ctx.font=fontSize+"px monospace";
 for(let i=0;i<drops.length;i++){
 let text=letters.charAt(Math.floor(Math.random()*letters.length));
 ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-if(drops[i]*fontSize>canvas.height && Math.random()>0.975){drops[i]=0;}
+if(drops[i]*fontSize>canvas.height && Math.random()>0.975){ drops[i]=0; }
 drops[i]++;
 }
 }
-setInterval(draw,40);
+setInterval(draw,35);
 
-/* ===== Suspicious Words (Full Old List) ===== */
+/* ===== Threat Detection ===== */
+
+let currentLang="en";
+let debounceTimer=null;
+
 const suspiciousWords=[
 "تحقق من حسابك","تحقق من حسابك البنكي","تحقق من كلمة المرور",
 "ادخل بياناتك","ادخل بياناتك البنكية","رقم البطاقة",
 "الرقم السري","رمز التحقق","تحديث الحساب",
 "تم تجميد حسابك","حسابك موقوف","مبروك لقد ربحت",
 "اربح الآن","جائزة مالية","هدية مجانية",
-"تحويل فوري","استثمار سريع","ضاعف أموالك",
 "verify your account","account suspended",
 "reset your password","claim your prize",
 "free gift card","urgent action required",
 "unusual activity detected","confirm your identity",
-"bitcoin investment","double your money",
-"bank alert","security update required",
-"limited time offer","click here immediately"
+"bitcoin investment","double your money"
 ];
 
 const pattern=new RegExp(suspiciousWords.join("|"),"i");
 
-/* ===== Voice System ===== */
-
-let spokenElements=new Set();
-let debounceTimer=null;
-let spokenResult=false;
-
 function getSoftVoice(){
 let voices=window.speechSynthesis.getVoices();
-return voices.find(v=>v.lang.includes("ar") && v.name.toLowerCase().includes("female")) || voices[0];
+return voices.find(v=>v.name.toLowerCase().includes("female")) || voices[0];
 }
 
 function speak(text){
 if(!text) return;
 window.speechSynthesis.cancel();
 let speech=new SpeechSynthesisUtterance(text);
-speech.lang="ar-SA";
-speech.rate=0.80;
+speech.lang=currentLang==="ar"?"ar-SA":"en-US";
+speech.rate=0.85;
 speech.pitch=0.9;
 speech.volume=0.9;
 speech.voice=getSoftVoice();
 window.speechSynthesis.speak(speech);
 }
-
-/* قراءة عند المرور */
-document.addEventListener("mouseover",(e)=>{
-let text=e.target.innerText || e.target.placeholder;
-if(text && !spokenElements.has(e.target)){
-spokenElements.add(e.target);
-speak(text);
-}
-});
-document.addEventListener("mouseout",(e)=>{
-spokenElements.delete(e.target);
-});
-
-/* ===== Threat Analysis ===== */
 
 function generateID(){
 return "INC-"+Math.floor(Math.random()*999999);
@@ -174,37 +223,74 @@ let text=document.getElementById("msg").value.trim();
 if(text.length<3) return;
 
 let status=document.getElementById("status");
+let score=document.getElementById("score");
+let bar=document.getElementById("bar");
+let mitre=document.getElementById("mitre");
 let incident=document.getElementById("incident");
-incident.innerText=generateID();
+let rec=document.getElementById("recommendationBox");
 
 document.body.classList.remove("alert");
-rainColor="#00f5d4";
+bar.classList.remove("danger");
+rec.classList.remove("danger");
 
 if(pattern.test(text)){
-status.innerText="⚠ رسالة مشبوهة";
+status.innerText=currentLang==="ar"?"خطر عالي":"HIGH RISK";
+score.innerText="100";
+bar.style.width="100%";
+bar.classList.add("danger");
+mitre.innerText="T1566 - Phishing";
+incident.innerText=generateID();
 document.body.classList.add("alert");
-rainColor="#ff0033";
 
-if(!spokenResult){
-setTimeout(()=>speak("تنبيه. رسالة مشبوهة"),500);
-spokenResult=true;
-}
+rec.innerText=currentLang==="ar"?
+"⚠️ التوصية: لا تضغط أي رابط. قم بحظر المرسل وإبلاغ فريق الأمن فوراً.":
+"⚠️ Recommendation: Do NOT click any links. Block sender and report immediately.";
+rec.classList.add("danger");
+
+setTimeout(()=>speak(status.innerText),500);
 
 }else{
-status.innerText="✔ رسالة آمنة";
+status.innerText=currentLang==="ar"?"آمن":"SAFE";
+score.innerText="0";
+bar.style.width="0%";
+mitre.innerText="None";
+incident.innerText=generateID();
 
-if(!spokenResult){
-setTimeout(()=>speak("رسالة آمنة"),500);
-spokenResult=true;
-}
+rec.innerText=currentLang==="ar"?
+"✔ التوصية: لا يوجد تهديد واضح. استمر بالمراقبة فقط.":
+"✔ Recommendation: No clear threat detected. Continue monitoring.";
+setTimeout(()=>speak(status.innerText),500);
 }
 }
 
 document.getElementById("msg").addEventListener("input",()=>{
 clearTimeout(debounceTimer);
-spokenResult=false;
-debounceTimer=setTimeout(analyze,3500);
+debounceTimer=setTimeout(analyze,2000);
 });
+
+document.addEventListener("mouseover",(e)=>{
+let text=e.target.innerText || e.target.placeholder;
+if(e.target.classList.contains("speakable") || e.target.tagName==="BUTTON"){
+speak(text);
+}
+});
+
+function toggleLang(){
+if(currentLang==="en"){
+currentLang="ar";
+document.getElementById("subtitle").innerText="منصة مركز العمليات الأمنية";
+document.getElementById("threatTitle").innerText="حالة التهديد";
+document.getElementById("riskLabel").innerText="درجة الخطورة";
+document.getElementById("msg").placeholder="الصق الرسالة هنا للتحليل...";
+}else{
+currentLang="en";
+document.getElementById("subtitle").innerText="Advanced Security Operations Platform";
+document.getElementById("threatTitle").innerText="Threat Status";
+document.getElementById("riskLabel").innerText="Risk Score";
+document.getElementById("msg").placeholder="Paste suspicious message here...";
+}
+speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
+}
 
 </script>
 
