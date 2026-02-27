@@ -26,6 +26,11 @@ text-align:center;
 margin-top:120px;
 }
 
+h1{
+font-size:32px;
+text-shadow:0 0 20px #00f5d4;
+}
+
 textarea{
 width:60%;
 height:120px;
@@ -36,12 +41,12 @@ border:none;
 outline:none;
 background:#111;
 color:#00f5d4;
-box-shadow:0 0 15px #00f5d4;
+box-shadow:0 0 20px #00f5d4;
 }
 
 .result{
 margin-top:20px;
-font-size:24px;
+font-size:26px;
 font-weight:bold;
 }
 
@@ -57,7 +62,7 @@ margin-top:15px;
 padding:15px;
 border-radius:10px;
 background:#111;
-box-shadow:0 0 10px #00f5d4;
+box-shadow:0 0 15px #00f5d4;
 width:60%;
 margin-left:auto;
 margin-right:auto;
@@ -71,7 +76,9 @@ border:none;
 border-radius:8px;
 cursor:pointer;
 background:#00f5d4;
+cursor:pointer;
 }
+
 </style>
 </head>
 <body>
@@ -82,7 +89,9 @@ background:#00f5d4;
 
 <h1 data-readable>نظام تحليل التهديدات السيبرانية</h1>
 
-<textarea id="input" placeholder="اكتب الرسالة هنا..." data-readable></textarea>
+<textarea id="input"
+placeholder="اكتب الرسالة هنا..."
+data-readable></textarea>
 
 <div id="result" class="result" data-readable></div>
 
@@ -90,41 +99,66 @@ background:#00f5d4;
 🛡 التوصية الأمنية ستظهر هنا
 </div>
 
-<button onclick="toggleLanguage()" data-readable>🌐 تبديل اللغة</button>
+<button onclick="toggleLanguage()" data-readable>
+🌐 تبديل اللغة
+</button>
 
 </div>
 
 <script>
 
-/* ===== Voice System ===== */
+/* ================= VOICE SYSTEM ================= */
 
 let currentLang="ar";
-let isSpeaking=false;
+let femaleVoice=null;
+
+/* تحميل الصوت الأنثوي إن وجد */
+function loadVoices(){
+const voices=speechSynthesis.getVoices();
+femaleVoice=voices.find(v =>
+v.lang.includes(currentLang==="ar"?"ar":"en") &&
+v.name.toLowerCase().includes("female")
+);
+}
+
+speechSynthesis.onvoiceschanged=loadVoices;
 
 function speak(text){
-if(isSpeaking) return;
-isSpeaking=true;
+speechSynthesis.cancel();
 
 const msg=new SpeechSynthesisUtterance(text);
-msg.lang = currentLang==="ar" ? "ar-SA" : "en-US";
+msg.lang=currentLang==="ar"?"ar-SA":"en-US";
 msg.rate=0.85;
 msg.pitch=1;
 msg.volume=1;
 
-msg.onend = () => { isSpeaking=false; };
+if(femaleVoice){
+msg.voice=femaleVoice;
+}
 
 speechSynthesis.speak(msg);
 }
 
 /* قراءة أي عنصر يمر عليه الماوس */
 document.addEventListener("mouseover",function(e){
-if(e.target.hasAttribute("data-readable")){
-let text = e.target.innerText || e.target.placeholder;
-if(text) speak(text);
+
+if(e.target.id==="input"){
+speak(currentLang==="ar"?
+"مربع إدخال النص":
+"Text input field");
+return;
 }
+
+if(e.target.hasAttribute("data-readable")){
+let text=e.target.innerText || e.target.placeholder;
+if(text){
+speak(text);
+}
+}
+
 });
 
-/* ===== الكلمات المشبوهة ===== */
+/* ================= الكلمات المشبوهة ================= */
 
 const suspiciousWords=[
 "تحقق","حسابك","البنكي","كلمة المرور","otp","رمز","سري",
@@ -134,7 +168,7 @@ const suspiciousWords=[
 "free money","claim now","update account"
 ];
 
-/* ===== تحليل بعد التوقف عن الكتابة ===== */
+/* ================= تحليل بعد التوقف ================= */
 
 let typingTimer;
 
@@ -167,7 +201,8 @@ rec.innerHTML="🛑 لا تضغط الروابط ولا تشارك بيانات�
 document.body.classList.add("alert");
 rainColor="#ff0033";
 
-speak("مشبوهة");
+speak(currentLang==="ar"?"مشبوهة":"Suspicious");
+
 setTimeout(()=>{
 speak(rec.innerText);
 },1200);
@@ -182,7 +217,8 @@ rec.innerHTML="🛡 لا يوجد خطر واضح، لكن تأكد دائماً
 document.body.classList.remove("alert");
 rainColor="#00f5d4";
 
-speak("آمنة");
+speak(currentLang==="ar"?"آمنة":"Safe");
+
 setTimeout(()=>{
 speak(rec.innerText);
 },1200);
@@ -191,9 +227,10 @@ speak(rec.innerText);
 
 }
 
-/* ===== تبديل اللغة ===== */
+/* ================= تبديل اللغة ================= */
 
 function toggleLanguage(){
+
 if(currentLang==="ar"){
 currentLang="en";
 document.querySelector("h1").innerText="Cyber Threat Analyzer";
@@ -203,9 +240,10 @@ currentLang="ar";
 document.querySelector("h1").innerText="نظام تحليل التهديدات السيبرانية";
 document.getElementById("input").placeholder="اكتب الرسالة هنا...";
 }
+
 }
 
-/* ===== Matrix Rain ===== */
+/* ================= Matrix Rain ================= */
 
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
@@ -233,7 +271,9 @@ ctx.font=fontSize+"px monospace";
 for(let i=0;i<drops.length;i++){
 ctx.fillText("•",i*fontSize,drops[i]);
 drops[i]+=fontSize;
-if(drops[i]>canvas.height){ drops[i]=0; }
+if(drops[i]>canvas.height){
+drops[i]=0;
+}
 }
 }
 
