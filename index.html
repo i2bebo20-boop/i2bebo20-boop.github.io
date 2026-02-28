@@ -133,48 +133,51 @@ box-shadow:0 0 25px #ff003355;
 <script>
 
 let currentLang="ar";
+let lastSpoken="";
 
-/* ===== Voice ===== */
-
+/* ===== صوت ذكي ===== */
 function speak(text){
 if(!text.trim()) return;
+if(text===lastSpoken) return;
+lastSpoken=text;
+
 speechSynthesis.cancel();
 let msg=new SpeechSynthesisUtterance(text);
 msg.lang=currentLang==="ar"?"ar-SA":"en-US";
 msg.rate=0.95;
+msg.pitch=1;
 speechSynthesis.speak(msg);
 }
 
 /* قراءة عند تمرير الماوس */
 document.addEventListener("mouseover",function(e){
 let text=e.target.innerText;
-if(text && text.length < 120){
+if(text && text.length<150){
 speak(text);
 }
 });
 
-/* ===== كلمات مشبوهة ===== */
-
+/* ===== كلمات مشبوهة موسعة ===== */
 const suspiciousWords=[
-"تحقق من حسابك","تم تجميد حسابك","حسابك موقوف","أدخل بياناتك",
-"الرقم السري","رمز التحقق","كلمة المرور","بيانات البطاقة",
-"رقم البطاقة","بطاقتك الائتمانية","رقم الآيبان","iban",
+"تحقق من حسابك البنكي","تحقق من حسابك","تم تجميد حسابك","حسابك موقوف",
+"أدخل بياناتك","الرقم السري","رمز التحقق","كلمة المرور","بيانات البطاقة",
+"رقم البطاقة","بطاقتك الائتمانية","رقم الآيبان","iban","swift",
 "otp","تحويل بنكي","حوالة عاجلة","استثمار مضمون",
 "اضغط هنا","عرض محدود","ربح سريع","قرض سريع",
-"verify your account","account suspended","reset your password",
+"verify your bank account","verify your account",
+"account suspended","reset your password",
 "update payment information","bank transfer",
-"credit card number","cvv","swift code",
-"claim your prize","urgent action required",
-"bitcoin investment","crypto investment",
-"double your money","win cash now",
-"social security number","ssn"
+"credit card number","cvv","claim your prize",
+"urgent action required","bitcoin investment",
+"crypto investment","double your money",
+"win cash now","social security number","ssn"
 ];
 
 let timer;
 
 document.getElementById("msg").addEventListener("input",()=>{
 clearTimeout(timer);
-timer=setTimeout(analyze,1200);
+timer=setTimeout(analyze,1000);
 });
 
 function analyze(){
@@ -186,7 +189,7 @@ suspiciousWords.forEach(w=>{
 if(text.includes(w.toLowerCase())) matches++;
 });
 
-let risk=Math.min(matches*10,100);
+let risk=Math.min(matches*12,100);
 
 document.getElementById("score").innerText=risk;
 document.getElementById("bar").style.width=risk+"%";
@@ -196,25 +199,26 @@ let rec=document.getElementById("rec");
 
 if(risk>0){
 
-document.getElementById("status").innerHTML="<span class='danger'>HIGH RISK</span>";
+document.getElementById("status").innerHTML="<span class='danger'>غير آمن</span>";
 document.getElementById("mitre").innerText="MITRE: T1566 – Phishing";
 
 rec.classList.remove("recSafe");
 rec.classList.add("recDanger");
 
 if(currentLang==="ar"){
-rec.innerText="⚠️ تحذير: الرسالة مشبوهة. لا تضغط أي رابط.";
-speak("الرسالة مشبوهة");
+rec.innerText="⚠️ تحذير: الرسالة غير آمنة. لا تضغط أي رابط ولا تشارك بياناتك.";
+speak("تنبيه. الرسالة غير آمنة.");
 }else{
-rec.innerText="⚠️ Warning: This message is suspicious.";
-speak("This message is suspicious");
+document.getElementById("status").innerHTML="<span class='danger'>UNSAFE</span>";
+rec.innerText="⚠️ Warning: Message is unsafe. Do not click links.";
+speak("Warning. This message is unsafe.");
 }
 
 rainColor="#ff0033";
 
 }else{
 
-document.getElementById("status").innerHTML="<span class='safe'>SAFE</span>";
+document.getElementById("status").innerHTML="<span class='safe'>آمن</span>";
 document.getElementById("mitre").innerText="MITRE: —";
 
 rec.classList.remove("recDanger");
@@ -222,10 +226,11 @@ rec.classList.add("recSafe");
 
 if(currentLang==="ar"){
 rec.innerText="✔️ الرسالة تبدو آمنة.";
-speak("الرسالة آمنة");
+speak("الرسالة آمنة.");
 }else{
+document.getElementById("status").innerHTML="<span class='safe'>SAFE</span>";
 rec.innerText="✔️ Message appears safe.";
-speak("This message is safe");
+speak("This message is safe.");
 }
 
 rainColor="#00f5d4";
@@ -242,17 +247,14 @@ currentLang="en";
 document.getElementById("subtitle").innerText="Advanced Security Operations Platform";
 document.getElementById("msg").placeholder="Paste suspicious message here...";
 document.getElementById("threatTitle").innerText="Threat Status";
-document.getElementById("riskText").innerHTML="Risk Score: <span id='score'>"+document.getElementById("score").innerText+"</span>%";
-document.getElementById("incidentText").innerHTML="Incident ID: <span id='incident'>"+document.getElementById("incident").innerText+"</span>";
 }else{
 currentLang="ar";
 document.getElementById("subtitle").innerText="منصة مركز العمليات الأمنية";
 document.getElementById("msg").placeholder="الصق الرسالة هنا...";
 document.getElementById("threatTitle").innerText="حالة التهديد";
-document.getElementById("riskText").innerHTML="نسبة الخطورة: <span id='score'>"+document.getElementById("score").innerText+"</span>%";
-document.getElementById("incidentText").innerHTML="رقم الحادثة: <span id='incident'>"+document.getElementById("incident").innerText+"</span>";
 }
 
+analyze();
 }
 
 /* ===== Matrix ===== */
