@@ -12,25 +12,23 @@ background:black;
 color:#00f5d4;
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
+transition:0.6s;
+}
+
+body.dangerMode{
+background:#1a0000;
+box-shadow:inset 0 0 250px #ff0033;
+animation:flash 0.6s infinite alternate;
+}
+
+@keyframes flash{
+from{box-shadow:inset 0 0 150px #ff0033;}
+to{box-shadow:inset 0 0 300px #ff0000;}
 }
 
 canvas{position:fixed;top:0;left:0;z-index:-1;}
 
 .container{text-align:center;margin-top:100px;}
-
-h1{font-size:42px;text-shadow:0 0 25px #00f5d4;}
-
-.subtitle{margin-bottom:30px;color:#00f5d4aa;}
-
-button{
-padding:10px 25px;
-border-radius:30px;
-border:1px solid #00f5d4;
-background:transparent;
-color:#00f5d4;
-cursor:pointer;
-margin:10px;
-}
 
 textarea{
 width:80%;
@@ -82,14 +80,12 @@ transition:0.4s;
 background:rgba(0,255,136,0.15);
 border:2px solid #00ff88;
 color:#00ff88;
-box-shadow:0 0 25px #00ff8855;
 }
 
 .recDanger{
 background:rgba(255,0,51,0.15);
 border:2px solid #ff0033;
 color:#ff0033;
-box-shadow:0 0 25px #ff003355;
 }
 
 .safe{color:#00ff88;}
@@ -102,26 +98,16 @@ box-shadow:0 0 25px #ff003355;
 
 <div class="container">
 
-<h1>🦅 BlackFalcon SOC</h1>
-<div class="subtitle" id="subtitle">Advanced Security Operations Platform</div>
-
-<button onclick="toggleLang()">EN | AR</button>
-
-<br><br>
-
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 <div class="card">
-<h2 id="threatTitle">حالة التهديد</h2>
+<h2>حالة التهديد</h2>
 <div id="status">—</div>
-<div id="riskText">نسبة الخطورة: <span id="score">0</span>%</div>
+<div>نسبة الخطورة: <span id="score">0</span>%</div>
 
-<div class="progress">
-<div class="bar" id="bar"></div>
-</div>
-
+<div class="progress"><div class="bar" id="bar"></div></div>
 <div id="mitre">MITRE: —</div>
-<div id="incidentText">رقم الحادثة: <span id="incident">—</span></div>
+<div>رقم الحادثة: <span id="incident">—</span></div>
 </div>
 
 <div class="recommendation recSafe" id="rec">
@@ -132,52 +118,98 @@ box-shadow:0 0 25px #ff003355;
 
 <script>
 
-let currentLang="ar";
-let lastSpoken="";
+let rainColor="#00f5d4";
+let currentRisk=0;
 
-/* ===== صوت ذكي ===== */
+/* ===== صوت ===== */
 function speak(text){
-if(!text.trim()) return;
-if(text===lastSpoken) return;
-lastSpoken=text;
-
 speechSynthesis.cancel();
 let msg=new SpeechSynthesisUtterance(text);
-msg.lang=currentLang==="ar"?"ar-SA":"en-US";
+msg.lang="ar-SA";
 msg.rate=0.95;
-msg.pitch=1;
 speechSynthesis.speak(msg);
 }
 
-/* قراءة عند تمرير الماوس */
-document.addEventListener("mouseover",function(e){
-let text=e.target.innerText;
-if(text && text.length<150){
-speak(text);
-}
-});
+/* ===== القائمة الضخمة جداً ===== */
 
-/* ===== كلمات مشبوهة موسعة ===== */
 const suspiciousWords=[
-"تحقق من حسابك البنكي","تحقق من حسابك","تم تجميد حسابك","حسابك موقوف",
-"أدخل بياناتك","الرقم السري","رمز التحقق","كلمة المرور","بيانات البطاقة",
-"رقم البطاقة","بطاقتك الائتمانية","رقم الآيبان","iban","swift",
-"otp","تحويل بنكي","حوالة عاجلة","استثمار مضمون",
-"اضغط هنا","عرض محدود","ربح سريع","قرض سريع",
+
+/* بنوك عربي */
+"تحقق من حسابك البنكي","تحقق من حسابك","تحديث بياناتك البنكية",
+"تم تجميد حسابك","تم إيقاف حسابك","حسابك موقوف",
+"نشاط غير معتاد","تنبيه أمني عاجل",
+"أدخل بياناتك","الرقم السري","رمز التحقق","رمز التفعيل",
+"كلمة المرور","إعادة تعيين كلمة المرور",
+"بيانات البطاقة","رقم البطاقة","بطاقتك الائتمانية",
+"رقم الآيبان","رقم الحساب","رمز cvv","otp",
+"تحويل بنكي عاجل","حوالة عاجلة",
+"استرجاع حسابك","استعادة الحساب",
+"تحديث معلومات الدفع","فشل عملية الدفع",
+
+/* استثمار عربي */
+"استثمار مضمون","ربح يومي","أرباح مضمونة",
+"مضاعفة أموالك","دخل ثابت مضمون",
+"فرصة لا تعوض","عرض محدود","لفترة محدودة",
+"اضغط هنا","انقر هنا الآن",
+"اكسب المال من المنزل","وظيفة براتب عالي",
+"سجل الآن","احصل على مكافأة",
+"استلم جائزتك","فزت بجائزة",
+"تهانينا لقد ربحت","سحب نقدي فوري",
+"بيتكوين","عملة رقمية","تداول فوري",
+
+/* توصيل عربي */
+"شحنة معلقة","فشل تسليم الشحنة",
+"ادفع رسوم الشحن","رسوم جمركية مستحقة",
+"تأكيد عنوان الشحن","تتبع الشحنة الآن",
+
+/* ابتزاز عربي */
+"لدينا صورك","تم اختراق جهازك",
+"ادفع خلال 24 ساعة","سننشر معلوماتك",
+"تم تسجيلك بالكاميرا",
+
+/* English Banking */
 "verify your bank account","verify your account",
-"account suspended","reset your password",
+"account suspended","account locked",
+"unusual activity detected","security alert",
+"reset your password","confirm your identity",
 "update payment information","bank transfer",
-"credit card number","cvv","claim your prize",
-"urgent action required","bitcoin investment",
-"crypto investment","double your money",
-"win cash now","social security number","ssn"
+"credit card number","card details",
+"cvv","iban number","swift code",
+"enter verification code","one time password",
+
+/* English Scam */
+"claim your prize","you won",
+"urgent action required","limited time offer",
+"click here now","act immediately",
+"double your money","guaranteed profit",
+"crypto investment","bitcoin investment",
+"earn money fast","work from home offer",
+
+/* Delivery English */
+"delivery failed","package on hold",
+"customs fee required","track your parcel",
+
+/* Extortion English */
+"we hacked your device","we recorded you",
+"pay within 24 hours","your data will be leaked",
+
+/* روابط */
+".ru",".cn",".tk",".gq",".ml",
+"bit.ly","tinyurl","shorturl",
+"http://","https://",
+
+/* تقني */
+"remote access","anydesk","teamviewer",
+"install this app","download attachment",
+"open attached file","enable macros"
+
 ];
 
 let timer;
 
 document.getElementById("msg").addEventListener("input",()=>{
 clearTimeout(timer);
-timer=setTimeout(analyze,1000);
+timer=setTimeout(analyze,600);
 });
 
 function analyze(){
@@ -185,11 +217,12 @@ function analyze(){
 let text=document.getElementById("msg").value.toLowerCase();
 let matches=0;
 
-suspiciousWords.forEach(w=>{
-if(text.includes(w.toLowerCase())) matches++;
+suspiciousWords.forEach(word=>{
+if(text.includes(word.toLowerCase())) matches++;
 });
 
-let risk=Math.min(matches*12,100);
+let risk=Math.min(matches*6,100);
+currentRisk=risk;
 
 document.getElementById("score").innerText=risk;
 document.getElementById("bar").style.width=risk+"%";
@@ -199,65 +232,37 @@ let rec=document.getElementById("rec");
 
 if(risk>0){
 
+document.body.classList.add("dangerMode");
+rainColor="#ff0033";
+
 document.getElementById("status").innerHTML="<span class='danger'>غير آمن</span>";
 document.getElementById("mitre").innerText="MITRE: T1566 – Phishing";
 
 rec.classList.remove("recSafe");
 rec.classList.add("recDanger");
+rec.innerText="⚠️ تحذير: الرسالة غير آمنة. لا تضغط روابط ولا تشارك بياناتك.";
 
-if(currentLang==="ar"){
-rec.innerText="⚠️ تحذير: الرسالة غير آمنة. لا تضغط أي رابط ولا تشارك بياناتك.";
 speak("تنبيه. الرسالة غير آمنة.");
-}else{
-document.getElementById("status").innerHTML="<span class='danger'>UNSAFE</span>";
-rec.innerText="⚠️ Warning: Message is unsafe. Do not click links.";
-speak("Warning. This message is unsafe.");
-}
-
-rainColor="#ff0033";
 
 }else{
+
+document.body.classList.remove("dangerMode");
+rainColor="#00f5d4";
 
 document.getElementById("status").innerHTML="<span class='safe'>آمن</span>";
 document.getElementById("mitre").innerText="MITRE: —";
 
 rec.classList.remove("recDanger");
 rec.classList.add("recSafe");
-
-if(currentLang==="ar"){
 rec.innerText="✔️ الرسالة تبدو آمنة.";
+
 speak("الرسالة آمنة.");
-}else{
-document.getElementById("status").innerHTML="<span class='safe'>SAFE</span>";
-rec.innerText="✔️ Message appears safe.";
-speak("This message is safe.");
-}
 
-rainColor="#00f5d4";
 }
 
 }
 
-/* ===== تغيير اللغة ===== */
-
-function toggleLang(){
-
-if(currentLang==="ar"){
-currentLang="en";
-document.getElementById("subtitle").innerText="Advanced Security Operations Platform";
-document.getElementById("msg").placeholder="Paste suspicious message here...";
-document.getElementById("threatTitle").innerText="Threat Status";
-}else{
-currentLang="ar";
-document.getElementById("subtitle").innerText="منصة مركز العمليات الأمنية";
-document.getElementById("msg").placeholder="الصق الرسالة هنا...";
-document.getElementById("threatTitle").innerText="حالة التهديد";
-}
-
-analyze();
-}
-
-/* ===== Matrix ===== */
+/* Matrix */
 
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
@@ -268,8 +273,6 @@ let fontSize=14;
 let columns=canvas.width/fontSize;
 let drops=[];
 for(let i=0;i<columns;i++){drops[i]=Math.random()*canvas.height;}
-
-let rainColor="#00f5d4";
 
 function draw(){
 ctx.fillStyle="rgba(0,0,0,0.08)";
@@ -282,10 +285,8 @@ drops[i]+=fontSize;
 if(drops[i]>canvas.height){drops[i]=0;}
 }
 }
-
 setInterval(draw,35);
 
 </script>
-
 </body>
 </html>
