@@ -30,8 +30,6 @@ left:0;
 z-index:-1;
 }
 
-/* العنوان */
-
 .container{
 text-align:center;
 margin-top:50px;
@@ -41,8 +39,6 @@ h1{
 font-size:40px;
 text-shadow:0 0 25px #00f5d4;
 }
-
-/* زر اللغة */
 
 .langWrapper{
 margin-top:25px;
@@ -58,8 +54,6 @@ color:#00f5d4;
 cursor:pointer;
 }
 
-/* مربع الإدخال */
-
 textarea{
 width:80%;
 height:140px;
@@ -72,8 +66,6 @@ font-size:16px;
 outline:none;
 }
 
-/* الكرت */
-
 .card{
 width:80%;
 margin:30px auto;
@@ -83,12 +75,6 @@ background:rgba(0,0,0,0.6);
 box-shadow:0 0 30px #00f5d422;
 text-align:left;
 }
-
-.card h2{
-margin-top:0;
-}
-
-/* شريط الخطورة */
 
 .progress{
 height:10px;
@@ -104,8 +90,6 @@ width:0%;
 background:red;
 transition:0.4s;
 }
-
-/* التوصيات */
 
 .recommendation{
 width:80%;
@@ -127,6 +111,11 @@ border:2px solid red;
 color:red;
 }
 
+.highlight{
+color:red;
+font-weight:bold;
+}
+
 </style>
 </head>
 
@@ -136,11 +125,9 @@ color:red;
 
 <div class="container">
 
-<h1 id="title">🦅 BlackFalcon SOC</h1>
+<h1>🦅 BlackFalcon SOC</h1>
 
-<div id="subtitle">
-منصة تحليل الرسائل المشبوهة
-</div>
+<div id="subtitle">منصة تحليل الرسائل المشبوهة</div>
 
 <div class="langWrapper">
 <button class="langBtn" onclick="toggleLang()">EN</button>
@@ -185,26 +172,12 @@ color:red;
 
 let lang="ar";
 
-/* كلمات الاحتيال */
-
 const suspiciousWords=[
+"verify","account","bank","password","confirm",
+"login","click","transfer","crypto","gift",
 
-"verify account","account verification","bank account",
-"confirm identity","security alert","account suspended",
-"click here","gift card","crypto investment",
-"bitcoin payment","urgent action","lottery winner",
-"claim prize","limited offer","open link",
-"password reset","update account","payment required",
-"billing problem","confirm payment","wire transfer",
-
-"تحقق","تحقق من حسابك","تحقق من حسابك البنكي",
-"تحديث الحساب","تأكيد الحساب","التحقق من الهوية",
-"تم ايقاف الحساب","تم تعليق الحساب",
-"تنبيه أمني","تحذير أمني",
-"تحويل بنكي","بطاقة ائتمان",
-"رمز التحقق","اضغط هنا","افتح الرابط",
-"مبروك","جائزة","استثمار سريع","ربح سريع"
-
+"تحقق","حساب","بنكي","كلمة المرور",
+"تأكيد","الدخول","اضغط","تحويل"
 ];
 
 /* كشف الروابط */
@@ -221,7 +194,7 @@ return links.length*30;
 
 }
 
-/* تأخير التحليل */
+/* تأخير التحليل 3 ثواني */
 
 let timer;
 
@@ -229,11 +202,25 @@ document.getElementById("msg").addEventListener("input",()=>{
 
 clearTimeout(timer);
 
-timer=setTimeout(analyze,1500);
+timer=setTimeout(analyze,3000);
 
 });
 
-/* التحليل */
+/* تحديد نوع الهجوم */
+
+function detectAttackType(text){
+
+if(text.includes("password")||text.includes("كلمة المرور")){
+return lang=="ar"?"سرقة بيانات الدخول":"Credential Harvesting";
+}
+
+if(text.includes("http")||text.includes("www")){
+return lang=="ar"?"رابط خبيث":"Malicious Link";
+}
+
+return lang=="ar"?"تصيد احتيالي":"Phishing";
+
+}
 
 function analyze(){
 
@@ -258,10 +245,10 @@ document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
 
 let status=document.getElementById("status");
-
 let rec=document.getElementById("rec");
-
 let type=document.getElementById("type");
+
+let attackType=detectAttackType(text);
 
 if(score>=30){
 
@@ -269,17 +256,19 @@ document.body.classList.add("dangerMode");
 
 status.innerText= lang=="ar" ? "⚠️ رسالة مشبوهة" : "⚠️ Suspicious message";
 
-type.innerText="Phishing / MITRE T1566";
+type.innerText=attackType;
 
 rec.className="recommendation recDanger";
 
 rec.innerText= lang=="ar"
-
 ? "لا تضغط الروابط ولا ترسل بياناتك."
-
 : "Do not click links or share sensitive data.";
 
-speak(lang=="ar" ? "الرسالة مشبوهة" : "The message is suspicious");
+speak(
+lang=="ar"
+? "الرسالة مشبوهة. نوع الهجوم "+attackType+" . لا تضغط الروابط ولا ترسل بياناتك"
+: "The message is suspicious. Attack type "+attackType+" . Do not click links or share sensitive data"
+);
 
 }else{
 
@@ -292,12 +281,14 @@ type.innerText="-";
 rec.className="recommendation recSafe";
 
 rec.innerText= lang=="ar"
-
 ? "لا يوجد تهديد واضح."
-
 : "No clear threat detected.";
 
-speak(lang=="ar" ? "الرسالة آمنة" : "The message is safe");
+speak(
+lang=="ar"
+? "الرسالة آمنة. لا يوجد تهديد واضح"
+: "The message is safe. No threat detected"
+);
 
 }
 
@@ -317,17 +308,11 @@ speechSynthesis.speak(msg);
 
 }
 
-/* قراءة العناصر */
+/* صوت مربع الإدخال */
 
-document.addEventListener("mouseover",function(e){
+document.getElementById("msg").addEventListener("mouseenter",function(){
 
-let t=e.target.innerText||e.target.placeholder;
-
-if(t && t.length<120){
-
-speak(t);
-
-}
+speak(lang=="ar"?"مربع إدخال الرسالة":"Message input field");
 
 });
 
@@ -340,33 +325,23 @@ let btn=document.querySelector(".langBtn");
 if(lang=="ar"){
 
 lang="en";
-
 btn.innerText="AR";
 
 document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
-
 document.getElementById("threatTitle").innerText="Threat Status";
-
 document.getElementById("riskText").innerText="Risk Level";
-
 document.getElementById("typeLabel").innerText="Threat Type";
-
 document.getElementById("msg").placeholder="Paste message here";
 
 }else{
 
 lang="ar";
-
 btn.innerText="EN";
 
 document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
-
 document.getElementById("threatTitle").innerText="حالة التهديد";
-
 document.getElementById("riskText").innerText="نسبة الخطورة";
-
 document.getElementById("typeLabel").innerText="نوع التهديد";
-
 document.getElementById("msg").placeholder="الصق الرسالة هنا";
 
 }
@@ -376,33 +351,26 @@ document.getElementById("msg").placeholder="الصق الرسالة هنا";
 /* Matrix */
 
 const canvas=document.getElementById("matrix");
-
 const ctx=canvas.getContext("2d");
 
 canvas.height=window.innerHeight;
-
 canvas.width=window.innerWidth;
 
 const letters="01BLACKFALCONSOC";
-
 const matrix=letters.split("");
 
 const fontSize=14;
-
 const columns=canvas.width/fontSize;
 
 const drops=[];
 
 for(let x=0;x<columns;x++){
-
 drops[x]=1;
-
 }
 
 function draw(){
 
 ctx.fillStyle="rgba(0,0,0,0.05)";
-
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
 ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
@@ -416,9 +384,7 @@ const text=matrix[Math.floor(Math.random()*matrix.length)];
 ctx.fillText(text,i*fontSize,drops[i]*fontSize);
 
 if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
-
 drops[i]=0;
-
 }
 
 drops[i]++;
