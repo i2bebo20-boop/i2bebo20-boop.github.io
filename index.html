@@ -17,8 +17,6 @@ overflow:hidden;
 transition:0.5s;
 }
 
-/* وضع الخطر */
-
 body.dangerMode{
 background:#140000;
 box-shadow:inset 0 0 300px red;
@@ -31,13 +29,13 @@ left:0;
 z-index:-1;
 }
 
-/* زر اللغة */
+.langWrapper{
+text-align:center;
+margin-top:20px;
+}
 
 .langBtn{
-position:absolute;
-top:20px;
-right:25px;
-padding:8px 18px;
+padding:8px 20px;
 border-radius:20px;
 border:1px solid #00f5d4;
 background:transparent;
@@ -45,24 +43,20 @@ color:#00f5d4;
 cursor:pointer;
 }
 
-/* العنوان */
-
 .container{
 text-align:center;
-margin-top:70px;
+margin-top:40px;
 }
 
 h1{
-font-size:42px;
+font-size:40px;
 text-shadow:0 0 25px #00f5d4;
 }
 
 .subtitle{
-margin-bottom:35px;
+margin-bottom:30px;
 color:#00f5d4aa;
 }
-
-/* مربع الإدخال */
 
 textarea{
 width:80%;
@@ -76,8 +70,6 @@ font-size:16px;
 outline:none;
 }
 
-/* الكرت */
-
 .card{
 width:80%;
 margin:30px auto;
@@ -87,8 +79,6 @@ background:rgba(0,0,0,0.6);
 box-shadow:0 0 30px #00f5d422;
 text-align:left;
 }
-
-/* شريط الخطورة */
 
 .progress{
 height:10px;
@@ -104,8 +94,6 @@ width:0%;
 background:#ff0033;
 transition:0.4s;
 }
-
-/* التوصية */
 
 .recommendation{
 width:80%;
@@ -135,8 +123,6 @@ color:red;
 
 <body>
 
-<button class="langBtn" onclick="toggleLang()">EN</button>
-
 <canvas id="matrix"></canvas>
 
 <div class="container">
@@ -147,18 +133,20 @@ color:red;
 منصة تحليل الرسائل المشبوهة
 </div>
 
+<div class="langWrapper">
+<button class="langBtn" onclick="toggleLang()">EN</button>
+</div>
+
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 <div class="card">
 
-<h2 class="speakable" id="threatTitle">
-حالة التهديد
-</h2>
+<h2 class="speakable">حالة التهديد</h2>
 
 <div id="status" class="speakable">—</div>
 
 <div class="speakable">
-<span id="riskLabel">نسبة الخطورة:</span>
+نسبة الخطورة:
 <span id="score">0</span>%
 </div>
 
@@ -171,97 +159,68 @@ color:red;
 </div>
 
 <div id="rec" class="recommendation recSafe speakable">
-✔️ بانتظار التحليل
+بانتظار التحليل
 </div>
 
 </div>
 
 <script>
 
-/* =====================
-قائمة كلمات الاحتيال
-===================== */
+/* قائمة الكلمات المشبوهة */
 
 const suspiciousWords=[
 
-"verify account","account verification","bank account",
-"update account","secure account","login now",
-"password reset","confirm password","security alert",
-"suspicious activity","account suspended","account locked",
-"confirm identity","verify identity","credit card",
-"bank transfer","wire transfer","urgent payment",
-"gift card","apple gift card","amazon gift card",
-"google play card","steam card","bitcoin payment",
-"crypto investment","free money","claim prize",
-"lottery winner","limited offer","act now",
-"click here","open link","visit link",
-"download attachment","open attachment",
-"tax refund","paypal alert","amazon security",
-"apple id locked","account recovery","security update",
-"bank security team","confirm transaction",
-"pending payment","unusual login",
-"verify payment","confirm payment",
-"urgent action required","security notice",
-"billing problem","payment failed",
-"update billing information",
-"verification code","otp code",
+"verify","verification","verify account","account verification",
+"confirm account","confirm identity","identity verification",
+"update account","update information","security alert",
+"suspicious activity","account locked","account suspended",
+"bank account","bank verification","bank alert",
+"credit card","card details","card verification",
+"billing information","payment alert","payment failed",
+"bank transfer","wire transfer","confirm payment",
+"refund request","refund notice","crypto investment",
+"earn money fast","investment opportunity",
+"paypal security","amazon security","apple id security",
+"dhl shipment","fedex shipment","delivery notice",
+"track your package","click here","tap here",
+"secure link","access link","verify via link",
+"otp","verification code","share code",
+"urgent action required","final warning",
+"lottery winner","you won","claim prize",
+"gift card","special offer","bonus reward",
 
-/* Arabic */
+/* عربي */
 
-"تحقق من حسابك",
-"تحقق من حسابك البنكي",
-"تم ايقاف حسابك",
-"تم تعليق حسابك",
-"تم حظر حسابك",
-"حسابك موقوف",
-"تم تجميد حسابك",
-"تحديث الحساب",
-"تحديث بياناتك",
-"تحديث معلوماتك",
-"التحقق من الهوية",
-"تأكيد الهوية",
-"تأكيد حسابك",
-"إعادة تعيين كلمة المرور",
-"كلمة المرور",
-"بطاقة ائتمان",
-"بطاقة بنكية",
-"تحويل بنكي",
-"تحويل الأموال",
-"تحويل فوري",
-"طلب دفع",
-"عملية دفع",
-"تنبيه أمني",
-"رسالة من البنك",
-"تأكيد الدفع",
-"اضغط هنا",
-"اضغط الرابط",
-"افتح الرابط",
-"زيارة الرابط",
-"اضغط للتأكيد",
-"اضغط للتحقق",
-"ارسل رمز",
-"رمز التحقق",
-"رمز التفعيل",
-"ارسل معلوماتك",
-"ارسل بياناتك",
-"جائزة",
-"ربحت جائزة",
-"مبروك فزت",
-"استلام جائزة",
-"جائزة مالية",
-"ارباح سريعة",
-"استثمار سريع",
-"ربح فوري",
-"عرض محدود",
-"عرض خاص",
-"تنبيه عاجل",
-"طلب عاجل"
+"تحقق","تحقق من حسابك","تحقق من حسابك البنكي",
+"التحقق من الحساب","التحقق من الهوية",
+"تأكيد الحساب","تأكيد الهوية",
+"تحديث الحساب","تحديث بياناتك","تحديث معلوماتك",
+"تم تعليق الحساب","تم إيقاف الحساب",
+"إعادة تفعيل الحساب","نشاط مشبوه",
+"محاولة دخول مشبوهة","تنبيه أمني",
+"تحذير أمني","رسالة أمنية",
+"تحويل بنكي","تحويل الأموال","تحويل فوري",
+"بطاقة بنكية","بطاقة ائتمان",
+"رقم البطاقة","رمز التحقق",
+"كود التفعيل","أدخل الرمز",
+"أرسل الرمز","رمز sms",
+"اضغط هنا","افتح الرابط",
+"رابط التحقق","اتبع الرابط",
+"تسجيل الدخول","الدخول الآن",
+"تأكيد الدفع","فشل الدفع",
+"استرداد المبلغ","طلب استرجاع",
+"ربحت جائزة","مبروك",
+"هدية مجانية","مكافأة مالية",
+"عرض خاص","عرض محدود",
+"فرصة استثمار","استثمار مربح",
+"أرباح مضمونة","ضاعف أموالك",
+"رسوم الشحن","تأكيد الشحنة",
+"تتبع الشحنة","إجراء عاجل",
+"تحرك الآن","آخر تحذير"
 
 ];
 
-/* =====================
-كشف الروابط
-===================== */
+/* كشف الروابط */
 
 function detectLinks(text){
 
@@ -275,13 +234,21 @@ return links.length*15;
 
 }
 
-/* =====================
-تحليل الرسالة
-===================== */
+/* تأخير التحليل */
 
 const msg=document.getElementById("msg");
 
-msg.addEventListener("input",analyze);
+let timer;
+
+msg.addEventListener("input",()=>{
+
+clearTimeout(timer);
+
+timer=setTimeout(analyze,1500);
+
+});
+
+/* التحليل */
 
 function analyze(){
 
@@ -311,7 +278,7 @@ status.innerHTML="⚠️ رسالة مشبوهة";
 status.className="danger speakable";
 
 rec.className="recommendation recDanger speakable";
-rec.innerHTML="⚠️ لا تضغط أي رابط. احذف الرسالة فوراً.";
+rec.innerHTML="لا تضغط الروابط ولا ترسل بياناتك.";
 
 document.body.classList.add("dangerMode");
 
@@ -323,7 +290,7 @@ status.innerHTML="✔️ الرسالة آمنة";
 status.className="safe speakable";
 
 rec.className="recommendation recSafe speakable";
-rec.innerHTML="✔️ لا يوجد تهديد واضح.";
+rec.innerHTML="لا يوجد تهديد واضح.";
 
 document.body.classList.remove("dangerMode");
 
@@ -333,9 +300,7 @@ speak("الرسالة آمنة");
 
 }
 
-/* =====================
-الصوت
-===================== */
+/* الصوت */
 
 let currentLang="ar";
 
@@ -347,29 +312,21 @@ let msg=new SpeechSynthesisUtterance(text);
 
 msg.lang=currentLang==="ar"?"ar-SA":"en-US";
 
-msg.rate=0.9;
-
 speechSynthesis.speak(msg);
 
 }
 
-document.addEventListener("mouseover",e=>{
-if(e.target.classList.contains("speakable")){
-speak(e.target.innerText);
-}
-});
+msg.addEventListener("mouseover",()=>{
 
-msg.addEventListener("focus",()=>{
 if(currentLang==="ar"){
-speak("مكان إدخال الرسالة");
+speak("مربع إدخال الرسالة");
 }else{
 speak("Message input field");
 }
+
 });
 
-/* =====================
-تبديل اللغة
-===================== */
+/* اللغة */
 
 function toggleLang(){
 
@@ -378,42 +335,26 @@ const btn=document.querySelector(".langBtn");
 if(currentLang==="ar"){
 
 currentLang="en";
-
 btn.innerText="AR";
 
 document.getElementById("subtitle").innerText="Suspicious Message Analysis Platform";
 
-document.getElementById("threatTitle").innerText="Threat Status";
-
-document.getElementById("riskLabel").innerText="Risk Level:";
-
 msg.placeholder="Paste message here";
-
-document.getElementById("rec").innerText="Waiting for analysis";
 
 }else{
 
 currentLang="ar";
-
 btn.innerText="EN";
 
 document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
 
-document.getElementById("threatTitle").innerText="حالة التهديد";
-
-document.getElementById("riskLabel").innerText="نسبة الخطورة:";
-
 msg.placeholder="الصق الرسالة هنا";
 
-document.getElementById("rec").innerText="بانتظار التحليل";
-
 }
 
 }
 
-/* =====================
-خلفية Matrix
-===================== */
+/* Matrix */
 
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
@@ -421,7 +362,7 @@ const ctx=canvas.getContext("2d");
 canvas.height=window.innerHeight;
 canvas.width=window.innerWidth;
 
-const letters="BLACKFALCONSOC01";
+const letters="01BLACKFALCONSOC";
 const matrix=letters.split("");
 
 const fontSize=14;
