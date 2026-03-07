@@ -2,22 +2,25 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
+
 <title>BlackFalcon SOC</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 
 body{
 margin:0;
 background:black;
-color:#00ffd5;
-font-family:Arial;
+color:#00f5d4;
+font-family:'Orbitron',sans-serif;
 overflow:hidden;
 transition:0.5s;
-text-align:center;
 }
 
-body.danger{
-background:#200000;
+body.dangerMode{
+background:#140000;
+box-shadow:inset 0 0 250px red;
 }
 
 canvas{
@@ -27,43 +30,69 @@ left:0;
 z-index:-1;
 }
 
+/* العنوان */
+
 .container{
-margin-top:40px;
+text-align:center;
+margin-top:50px;
+}
+
+h1{
+font-size:40px;
+text-shadow:0 0 25px #00f5d4;
+}
+
+/* زر اللغة */
+
+.langWrapper{
+margin-top:25px;
+margin-bottom:35px;
 }
 
 .langBtn{
-margin-top:25px;
 padding:10px 25px;
 border-radius:20px;
-border:1px solid #00ffd5;
+border:1px solid #00f5d4;
 background:transparent;
-color:#00ffd5;
+color:#00f5d4;
 cursor:pointer;
 }
 
+/* مربع الإدخال */
+
 textarea{
 width:80%;
-height:130px;
-margin-top:25px;
-background:#000;
-border:1px solid #00ffd5;
-border-radius:15px;
-padding:15px;
-color:#00ffd5;
+height:140px;
+background:rgba(0,0,0,0.6);
+border:1px solid #00f5d4;
+border-radius:20px;
+padding:20px;
+color:#00f5d4;
 font-size:16px;
+outline:none;
 }
+
+/* الكرت */
 
 .card{
 width:80%;
 margin:30px auto;
 padding:25px;
-background:#000;
-border-radius:20px;
+border-radius:25px;
+background:rgba(0,0,0,0.6);
+box-shadow:0 0 30px #00f5d422;
+text-align:left;
 }
+
+.card h2{
+margin-top:0;
+}
+
+/* شريط الخطورة */
 
 .progress{
 height:10px;
-background:#222;
+background:#111;
 border-radius:20px;
 margin-top:10px;
 overflow:hidden;
@@ -73,20 +102,27 @@ overflow:hidden;
 height:100%;
 width:0%;
 background:red;
+transition:0.4s;
 }
+
+/* التوصيات */
 
 .recommendation{
-margin-top:20px;
-padding:15px;
-border-radius:15px;
+width:80%;
+margin:20px auto;
+padding:20px;
+border-radius:20px;
+font-weight:bold;
 }
 
-.safe{
+.recSafe{
+background:rgba(0,255,136,0.1);
 border:2px solid #00ff88;
 color:#00ff88;
 }
 
-.dangerRec{
+.recDanger{
+background:rgba(255,0,0,0.1);
 border:2px solid red;
 color:red;
 }
@@ -101,11 +137,14 @@ color:red;
 <div class="container">
 
 <h1 id="title">🦅 BlackFalcon SOC</h1>
-<div id="subtitle">منصة تحليل الرسائل المشبوهة</div>
 
+<div id="subtitle">
+منصة تحليل الرسائل المشبوهة
+</div>
+
+<div class="langWrapper">
 <button class="langBtn" onclick="toggleLang()">EN</button>
-
-<br>
+</div>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
@@ -124,52 +163,47 @@ color:red;
 <div class="bar" id="bar"></div>
 </div>
 
+<div style="margin-top:15px">
+
+<strong id="typeLabel">نوع التهديد:</strong>
+
+<span id="type">—</span>
+
 </div>
 
-<div id="rec" class="recommendation safe">
+</div>
+
+<div id="rec" class="recommendation recSafe">
+
 بانتظار التحليل
+
 </div>
 
 </div>
 
 <script>
 
-/* اللغة */
-
 let lang="ar";
 
-/* الكلمات المشبوهة */
+/* كلمات الاحتيال */
 
 const suspiciousWords=[
 
-"verify account","bank account","confirm identity","security alert",
-"account suspended","click here","gift card","crypto investment",
-"bitcoin payment","urgent action","lottery winner","claim prize",
-"limited offer","open link","verify identity","password reset",
-"update account","payment required","billing problem",
-"delivery notice","shipment problem","confirm payment",
-"confirm transaction","wire transfer","bank transfer",
-"confirm card","card verification","enter card number",
-"submit card details","crypto opportunity","forex profit",
-"earn money fast","double money","free money","you won",
+"verify account","account verification","bank account",
+"confirm identity","security alert","account suspended",
+"click here","gift card","crypto investment",
+"bitcoin payment","urgent action","lottery winner",
+"claim prize","limited offer","open link",
+"password reset","update account","payment required",
+"billing problem","confirm payment","wire transfer",
 
 "تحقق","تحقق من حسابك","تحقق من حسابك البنكي",
 "تحديث الحساب","تأكيد الحساب","التحقق من الهوية",
 "تم ايقاف الحساب","تم تعليق الحساب",
 "تنبيه أمني","تحذير أمني",
-"تحويل بنكي","تحويل الأموال",
-"بطاقة ائتمان","رقم البطاقة",
-"رمز التحقق","كود التحقق",
-"اضغط هنا","افتح الرابط",
-"الدخول الآن","تسجيل الدخول",
-"جائزة","لقد فزت","مبروك",
-"استثمار سريع","ربح سريع",
-"فرصة استثمار","أرباح مضمونة",
-"هدية مجانية","عرض خاص",
-"تأكيد الدفع","فشل الدفع",
-"طلب استرجاع","استرداد المبلغ",
-"تتبع الشحنة","رسوم الشحن",
-"إجراء عاجل","آخر تحذير"
+"تحويل بنكي","بطاقة ائتمان",
+"رمز التحقق","اضغط هنا","افتح الرابط",
+"مبروك","جائزة","استثمار سريع","ربح سريع"
 
 ];
 
@@ -187,7 +221,7 @@ return links.length*30;
 
 }
 
-/* تحليل بعد تأخير */
+/* تأخير التحليل */
 
 let timer;
 
@@ -198,6 +232,8 @@ clearTimeout(timer);
 timer=setTimeout(analyze,1500);
 
 });
+
+/* التحليل */
 
 function analyze(){
 
@@ -218,35 +254,47 @@ score+=detectLinks(text);
 if(score>100)score=100;
 
 document.getElementById("score").innerText=score;
+
 document.getElementById("bar").style.width=score+"%";
 
 let status=document.getElementById("status");
+
 let rec=document.getElementById("rec");
+
+let type=document.getElementById("type");
 
 if(score>=30){
 
-document.body.classList.add("danger");
+document.body.classList.add("dangerMode");
 
 status.innerText= lang=="ar" ? "⚠️ رسالة مشبوهة" : "⚠️ Suspicious message";
 
-rec.className="recommendation dangerRec";
+type.innerText="Phishing / MITRE T1566";
+
+rec.className="recommendation recDanger";
 
 rec.innerText= lang=="ar"
+
 ? "لا تضغط الروابط ولا ترسل بياناتك."
-: "Do not click links or share your data.";
+
+: "Do not click links or share sensitive data.";
 
 speak(lang=="ar" ? "الرسالة مشبوهة" : "The message is suspicious");
 
 }else{
 
-document.body.classList.remove("danger");
+document.body.classList.remove("dangerMode");
 
 status.innerText= lang=="ar" ? "✔️ الرسالة آمنة" : "✔️ Message is safe";
 
-rec.className="recommendation safe";
+type.innerText="-";
+
+rec.className="recommendation recSafe";
 
 rec.innerText= lang=="ar"
+
 ? "لا يوجد تهديد واضح."
+
 : "No clear threat detected.";
 
 speak(lang=="ar" ? "الرسالة آمنة" : "The message is safe");
@@ -261,22 +309,24 @@ function speak(text){
 
 speechSynthesis.cancel();
 
-let utter=new SpeechSynthesisUtterance(text);
+let msg=new SpeechSynthesisUtterance(text);
 
-utter.lang= lang=="ar" ? "ar-SA" : "en-US";
+msg.lang= lang=="ar" ? "ar-SA" : "en-US";
 
-speechSynthesis.speak(utter);
+speechSynthesis.speak(msg);
 
 }
 
-/* قراءة أي عنصر */
+/* قراءة العناصر */
 
 document.addEventListener("mouseover",function(e){
 
 let t=e.target.innerText||e.target.placeholder;
 
-if(t && t.length<100){
+if(t && t.length<120){
+
 speak(t);
+
 }
 
 });
@@ -290,21 +340,33 @@ let btn=document.querySelector(".langBtn");
 if(lang=="ar"){
 
 lang="en";
+
 btn.innerText="AR";
 
 document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
+
 document.getElementById("threatTitle").innerText="Threat Status";
+
 document.getElementById("riskText").innerText="Risk Level";
+
+document.getElementById("typeLabel").innerText="Threat Type";
+
 document.getElementById("msg").placeholder="Paste message here";
 
 }else{
 
 lang="ar";
+
 btn.innerText="EN";
 
 document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
+
 document.getElementById("threatTitle").innerText="حالة التهديد";
+
 document.getElementById("riskText").innerText="نسبة الخطورة";
+
+document.getElementById("typeLabel").innerText="نوع التهديد";
+
 document.getElementById("msg").placeholder="الصق الرسالة هنا";
 
 }
@@ -314,29 +376,36 @@ document.getElementById("msg").placeholder="الصق الرسالة هنا";
 /* Matrix */
 
 const canvas=document.getElementById("matrix");
+
 const ctx=canvas.getContext("2d");
 
 canvas.height=window.innerHeight;
+
 canvas.width=window.innerWidth;
 
 const letters="01BLACKFALCONSOC";
+
 const matrix=letters.split("");
 
 const fontSize=14;
+
 const columns=canvas.width/fontSize;
 
 const drops=[];
 
 for(let x=0;x<columns;x++){
+
 drops[x]=1;
+
 }
 
 function draw(){
 
 ctx.fillStyle="rgba(0,0,0,0.05)";
+
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle=document.body.classList.contains("danger")?"red":"#00ffd5";
+ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
 
 ctx.font=fontSize+"px monospace";
 
@@ -347,7 +416,9 @@ const text=matrix[Math.floor(Math.random()*matrix.length)];
 ctx.fillText(text,i*fontSize,drops[i]*fontSize);
 
 if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
+
 drops[i]=0;
+
 }
 
 drops[i]++;
