@@ -4,22 +4,20 @@
 <meta charset="UTF-8">
 <title>BlackFalcon SOC</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-
 <style>
 
 body{
 margin:0;
 background:black;
-color:#00f5d4;
-font-family:'Orbitron',sans-serif;
+color:#00ffd5;
+font-family:Arial;
 overflow:hidden;
 transition:0.5s;
+text-align:center;
 }
 
-body.dangerMode{
-background:#140000;
-box-shadow:inset 0 0 300px red;
+body.danger{
+background:#200000;
 }
 
 canvas{
@@ -29,94 +27,69 @@ left:0;
 z-index:-1;
 }
 
-.langWrapper{
-text-align:center;
-margin-top:20px;
-}
-
-.langBtn{
-padding:8px 20px;
-border-radius:20px;
-border:1px solid #00f5d4;
-background:transparent;
-color:#00f5d4;
-cursor:pointer;
-}
-
 .container{
-text-align:center;
 margin-top:40px;
 }
 
-h1{
-font-size:40px;
-text-shadow:0 0 25px #00f5d4;
-}
-
-.subtitle{
-margin-bottom:30px;
-color:#00f5d4aa;
+.langBtn{
+margin-top:25px;
+padding:10px 25px;
+border-radius:20px;
+border:1px solid #00ffd5;
+background:transparent;
+color:#00ffd5;
+cursor:pointer;
 }
 
 textarea{
 width:80%;
 height:130px;
-background:rgba(0,0,0,0.6);
-border:1px solid #00f5d4;
-border-radius:20px;
-padding:20px;
-color:#00f5d4;
+margin-top:25px;
+background:#000;
+border:1px solid #00ffd5;
+border-radius:15px;
+padding:15px;
+color:#00ffd5;
 font-size:16px;
-outline:none;
 }
 
 .card{
 width:80%;
 margin:30px auto;
 padding:25px;
-border-radius:25px;
-background:rgba(0,0,0,0.6);
-box-shadow:0 0 30px #00f5d422;
-text-align:left;
+background:#000;
+border-radius:20px;
 }
 
 .progress{
 height:10px;
-background:#111;
+background:#222;
 border-radius:20px;
-margin-top:15px;
+margin-top:10px;
 overflow:hidden;
 }
 
 .bar{
 height:100%;
 width:0%;
-background:#ff0033;
-transition:0.4s;
+background:red;
 }
 
 .recommendation{
-width:80%;
-margin:20px auto;
-padding:20px;
-border-radius:20px;
-font-weight:bold;
+margin-top:20px;
+padding:15px;
+border-radius:15px;
 }
 
-.recSafe{
-background:rgba(0,255,136,0.1);
+.safe{
 border:2px solid #00ff88;
 color:#00ff88;
 }
 
-.recDanger{
-background:rgba(255,0,0,0.1);
+.dangerRec{
 border:2px solid red;
 color:red;
 }
-
-.safe{color:#00ff88;}
-.danger{color:red;}
 
 </style>
 </head>
@@ -127,26 +100,23 @@ color:red;
 
 <div class="container">
 
-<h1 class="speakable">🦅 BlackFalcon SOC</h1>
+<h1 id="title">🦅 BlackFalcon SOC</h1>
+<div id="subtitle">منصة تحليل الرسائل المشبوهة</div>
 
-<div class="subtitle speakable" id="subtitle">
-منصة تحليل الرسائل المشبوهة
-</div>
-
-<div class="langWrapper">
 <button class="langBtn" onclick="toggleLang()">EN</button>
-</div>
+
+<br>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 <div class="card">
 
-<h2 class="speakable">حالة التهديد</h2>
+<h2 id="threatTitle">حالة التهديد</h2>
 
-<div id="status" class="speakable">—</div>
+<div id="status">—</div>
 
-<div class="speakable">
-نسبة الخطورة:
+<div>
+<span id="riskText">نسبة الخطورة</span> :
 <span id="score">0</span>%
 </div>
 
@@ -154,11 +124,9 @@ color:red;
 <div class="bar" id="bar"></div>
 </div>
 
-<div>MITRE: T1566 – Phishing</div>
-
 </div>
 
-<div id="rec" class="recommendation recSafe speakable">
+<div id="rec" class="recommendation safe">
 بانتظار التحليل
 </div>
 
@@ -166,57 +134,42 @@ color:red;
 
 <script>
 
-/* قائمة الكلمات المشبوهة */
+/* اللغة */
+
+let lang="ar";
+
+/* الكلمات المشبوهة */
 
 const suspiciousWords=[
 
-"verify","verification","verify account","account verification",
-"confirm account","confirm identity","identity verification",
-"update account","update information","security alert",
-"suspicious activity","account locked","account suspended",
-"bank account","bank verification","bank alert",
-"credit card","card details","card verification",
-"billing information","payment alert","payment failed",
-"bank transfer","wire transfer","confirm payment",
-"refund request","refund notice","crypto investment",
-"earn money fast","investment opportunity",
-"paypal security","amazon security","apple id security",
-"dhl shipment","fedex shipment","delivery notice",
-"track your package","click here","tap here",
-"secure link","access link","verify via link",
-"otp","verification code","share code",
-"urgent action required","final warning",
-"lottery winner","you won","claim prize",
-"gift card","special offer","bonus reward",
-
-/* عربي */
+"verify account","bank account","confirm identity","security alert",
+"account suspended","click here","gift card","crypto investment",
+"bitcoin payment","urgent action","lottery winner","claim prize",
+"limited offer","open link","verify identity","password reset",
+"update account","payment required","billing problem",
+"delivery notice","shipment problem","confirm payment",
+"confirm transaction","wire transfer","bank transfer",
+"confirm card","card verification","enter card number",
+"submit card details","crypto opportunity","forex profit",
+"earn money fast","double money","free money","you won",
 
 "تحقق","تحقق من حسابك","تحقق من حسابك البنكي",
-"التحقق من الحساب","التحقق من الهوية",
-"تأكيد الحساب","تأكيد الهوية",
-"تحديث الحساب","تحديث بياناتك","تحديث معلوماتك",
-"تم تعليق الحساب","تم إيقاف الحساب",
-"إعادة تفعيل الحساب","نشاط مشبوه",
-"محاولة دخول مشبوهة","تنبيه أمني",
-"تحذير أمني","رسالة أمنية",
-"تحويل بنكي","تحويل الأموال","تحويل فوري",
-"بطاقة بنكية","بطاقة ائتمان",
-"رقم البطاقة","رمز التحقق",
-"كود التفعيل","أدخل الرمز",
-"أرسل الرمز","رمز sms",
+"تحديث الحساب","تأكيد الحساب","التحقق من الهوية",
+"تم ايقاف الحساب","تم تعليق الحساب",
+"تنبيه أمني","تحذير أمني",
+"تحويل بنكي","تحويل الأموال",
+"بطاقة ائتمان","رقم البطاقة",
+"رمز التحقق","كود التحقق",
 "اضغط هنا","افتح الرابط",
-"رابط التحقق","اتبع الرابط",
-"تسجيل الدخول","الدخول الآن",
+"الدخول الآن","تسجيل الدخول",
+"جائزة","لقد فزت","مبروك",
+"استثمار سريع","ربح سريع",
+"فرصة استثمار","أرباح مضمونة",
+"هدية مجانية","عرض خاص",
 "تأكيد الدفع","فشل الدفع",
-"استرداد المبلغ","طلب استرجاع",
-"ربحت جائزة","مبروك",
-"هدية مجانية","مكافأة مالية",
-"عرض خاص","عرض محدود",
-"فرصة استثمار","استثمار مربح",
-"أرباح مضمونة","ضاعف أموالك",
-"رسوم الشحن","تأكيد الشحنة",
-"تتبع الشحنة","إجراء عاجل",
-"تحرك الآن","آخر تحذير"
+"طلب استرجاع","استرداد المبلغ",
+"تتبع الشحنة","رسوم الشحن",
+"إجراء عاجل","آخر تحذير"
 
 ];
 
@@ -230,17 +183,15 @@ let links=text.match(regex);
 
 if(!links) return 0;
 
-return links.length*15;
+return links.length*30;
 
 }
 
-/* تأخير التحليل */
-
-const msg=document.getElementById("msg");
+/* تحليل بعد تأخير */
 
 let timer;
 
-msg.addEventListener("input",()=>{
+document.getElementById("msg").addEventListener("input",()=>{
 
 clearTimeout(timer);
 
@@ -248,23 +199,23 @@ timer=setTimeout(analyze,1500);
 
 });
 
-/* التحليل */
-
 function analyze(){
 
-let text=msg.value.toLowerCase();
+let text=document.getElementById("msg").value.toLowerCase();
 
 let score=0;
 
 suspiciousWords.forEach(word=>{
+
 if(text.includes(word)){
-score+=5;
+score+=15;
 }
+
 });
 
 score+=detectLinks(text);
 
-if(score>100) score=100;
+if(score>100)score=100;
 
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
@@ -272,29 +223,33 @@ document.getElementById("bar").style.width=score+"%";
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 
-if(score>=40){
+if(score>=30){
 
-status.innerHTML="⚠️ رسالة مشبوهة";
-status.className="danger speakable";
+document.body.classList.add("danger");
 
-rec.className="recommendation recDanger speakable";
-rec.innerHTML="لا تضغط الروابط ولا ترسل بياناتك.";
+status.innerText= lang=="ar" ? "⚠️ رسالة مشبوهة" : "⚠️ Suspicious message";
 
-document.body.classList.add("dangerMode");
+rec.className="recommendation dangerRec";
 
-speak("تحذير الرسالة مشبوهة");
+rec.innerText= lang=="ar"
+? "لا تضغط الروابط ولا ترسل بياناتك."
+: "Do not click links or share your data.";
+
+speak(lang=="ar" ? "الرسالة مشبوهة" : "The message is suspicious");
 
 }else{
 
-status.innerHTML="✔️ الرسالة آمنة";
-status.className="safe speakable";
+document.body.classList.remove("danger");
 
-rec.className="recommendation recSafe speakable";
-rec.innerHTML="لا يوجد تهديد واضح.";
+status.innerText= lang=="ar" ? "✔️ الرسالة آمنة" : "✔️ Message is safe";
 
-document.body.classList.remove("dangerMode");
+rec.className="recommendation safe";
 
-speak("الرسالة آمنة");
+rec.innerText= lang=="ar"
+? "لا يوجد تهديد واضح."
+: "No clear threat detected.";
+
+speak(lang=="ar" ? "الرسالة آمنة" : "The message is safe");
 
 }
 
@@ -302,53 +257,55 @@ speak("الرسالة آمنة");
 
 /* الصوت */
 
-let currentLang="ar";
-
 function speak(text){
 
 speechSynthesis.cancel();
 
-let msg=new SpeechSynthesisUtterance(text);
+let utter=new SpeechSynthesisUtterance(text);
 
-msg.lang=currentLang==="ar"?"ar-SA":"en-US";
+utter.lang= lang=="ar" ? "ar-SA" : "en-US";
 
-speechSynthesis.speak(msg);
+speechSynthesis.speak(utter);
 
 }
 
-msg.addEventListener("mouseover",()=>{
+/* قراءة أي عنصر */
 
-if(currentLang==="ar"){
-speak("مربع إدخال الرسالة");
-}else{
-speak("Message input field");
+document.addEventListener("mouseover",function(e){
+
+let t=e.target.innerText||e.target.placeholder;
+
+if(t && t.length<100){
+speak(t);
 }
 
 });
 
-/* اللغة */
+/* تغيير اللغة */
 
 function toggleLang(){
 
-const btn=document.querySelector(".langBtn");
+let btn=document.querySelector(".langBtn");
 
-if(currentLang==="ar"){
+if(lang=="ar"){
 
-currentLang="en";
+lang="en";
 btn.innerText="AR";
 
-document.getElementById("subtitle").innerText="Suspicious Message Analysis Platform";
-
-msg.placeholder="Paste message here";
+document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
+document.getElementById("threatTitle").innerText="Threat Status";
+document.getElementById("riskText").innerText="Risk Level";
+document.getElementById("msg").placeholder="Paste message here";
 
 }else{
 
-currentLang="ar";
+lang="ar";
 btn.innerText="EN";
 
 document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
-
-msg.placeholder="الصق الرسالة هنا";
+document.getElementById("threatTitle").innerText="حالة التهديد";
+document.getElementById("riskText").innerText="نسبة الخطورة";
+document.getElementById("msg").placeholder="الصق الرسالة هنا";
 
 }
 
@@ -379,7 +336,7 @@ function draw(){
 ctx.fillStyle="rgba(0,0,0,0.05)";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
+ctx.fillStyle=document.body.classList.contains("danger")?"red":"#00ffd5";
 
 ctx.font=fontSize+"px monospace";
 
