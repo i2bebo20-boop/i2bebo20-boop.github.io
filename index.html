@@ -19,7 +19,7 @@ transition:.5s;
 }
 
 body.dangerMode{
-background:#200000;
+background:#140000;
 box-shadow:inset 0 0 250px red;
 }
 
@@ -35,10 +35,34 @@ text-align:center;
 margin-top:50px;
 }
 
+h1{
+font-size:40px;
+text-shadow:0 0 25px #00f5d4;
+}
+
+/* أزرار */
+
+.controls{
+margin-top:25px;
+margin-bottom:35px;
+}
+
+button{
+padding:10px 25px;
+border-radius:20px;
+border:1px solid #00f5d4;
+background:transparent;
+color:#00f5d4;
+cursor:pointer;
+margin:5px;
+}
+
+/* مربع النص */
+
 textarea{
 width:80%;
 height:140px;
-background:#000;
+background:rgba(0,0,0,.6);
 border:1px solid #00f5d4;
 border-radius:20px;
 padding:20px;
@@ -46,42 +70,43 @@ color:#00f5d4;
 font-size:16px;
 }
 
+/* كرت */
+
 .card{
 width:80%;
 margin:30px auto;
 padding:25px;
-border-radius:20px;
+border-radius:25px;
 background:rgba(0,0,0,.6);
+box-shadow:0 0 30px #00f5d422;
+text-align:left;
 }
+
+/* شريط الخطورة */
 
 .progress{
 height:10px;
 background:#111;
 border-radius:20px;
 margin-top:10px;
+overflow:hidden;
 }
 
 .bar{
 height:100%;
 width:0%;
 background:red;
+transition:.4s;
 }
 
-button{
-margin:10px;
-padding:10px 25px;
-border-radius:20px;
-border:1px solid #00f5d4;
-background:transparent;
-color:#00f5d4;
-cursor:pointer;
-}
+/* توصيات */
 
 .rec{
 width:80%;
-margin:auto;
+margin:20px auto;
 padding:20px;
 border-radius:20px;
+font-weight:bold;
 }
 
 .safe{
@@ -105,19 +130,29 @@ color:red;
 
 <h1 class="speak">🦅 Falcon SOC</h1>
 
-<div class="speak">Suspicious Message Analyzer</div>
+<div id="subtitle" class="speak">
+منصة تحليل الرسائل المشبوهة
+</div>
 
-<button onclick="toggleLang()" class="speak">Language</button>
+<div class="controls">
 
-<br>
+<button onclick="toggleLang()" class="speak">
+Language
+</button>
 
-<textarea id="msg" placeholder="Paste message here"></textarea>
+<button onclick="generateReport()" class="speak">
+Report
+</button>
+
+</div>
+
+<textarea id="msg" placeholder="الصق الرسالة هنا..." class="speak"></textarea>
 
 <div class="card">
 
 <h2 class="speak">Threat Status</h2>
 
-<div id="status" class="speak">-</div>
+<div id="status" class="speak">—</div>
 
 <div class="speak">
 Risk Level :
@@ -128,11 +163,11 @@ Risk Level :
 <div class="bar" id="bar"></div>
 </div>
 
-<div style="margin-top:10px">
+<div style="margin-top:15px">
 
-MITRE ATT&CK :
+<strong class="speak">MITRE ATT&CK :</strong>
 
-<span id="type" class="speak">-</span>
+<span id="type" class="speak">—</span>
 
 </div>
 
@@ -144,49 +179,48 @@ Waiting for analysis
 
 </div>
 
-<button onclick="generateReport()" class="speak">
-Generate Report
-</button>
-
 </div>
 
 <script>
 
-let lang="en";
+let lang="ar";
 let audioEnabled=false;
 
-/* تشغيل الصوت بعد أول تفاعل */
+/* تفعيل الصوت بعد أول نقرة */
 
 document.body.addEventListener("click",()=>{
 audioEnabled=true;
 });
 
-/* كلمات الاحتيال */
+/* الكلمات المشبوهة */
 
 const words=[
-"verify","account","password","bank",
-"confirm","login","click","transfer",
-"crypto","gift","winner","prize",
+"verify","account","bank","password","confirm",
+"login","click","transfer","crypto","gift",
 
 "تحقق","حساب","بنكي","كلمة المرور",
 "تأكيد","الدخول","اضغط","تحويل"
 ];
 
+/* كشف الروابط */
+
 function detectLinks(text){
 
 let r=/https?:\/\/[^\s]+/g;
 
-let l=text.match(r);
+let links=text.match(r);
 
-if(!l)return 0;
+if(!links)return 0;
 
-return l.length*30;
+return links.length*30;
 
 }
 
+/* نوع الهجوم */
+
 function attackType(text){
 
-if(text.includes("password")){
+if(text.includes("password")||text.includes("كلمة المرور")){
 
 return "Credential Harvesting – MITRE T1056";
 
@@ -202,7 +236,7 @@ return "Phishing – MITRE T1566";
 
 }
 
-/* تحليل */
+/* التحليل */
 
 let timer;
 
@@ -240,7 +274,7 @@ if(score>=30){
 
 document.body.classList.add("dangerMode");
 
-status.innerText="⚠ Suspicious message";
+status.innerText="⚠️ Suspicious message";
 
 rec.className="rec danger";
 
@@ -252,7 +286,7 @@ speak("Suspicious message. Attack type "+type);
 
 document.body.classList.remove("dangerMode");
 
-status.innerText="✔ Message safe";
+status.innerText="✔️ Message safe";
 
 rec.className="rec safe";
 
@@ -286,13 +320,41 @@ document.addEventListener("mouseover",(e)=>{
 
 if(e.target.classList.contains("speak")){
 
-let t=e.target.innerText;
+let t=e.target.innerText || e.target.placeholder;
 
-if(t.length<120)speak(t);
+if(t && t.length<120){
+
+speak(t);
+
+}
 
 }
 
 });
+
+/* اللغة */
+
+function toggleLang(){
+
+if(lang=="ar"){
+
+lang="en";
+
+subtitle.innerText="Suspicious Message Analyzer";
+
+msg.placeholder="Paste message here";
+
+}else{
+
+lang="ar";
+
+subtitle.innerText="منصة تحليل الرسائل المشبوهة";
+
+msg.placeholder="الصق الرسالة هنا";
+
+}
+
+}
 
 /* تقرير */
 
@@ -300,7 +362,7 @@ function generateReport(){
 
 let report=
 
-`FALCON CYBER SECURITY REPORT
+`FALCON SOC REPORT
 
 Threat Status: ${status.innerText}
 
@@ -343,9 +405,7 @@ const letters="FALCONSOC01";
 const matrix=letters.split("");
 
 const size=14;
-
 const columns=canvas.width/size;
-
 const drops=[];
 
 for(let x=0;x<columns;x++)drops[x]=1;
@@ -353,7 +413,6 @@ for(let x=0;x<columns;x++)drops[x]=1;
 function draw(){
 
 ctx.fillStyle="rgba(0,0,0,0.05)";
-
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
 ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
