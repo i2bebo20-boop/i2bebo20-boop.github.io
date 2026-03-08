@@ -111,11 +111,6 @@ border:2px solid red;
 color:red;
 }
 
-.highlight{
-color:red;
-font-weight:bold;
-}
-
 </style>
 </head>
 
@@ -125,23 +120,25 @@ font-weight:bold;
 
 <div class="container">
 
-<h1>🦅 BlackFalcon SOC</h1>
+<h1 class="speak">🦅 BlackFalcon SOC</h1>
 
-<div id="subtitle">منصة تحليل الرسائل المشبوهة</div>
-
-<div class="langWrapper">
-<button class="langBtn" onclick="toggleLang()">EN</button>
+<div id="subtitle" class="speak">
+منصة تحليل الرسائل المشبوهة
 </div>
 
-<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
+<div class="langWrapper">
+<button class="langBtn speak" onclick="toggleLang()">EN</button>
+</div>
+
+<textarea id="msg" placeholder="الصق الرسالة هنا..." class="speak"></textarea>
 
 <div class="card">
 
-<h2 id="threatTitle">حالة التهديد</h2>
+<h2 id="threatTitle" class="speak">حالة التهديد</h2>
 
-<div id="status">—</div>
+<div id="status" class="speak">—</div>
 
-<div>
+<div class="speak">
 <span id="riskText">نسبة الخطورة</span> :
 <span id="score">0</span>%
 </div>
@@ -152,15 +149,15 @@ font-weight:bold;
 
 <div style="margin-top:15px">
 
-<strong id="typeLabel">نوع التهديد:</strong>
+<strong id="typeLabel" class="speak">MITRE ATT&CK:</strong>
 
-<span id="type">—</span>
-
-</div>
+<span id="type" class="speak">—</span>
 
 </div>
 
-<div id="rec" class="recommendation recSafe">
+</div>
+
+<div id="rec" class="recommendation recSafe speak">
 
 بانتظار التحليل
 
@@ -171,6 +168,8 @@ font-weight:bold;
 <script>
 
 let lang="ar";
+
+/* كلمات الاحتيال */
 
 const suspiciousWords=[
 "verify","account","bank","password","confirm",
@@ -194,7 +193,27 @@ return links.length*30;
 
 }
 
-/* تأخير التحليل 3 ثواني */
+/* تحديد نوع الهجوم */
+
+function detectAttackType(text){
+
+if(text.includes("password")||text.includes("كلمة المرور")){
+
+return "Credential Harvesting – MITRE ATT&CK T1056";
+
+}
+
+if(text.includes("http")||text.includes("www")){
+
+return "Malicious Link – MITRE ATT&CK T1204";
+
+}
+
+return "Phishing – MITRE ATT&CK T1566";
+
+}
+
+/* تأخير التحليل */
 
 let timer;
 
@@ -205,22 +224,6 @@ clearTimeout(timer);
 timer=setTimeout(analyze,3000);
 
 });
-
-/* تحديد نوع الهجوم */
-
-function detectAttackType(text){
-
-if(text.includes("password")||text.includes("كلمة المرور")){
-return lang=="ar"?"سرقة بيانات الدخول":"Credential Harvesting";
-}
-
-if(text.includes("http")||text.includes("www")){
-return lang=="ar"?"رابط خبيث":"Malicious Link";
-}
-
-return lang=="ar"?"تصيد احتيالي":"Phishing";
-
-}
 
 function analyze(){
 
@@ -245,50 +248,40 @@ document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
 
 let status=document.getElementById("status");
+
 let rec=document.getElementById("rec");
+
 let type=document.getElementById("type");
 
-let attackType=detectAttackType(text);
+let attack=detectAttackType(text);
 
 if(score>=30){
 
 document.body.classList.add("dangerMode");
 
-status.innerText= lang=="ar" ? "⚠️ رسالة مشبوهة" : "⚠️ Suspicious message";
+status.innerText="⚠️ رسالة مشبوهة";
 
-type.innerText=attackType;
+type.innerText=attack;
 
 rec.className="recommendation recDanger";
 
-rec.innerText= lang=="ar"
-? "لا تضغط الروابط ولا ترسل بياناتك."
-: "Do not click links or share sensitive data.";
+rec.innerText="لا تضغط الروابط ولا ترسل بياناتك.";
 
-speak(
-lang=="ar"
-? "الرسالة مشبوهة. نوع الهجوم "+attackType+" . لا تضغط الروابط ولا ترسل بياناتك"
-: "The message is suspicious. Attack type "+attackType+" . Do not click links or share sensitive data"
-);
+speak("الرسالة مشبوهة. نوع الهجوم "+attack+" . لا تضغط الروابط ولا ترسل بياناتك");
 
 }else{
 
 document.body.classList.remove("dangerMode");
 
-status.innerText= lang=="ar" ? "✔️ الرسالة آمنة" : "✔️ Message is safe";
+status.innerText="✔️ الرسالة آمنة";
 
 type.innerText="-";
 
 rec.className="recommendation recSafe";
 
-rec.innerText= lang=="ar"
-? "لا يوجد تهديد واضح."
-: "No clear threat detected.";
+rec.innerText="لا يوجد تهديد واضح.";
 
-speak(
-lang=="ar"
-? "الرسالة آمنة. لا يوجد تهديد واضح"
-: "The message is safe. No threat detected"
-);
+speak("الرسالة آمنة. لا يوجد تهديد واضح");
 
 }
 
@@ -308,15 +301,25 @@ speechSynthesis.speak(msg);
 
 }
 
-/* صوت مربع الإدخال */
+/* قراءة أي عنصر بالماوس */
 
-document.getElementById("msg").addEventListener("mouseenter",function(){
+document.addEventListener("mouseover",function(e){
 
-speak(lang=="ar"?"مربع إدخال الرسالة":"Message input field");
+if(e.target.classList.contains("speak")){
+
+let text=e.target.innerText || e.target.placeholder;
+
+if(text && text.length<120){
+
+speak(text);
+
+}
+
+}
 
 });
 
-/* تغيير اللغة */
+/* اللغة */
 
 function toggleLang(){
 
@@ -330,7 +333,8 @@ btn.innerText="AR";
 document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
 document.getElementById("threatTitle").innerText="Threat Status";
 document.getElementById("riskText").innerText="Risk Level";
-document.getElementById("typeLabel").innerText="Threat Type";
+document.getElementById("typeLabel").innerText="MITRE ATT&CK";
+
 document.getElementById("msg").placeholder="Paste message here";
 
 }else{
@@ -341,7 +345,8 @@ btn.innerText="EN";
 document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
 document.getElementById("threatTitle").innerText="حالة التهديد";
 document.getElementById("riskText").innerText="نسبة الخطورة";
-document.getElementById("typeLabel").innerText="نوع التهديد";
+document.getElementById("typeLabel").innerText="MITRE ATT&CK";
+
 document.getElementById("msg").placeholder="الصق الرسالة هنا";
 
 }
