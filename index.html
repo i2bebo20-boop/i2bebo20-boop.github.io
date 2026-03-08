@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>Falcon SOC</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+
+<title>BlackFalcon SOC</title>
 
 <style>
 
 body{
 margin:0;
 background:black;
-color:#00ff9c;
-font-family:'Orbitron',sans-serif;
+color:#00ffe1;
+font-family:Arial;
 overflow:hidden;
 }
 
@@ -25,52 +25,58 @@ z-index:-1;
 
 .container{
 text-align:center;
-margin-top:60px;
+padding-top:70px;
 }
 
 h1{
-font-size:40px;
-text-shadow:0 0 20px #00ff9c;
-}
-
-.controls{
-margin:20px;
+font-size:55px;
+text-shadow:0 0 25px #00ffe1;
 }
 
 button{
-padding:10px 25px;
+padding:10px 30px;
 border-radius:20px;
-border:1px solid #00ff9c;
 background:transparent;
-color:#00ff9c;
+border:1px solid #00ffe1;
+color:#00ffe1;
 cursor:pointer;
-margin:5px;
 }
 
 textarea{
+
 width:80%;
-height:140px;
-background:black;
-border:1px solid #00ff9c;
+height:150px;
+
+background:rgba(0,0,0,.7);
+border:1px solid #00ffe1;
 border-radius:20px;
+
 padding:20px;
-color:#00ff9c;
+color:white;
 font-size:16px;
+
+margin-top:30px;
+
 }
 
 .card{
+
 width:80%;
-margin:30px auto;
-padding:25px;
+margin:auto;
+margin-top:30px;
+
+background:rgba(0,0,0,.6);
+
+padding:30px;
 border-radius:20px;
-background:rgba(0,0,0,.7);
-text-align:left;
+
+text-align:right;
+
 }
 
 .progress{
 height:10px;
 background:#111;
-border-radius:20px;
 margin-top:10px;
 }
 
@@ -80,16 +86,21 @@ width:0%;
 background:red;
 }
 
-.rec{
+.result{
+
 width:80%;
 margin:auto;
+margin-top:20px;
+
 padding:20px;
+
 border-radius:20px;
+
 }
 
 .safe{
-border:2px solid #00ff9c;
-color:#00ff9c;
+border:2px solid #00ffe1;
+color:#00ffe1;
 }
 
 .danger{
@@ -106,57 +117,54 @@ color:red;
 
 <div class="container">
 
-<h1 class="speak">🦅 Falcon SOC</h1>
+<h1 class="speak">BlackFalcon SOC</h1>
 
-<div class="controls">
+<button id="lang">EN</button>
 
-<button id="langBtn" class="speak">Language</button>
-<button id="reportBtn" class="speak">Report</button>
+<br>
 
-</div>
-
-<textarea id="msg" placeholder="Paste message here"></textarea>
+<textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
 
 <div class="card">
 
-<h2 class="speak">Threat Status</h2>
+<h2 class="speak">حالة التهديد</h2>
 
-<div id="status" class="speak">-</div>
+<div id="status">-</div>
 
-<div class="speak">
-Risk Level :
+<br>
+
+نسبة الخطورة
+
 <span id="score">0</span>%
-</div>
 
 <div class="progress">
+
 <div id="bar" class="bar"></div>
-</div>
-
-<div style="margin-top:15px">
-
-<strong class="speak">MITRE ATT&CK :</strong>
-
-<span id="type" class="speak">-</span>
 
 </div>
 
+<br>
+
+نوع التهديد
+
+<div id="attack">-</div>
+
 </div>
 
-<div id="rec" class="rec safe speak">
-Waiting for analysis
+<div id="rec" class="result safe">
+
+بانتظار التحليل
+
 </div>
 
 </div>
 
 <script>
 
-let lang="en"
 let audioEnabled=false
-let dangerMode=false
+let danger=false
 
-document.body.addEventListener("click",()=>{
-audioEnabled=true
-})
+document.body.onclick=()=>audioEnabled=true
 
 function speak(text){
 
@@ -166,87 +174,33 @@ speechSynthesis.cancel()
 
 let u=new SpeechSynthesisUtterance(text)
 
-u.lang="en-US"
+u.lang="ar-SA"
 
 speechSynthesis.speak(u)
 
 }
 
-/* قراءة العناصر بالماوس */
-
-document.addEventListener("mouseover",e=>{
-
-if(e.target.classList.contains("speak")){
-
-let t=e.target.innerText
-
-if(t && t.length<120)speak(t)
-
-}
-
-})
-
-/* مربع النص للمكفوفين */
+/* مربع النص */
 
 const msg=document.getElementById("msg")
 
 msg.addEventListener("mouseenter",()=>{
 
-speak("You are at the message input field")
+speak("أنت الآن عند مربع كتابة الرسالة")
 
 })
 
-/* القائمة الكبيرة للكلمات المشبوهة */
+/* الكلمات المشبوهة */
 
-const suspiciousWords=[
+const words=[
 
-"verify","verification","account","bank","password","confirm",
-"login","click","transfer","crypto","bitcoin","wallet",
-"gift","winner","prize","urgent","security","alert",
-"suspended","limited","reset","update","billing",
-"payment","invoice","transaction","claim","reward",
-"lottery","jackpot","bonus","promotion","congratulations",
+"bank","account","verify","login","password",
+"click","urgent","crypto","bitcoin","transfer",
 
-"تحقق","تأكيد","حساب","بنكي","كلمة المرور",
-"الدخول","اضغط","تحويل","جائزة","مبروك",
-"فزت","رابط","تحديث","أمني","تنبيه",
-"إعادة تعيين","فاتورة","دفع","معاملة",
-"هدية","مكافأة","عرض","تسجيل الدخول",
-"حسابك معلق","تأكيد الهوية"
+"تحقق","حساب","كلمة المرور","تحويل",
+"جائزة","اضغط","رابط","مبروك"
 
 ]
-
-function detectLinks(text){
-
-let r=/https?:\/\/[^\s]+/g
-
-let links=text.match(r)
-
-if(!links)return 0
-
-return links.length*30
-
-}
-
-function attackType(text){
-
-if(text.includes("password")||text.includes("login")){
-
-return "Credential Harvesting – MITRE T1056"
-
-}
-
-if(text.includes("http")){
-
-return "Malicious Link – MITRE T1204"
-
-}
-
-return "Phishing – MITRE T1566"
-
-}
-
-/* التحليل */
 
 let timer
 
@@ -254,7 +208,7 @@ msg.addEventListener("input",()=>{
 
 clearTimeout(timer)
 
-timer=setTimeout(analyze,3000)
+timer=setTimeout(analyze,2500)
 
 })
 
@@ -264,86 +218,53 @@ let text=msg.value.toLowerCase()
 
 let score=0
 
-suspiciousWords.forEach(w=>{
-if(text.includes(w))score+=10
+words.forEach(w=>{
+
+if(text.includes(w))score+=15
+
 })
 
-score+=detectLinks(text)
+if(text.includes("http"))score+=30
 
 if(score>100)score=100
 
-scoreEl.innerText=score
+document.getElementById("score").innerText=score
 
-bar.style.width=score+"%"
+document.getElementById("bar").style.width=score+"%"
 
-let type=attackType(text)
+if(score>40){
 
-typeEl.innerText=type
+danger=true
 
-if(score>=30){
+status.innerText="رسالة مشبوهة"
 
-dangerMode=true
+attack.innerText="Phishing Attack"
 
-status.innerText="⚠ Suspicious message"
+rec.className="result danger"
 
-rec.className="rec danger"
+rec.innerText="لا تضغط على الروابط ولا تشارك معلوماتك"
 
-rec.innerText="Do not click links or share sensitive data"
-
-speak("Suspicious message. Attack type "+type)
+speak("تحذير. الرسالة مشبوهة")
 
 }else{
 
-dangerMode=false
+danger=false
 
-status.innerText="✔ Message safe"
+status.innerText="الرسالة آمنة"
 
-rec.className="rec safe"
+attack.innerText="No Attack"
 
-rec.innerText="No threat detected"
+rec.className="result safe"
 
-speak("Message safe")
+rec.innerText="لم يتم اكتشاف تهديد"
 
-}
-
-}
-
-/* التقرير */
-
-reportBtn.onclick=function(){
-
-let report=
-
-`FALCON SOC REPORT
-
-Threat Status: ${status.innerText}
-
-Risk Level: ${scoreEl.innerText}%
-
-Attack Type: ${typeEl.innerText}
-
-Recommendation:
-${rec.innerText}
-
-Analyzed Message:
-${msg.value}
-
-Generated by Falcon SOC`
-
-let w=window.open()
-
-w.document.write("<pre>"+report+"</pre>")
+speak("الرسالة آمنة")
 
 }
 
-const scoreEl=document.getElementById("score")
-const bar=document.getElementById("bar")
-const status=document.getElementById("status")
-const typeEl=document.getElementById("type")
-const rec=document.getElementById("rec")
-const reportBtn=document.getElementById("reportBtn")
+}
 
-/* خلفية Matrix */
+/* MATRIX BACKGROUND */
 
 const canvas=document.getElementById("matrix")
 const ctx=canvas.getContext("2d")
@@ -351,28 +272,27 @@ const ctx=canvas.getContext("2d")
 canvas.height=window.innerHeight
 canvas.width=window.innerWidth
 
-const letters="01FALCONSOC"
-const matrix=letters.split("")
+const letters="01BLACKFALCON"
+const fontSize=14
 
-const fontSize=16
 const columns=canvas.width/fontSize
 
 const drops=[]
 
-for(let x=0;x<columns;x++)drops[x]=1
+for(let i=0;i<columns;i++)drops[i]=1
 
 function draw(){
 
 ctx.fillStyle="rgba(0,0,0,0.05)"
 ctx.fillRect(0,0,canvas.width,canvas.height)
 
-ctx.fillStyle=dangerMode?"red":"#00ff9c"
+ctx.fillStyle=danger?"red":"#00ffe1"
 
 ctx.font=fontSize+"px monospace"
 
 for(let i=0;i<drops.length;i++){
 
-let text=matrix[Math.floor(Math.random()*matrix.length)]
+let text=letters[Math.floor(Math.random()*letters.length)]
 
 ctx.fillText(text,i*fontSize,drops[i]*fontSize)
 
@@ -388,7 +308,7 @@ drops[i]++
 
 }
 
-setInterval(draw,35)
+setInterval(draw,33)
 
 </script>
 
