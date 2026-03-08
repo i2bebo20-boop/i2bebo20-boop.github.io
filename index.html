@@ -3,7 +3,6 @@
 <head>
 
 <meta charset="UTF-8">
-
 <title>BlackFalcon SOC</title>
 
 <style>
@@ -25,7 +24,7 @@ z-index:-1;
 
 .container{
 text-align:center;
-padding-top:70px;
+padding-top:60px;
 }
 
 h1{
@@ -33,45 +32,26 @@ font-size:55px;
 text-shadow:0 0 25px #00ffe1;
 }
 
-button{
-padding:10px 30px;
-border-radius:20px;
-background:transparent;
-border:1px solid #00ffe1;
-color:#00ffe1;
-cursor:pointer;
-}
-
 textarea{
-
 width:80%;
 height:150px;
-
 background:rgba(0,0,0,.7);
 border:1px solid #00ffe1;
 border-radius:20px;
-
 padding:20px;
 color:white;
 font-size:16px;
-
 margin-top:30px;
-
 }
 
 .card{
-
 width:80%;
 margin:auto;
 margin-top:30px;
-
 background:rgba(0,0,0,.6);
-
 padding:30px;
 border-radius:20px;
-
 text-align:right;
-
 }
 
 .progress{
@@ -87,15 +67,11 @@ background:red;
 }
 
 .result{
-
 width:80%;
 margin:auto;
 margin-top:20px;
-
 padding:20px;
-
 border-radius:20px;
-
 }
 
 .safe{
@@ -119,15 +95,11 @@ color:red;
 
 <h1 class="speak">BlackFalcon SOC</h1>
 
-<button id="lang">EN</button>
+<textarea id="msg" class="speak" data-label="مربع كتابة الرسالة"></textarea>
 
-<br>
+<div class="card speak" data-label="لوحة تحليل التهديد">
 
-<textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
-
-<div class="card">
-
-<h2 class="speak">حالة التهديد</h2>
+<h2>حالة التهديد</h2>
 
 <div id="status">-</div>
 
@@ -151,7 +123,7 @@ color:red;
 
 </div>
 
-<div id="rec" class="result safe">
+<div id="rec" class="result safe speak" data-label="التوصية">
 
 بانتظار التحليل
 
@@ -180,13 +152,17 @@ speechSynthesis.speak(u)
 
 }
 
-/* مربع النص */
+/* قراءة العناصر عند مرور الماوس */
 
-const msg=document.getElementById("msg")
+document.querySelectorAll(".speak").forEach(el=>{
 
-msg.addEventListener("mouseenter",()=>{
+el.addEventListener("mouseenter",()=>{
 
-speak("أنت الآن عند مربع كتابة الرسالة")
+let name=el.dataset.label || el.innerText
+
+if(name)speak(name)
+
+})
 
 })
 
@@ -194,13 +170,35 @@ speak("أنت الآن عند مربع كتابة الرسالة")
 
 const words=[
 
-"bank","account","verify","login","password",
-"click","urgent","crypto","bitcoin","transfer",
+/* بنوك */
 
-"تحقق","حساب","كلمة المرور","تحويل",
-"جائزة","اضغط","رابط","مبروك"
+"bank","account","banking","iban","swift",
+
+/* تسجيل دخول */
+
+"login","signin","password","username","verification","verify","confirm","security code",
+
+/* أموال */
+
+"transfer","payment","invoice","billing","transaction","crypto","bitcoin","wallet",
+
+/* احتيال */
+
+"urgent","suspended","limited","reset","update","claim","reward","prize","winner","lottery",
+
+/* روابط */
+
+"http","https","bit.ly","tinyurl","shorturl",
+
+/* عربي */
+
+"بنك","حساب","تحقق","تأكيد","كلمة المرور","رمز التحقق",
+"تحويل","دفع","فاتورة","معاملة","جائزة","مبروك",
+"رابط","اضغط","مهم","عاجل","تحديث","إعادة تعيين"
 
 ]
+
+/* تحليل */
 
 let timer
 
@@ -208,9 +206,23 @@ msg.addEventListener("input",()=>{
 
 clearTimeout(timer)
 
-timer=setTimeout(analyze,2500)
+timer=setTimeout(analyze,3000)
 
 })
+
+function mitre(text){
+
+if(text.includes("login")||text.includes("password"))
+
+return "Credential Harvesting - MITRE T1056"
+
+if(text.includes("http"))
+
+return "Malicious Link - MITRE T1204"
+
+return "Phishing - MITRE T1566"
+
+}
 
 function analyze(){
 
@@ -220,31 +232,31 @@ let score=0
 
 words.forEach(w=>{
 
-if(text.includes(w))score+=15
+if(text.includes(w))score+=10
 
 })
 
-if(text.includes("http"))score+=30
-
 if(score>100)score=100
 
-document.getElementById("score").innerText=score
+scoreEl.innerText=score
 
-document.getElementById("bar").style.width=score+"%"
+bar.style.width=score+"%"
 
-if(score>40){
+let type=mitre(text)
+
+attack.innerText=type
+
+if(score>=40){
 
 danger=true
 
 status.innerText="رسالة مشبوهة"
 
-attack.innerText="Phishing Attack"
-
 rec.className="result danger"
 
-rec.innerText="لا تضغط على الروابط ولا تشارك معلوماتك"
+rec.innerText="التوصية: لا تضغط الروابط ولا تشارك بياناتك"
 
-speak("تحذير. الرسالة مشبوهة")
+speak("تحذير. الرسالة مشبوهة. التوصية. لا تضغط على الروابط ولا تشارك بياناتك")
 
 }else{
 
@@ -252,13 +264,11 @@ danger=false
 
 status.innerText="الرسالة آمنة"
 
-attack.innerText="No Attack"
-
 rec.className="result safe"
 
-rec.innerText="لم يتم اكتشاف تهديد"
+rec.innerText="لا يوجد تهديد"
 
-speak("الرسالة آمنة")
+speak("الرسالة آمنة. لا يوجد تهديد")
 
 }
 
@@ -272,7 +282,7 @@ const ctx=canvas.getContext("2d")
 canvas.height=window.innerHeight
 canvas.width=window.innerWidth
 
-const letters="01BLACKFALCON"
+const letters="01BLACKFALCONSOC"
 const fontSize=14
 
 const columns=canvas.width/fontSize
@@ -308,7 +318,10 @@ drops[i]++
 
 }
 
-setInterval(draw,33)
+setInterval(draw,35)
+
+const scoreEl=document.getElementById("score")
+const bar=document.getElementById("bar")
 
 </script>
 
