@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 
-<title>BlackFalcon SOC</title>
+<title>Falcon SOC</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
@@ -15,11 +15,11 @@ background:black;
 color:#00f5d4;
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
-transition:0.5s;
+transition:.5s;
 }
 
 body.dangerMode{
-background:#140000;
+background:#200000;
 box-shadow:inset 0 0 250px red;
 }
 
@@ -35,17 +35,40 @@ text-align:center;
 margin-top:50px;
 }
 
-h1{
-font-size:40px;
-text-shadow:0 0 25px #00f5d4;
+textarea{
+width:80%;
+height:140px;
+background:#000;
+border:1px solid #00f5d4;
+border-radius:20px;
+padding:20px;
+color:#00f5d4;
+font-size:16px;
 }
 
-.langWrapper{
-margin-top:25px;
-margin-bottom:35px;
+.card{
+width:80%;
+margin:30px auto;
+padding:25px;
+border-radius:20px;
+background:rgba(0,0,0,.6);
 }
 
-.langBtn{
+.progress{
+height:10px;
+background:#111;
+border-radius:20px;
+margin-top:10px;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:red;
+}
+
+button{
+margin:10px;
 padding:10px 25px;
 border-radius:20px;
 border:1px solid #00f5d4;
@@ -54,59 +77,19 @@ color:#00f5d4;
 cursor:pointer;
 }
 
-textarea{
+.rec{
 width:80%;
-height:140px;
-background:rgba(0,0,0,0.6);
-border:1px solid #00f5d4;
-border-radius:20px;
-padding:20px;
-color:#00f5d4;
-font-size:16px;
-outline:none;
-}
-
-.card{
-width:80%;
-margin:30px auto;
-padding:25px;
-border-radius:25px;
-background:rgba(0,0,0,0.6);
-box-shadow:0 0 30px #00f5d422;
-text-align:left;
-}
-
-.progress{
-height:10px;
-background:#111;
-border-radius:20px;
-margin-top:10px;
-overflow:hidden;
-}
-
-.bar{
-height:100%;
-width:0%;
-background:red;
-transition:0.4s;
-}
-
-.recommendation{
-width:80%;
-margin:20px auto;
+margin:auto;
 padding:20px;
 border-radius:20px;
-font-weight:bold;
 }
 
-.recSafe{
-background:rgba(0,255,136,0.1);
+.safe{
 border:2px solid #00ff88;
 color:#00ff88;
 }
 
-.recDanger{
-background:rgba(255,0,0,0.1);
+.danger{
 border:2px solid red;
 color:red;
 }
@@ -120,26 +103,24 @@ color:red;
 
 <div class="container">
 
-<h1 class="speak">🦅 BlackFalcon SOC</h1>
+<h1 class="speak">🦅 Falcon SOC</h1>
 
-<div id="subtitle" class="speak">
-منصة تحليل الرسائل المشبوهة
-</div>
+<div class="speak">Suspicious Message Analyzer</div>
 
-<div class="langWrapper">
-<button class="langBtn speak" onclick="toggleLang()">EN</button>
-</div>
+<button onclick="toggleLang()" class="speak">Language</button>
 
-<textarea id="msg" placeholder="الصق الرسالة هنا..." class="speak"></textarea>
+<br>
+
+<textarea id="msg" placeholder="Paste message here"></textarea>
 
 <div class="card">
 
-<h2 id="threatTitle" class="speak">حالة التهديد</h2>
+<h2 class="speak">Threat Status</h2>
 
-<div id="status" class="speak">—</div>
+<div id="status" class="speak">-</div>
 
 <div class="speak">
-<span id="riskText">نسبة الخطورة</span> :
+Risk Level :
 <span id="score">0</span>%
 </div>
 
@@ -147,77 +128,85 @@ color:red;
 <div class="bar" id="bar"></div>
 </div>
 
-<div style="margin-top:15px">
+<div style="margin-top:10px">
 
-<strong id="typeLabel" class="speak">MITRE ATT&CK:</strong>
+MITRE ATT&CK :
 
-<span id="type" class="speak">—</span>
-
-</div>
+<span id="type" class="speak">-</span>
 
 </div>
 
-<div id="rec" class="recommendation recSafe speak">
+</div>
 
-بانتظار التحليل
+<div id="rec" class="rec safe speak">
+
+Waiting for analysis
 
 </div>
+
+<button onclick="generateReport()" class="speak">
+Generate Report
+</button>
 
 </div>
 
 <script>
 
-let lang="ar";
+let lang="en";
+let audioEnabled=false;
+
+/* تشغيل الصوت بعد أول تفاعل */
+
+document.body.addEventListener("click",()=>{
+audioEnabled=true;
+});
 
 /* كلمات الاحتيال */
 
-const suspiciousWords=[
-"verify","account","bank","password","confirm",
-"login","click","transfer","crypto","gift",
+const words=[
+"verify","account","password","bank",
+"confirm","login","click","transfer",
+"crypto","gift","winner","prize",
 
 "تحقق","حساب","بنكي","كلمة المرور",
 "تأكيد","الدخول","اضغط","تحويل"
 ];
 
-/* كشف الروابط */
-
 function detectLinks(text){
 
-let regex=/https?:\/\/[^\s]+/g;
+let r=/https?:\/\/[^\s]+/g;
 
-let links=text.match(regex);
+let l=text.match(r);
 
-if(!links) return 0;
+if(!l)return 0;
 
-return links.length*30;
-
-}
-
-/* تحديد نوع الهجوم */
-
-function detectAttackType(text){
-
-if(text.includes("password")||text.includes("كلمة المرور")){
-
-return "Credential Harvesting – MITRE ATT&CK T1056";
+return l.length*30;
 
 }
 
-if(text.includes("http")||text.includes("www")){
+function attackType(text){
 
-return "Malicious Link – MITRE ATT&CK T1204";
+if(text.includes("password")){
 
-}
-
-return "Phishing – MITRE ATT&CK T1566";
+return "Credential Harvesting – MITRE T1056";
 
 }
 
-/* تأخير التحليل */
+if(text.includes("http")){
+
+return "Malicious Link – MITRE T1204";
+
+}
+
+return "Phishing – MITRE T1566";
+
+}
+
+/* تحليل */
 
 let timer;
 
-document.getElementById("msg").addEventListener("input",()=>{
+msg.addEventListener("input",()=>{
 
 clearTimeout(timer);
 
@@ -227,61 +216,49 @@ timer=setTimeout(analyze,3000);
 
 function analyze(){
 
-let text=document.getElementById("msg").value.toLowerCase();
+let text=msg.value.toLowerCase();
 
 let score=0;
 
-suspiciousWords.forEach(word=>{
-
-if(text.includes(word)){
-score+=15;
-}
-
+words.forEach(w=>{
+if(text.includes(w))score+=15;
 });
 
 score+=detectLinks(text);
 
 if(score>100)score=100;
 
-document.getElementById("score").innerText=score;
+scoreEl.innerText=score;
 
-document.getElementById("bar").style.width=score+"%";
+bar.style.width=score+"%";
 
-let status=document.getElementById("status");
+let type=attackType(text);
 
-let rec=document.getElementById("rec");
-
-let type=document.getElementById("type");
-
-let attack=detectAttackType(text);
+typeEl.innerText=type;
 
 if(score>=30){
 
 document.body.classList.add("dangerMode");
 
-status.innerText="⚠️ رسالة مشبوهة";
+status.innerText="⚠ Suspicious message";
 
-type.innerText=attack;
+rec.className="rec danger";
 
-rec.className="recommendation recDanger";
+rec.innerText="Do not click links or share sensitive data";
 
-rec.innerText="لا تضغط الروابط ولا ترسل بياناتك.";
-
-speak("الرسالة مشبوهة. نوع الهجوم "+attack+" . لا تضغط الروابط ولا ترسل بياناتك");
+speak("Suspicious message. Attack type "+type);
 
 }else{
 
 document.body.classList.remove("dangerMode");
 
-status.innerText="✔️ الرسالة آمنة";
+status.innerText="✔ Message safe";
 
-type.innerText="-";
+rec.className="rec safe";
 
-rec.className="recommendation recSafe";
+rec.innerText="No threat detected";
 
-rec.innerText="لا يوجد تهديد واضح.";
-
-speak("الرسالة آمنة. لا يوجد تهديد واضح");
+speak("Message safe. No threat detected");
 
 }
 
@@ -291,67 +268,68 @@ speak("الرسالة آمنة. لا يوجد تهديد واضح");
 
 function speak(text){
 
+if(!audioEnabled)return;
+
 speechSynthesis.cancel();
 
-let msg=new SpeechSynthesisUtterance(text);
+let u=new SpeechSynthesisUtterance(text);
 
-msg.lang= lang=="ar" ? "ar-SA" : "en-US";
+u.lang="en-US";
 
-speechSynthesis.speak(msg);
+speechSynthesis.speak(u);
 
 }
 
-/* قراءة أي عنصر بالماوس */
+/* قراءة العناصر */
 
-document.addEventListener("mouseover",function(e){
+document.addEventListener("mouseover",(e)=>{
 
 if(e.target.classList.contains("speak")){
 
-let text=e.target.innerText || e.target.placeholder;
+let t=e.target.innerText;
 
-if(text && text.length<120){
-
-speak(text);
-
-}
+if(t.length<120)speak(t);
 
 }
 
 });
 
-/* اللغة */
+/* تقرير */
 
-function toggleLang(){
+function generateReport(){
 
-let btn=document.querySelector(".langBtn");
+let report=
 
-if(lang=="ar"){
+`FALCON CYBER SECURITY REPORT
 
-lang="en";
-btn.innerText="AR";
+Threat Status: ${status.innerText}
 
-document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
-document.getElementById("threatTitle").innerText="Threat Status";
-document.getElementById("riskText").innerText="Risk Level";
-document.getElementById("typeLabel").innerText="MITRE ATT&CK";
+Risk Level: ${scoreEl.innerText}%
 
-document.getElementById("msg").placeholder="Paste message here";
+Attack Type: ${typeEl.innerText}
 
-}else{
+Recommendation:
+${rec.innerText}
 
-lang="ar";
-btn.innerText="EN";
+Analyzed Message:
+${msg.value}
 
-document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
-document.getElementById("threatTitle").innerText="حالة التهديد";
-document.getElementById("riskText").innerText="نسبة الخطورة";
-document.getElementById("typeLabel").innerText="MITRE ATT&CK";
+Generated by Falcon SOC`;
 
-document.getElementById("msg").placeholder="الصق الرسالة هنا";
+let w=window.open();
+
+w.document.write("<pre>"+report+"</pre>");
 
 }
 
-}
+/* عناصر */
+
+const scoreEl=document.getElementById("score");
+const bar=document.getElementById("bar");
+const status=document.getElementById("status");
+const typeEl=document.getElementById("type");
+const rec=document.getElementById("rec");
+const msg=document.getElementById("msg");
 
 /* Matrix */
 
@@ -361,36 +339,34 @@ const ctx=canvas.getContext("2d");
 canvas.height=window.innerHeight;
 canvas.width=window.innerWidth;
 
-const letters="01BLACKFALCONSOC";
+const letters="FALCONSOC01";
 const matrix=letters.split("");
 
-const fontSize=14;
-const columns=canvas.width/fontSize;
+const size=14;
+
+const columns=canvas.width/size;
 
 const drops=[];
 
-for(let x=0;x<columns;x++){
-drops[x]=1;
-}
+for(let x=0;x<columns;x++)drops[x]=1;
 
 function draw(){
 
 ctx.fillStyle="rgba(0,0,0,0.05)";
+
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
 ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
 
-ctx.font=fontSize+"px monospace";
+ctx.font=size+"px monospace";
 
 for(let i=0;i<drops.length;i++){
 
-const text=matrix[Math.floor(Math.random()*matrix.length)];
+let text=matrix[Math.floor(Math.random()*matrix.length)];
 
-ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+ctx.fillText(text,i*size,drops[i]*size);
 
-if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
-drops[i]=0;
-}
+if(drops[i]*size>canvas.height && Math.random()>0.975)drops[i]=0;
 
 drops[i]++;
 
