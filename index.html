@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-
 <title>Falcon SOC</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -12,15 +11,9 @@
 body{
 margin:0;
 background:black;
-color:#00f5d4;
+color:#00ff9c;
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
-transition:.5s;
-}
-
-body.dangerMode{
-background:#140000;
-box-shadow:inset 0 0 250px red;
 }
 
 canvas{
@@ -32,86 +25,71 @@ z-index:-1;
 
 .container{
 text-align:center;
-margin-top:50px;
+margin-top:60px;
 }
 
 h1{
 font-size:40px;
-text-shadow:0 0 25px #00f5d4;
+text-shadow:0 0 20px #00ff9c;
 }
 
-/* أزرار */
-
 .controls{
-margin-top:25px;
-margin-bottom:35px;
+margin:20px;
 }
 
 button{
 padding:10px 25px;
 border-radius:20px;
-border:1px solid #00f5d4;
+border:1px solid #00ff9c;
 background:transparent;
-color:#00f5d4;
+color:#00ff9c;
 cursor:pointer;
 margin:5px;
 }
 
-/* مربع النص */
-
 textarea{
 width:80%;
 height:140px;
-background:rgba(0,0,0,.6);
-border:1px solid #00f5d4;
+background:black;
+border:1px solid #00ff9c;
 border-radius:20px;
 padding:20px;
-color:#00f5d4;
+color:#00ff9c;
 font-size:16px;
 }
-
-/* كرت */
 
 .card{
 width:80%;
 margin:30px auto;
 padding:25px;
-border-radius:25px;
-background:rgba(0,0,0,.6);
-box-shadow:0 0 30px #00f5d422;
+border-radius:20px;
+background:rgba(0,0,0,.7);
 text-align:left;
 }
-
-/* شريط الخطورة */
 
 .progress{
 height:10px;
 background:#111;
 border-radius:20px;
 margin-top:10px;
-overflow:hidden;
 }
 
 .bar{
 height:100%;
 width:0%;
 background:red;
-transition:.4s;
 }
-
-/* توصيات */
 
 .rec{
 width:80%;
-margin:20px auto;
+margin:auto;
 padding:20px;
 border-radius:20px;
-font-weight:bold;
 }
 
 .safe{
-border:2px solid #00ff88;
-color:#00ff88;
+border:2px solid #00ff9c;
+color:#00ff9c;
 }
 
 .danger{
@@ -130,29 +108,20 @@ color:red;
 
 <h1 class="speak">🦅 Falcon SOC</h1>
 
-<div id="subtitle" class="speak">
-منصة تحليل الرسائل المشبوهة
-</div>
-
 <div class="controls">
 
-<button onclick="toggleLang()" class="speak">
-Language
-</button>
-
-<button onclick="generateReport()" class="speak">
-Report
-</button>
+<button id="langBtn" class="speak">Language</button>
+<button id="reportBtn" class="speak">Report</button>
 
 </div>
 
-<textarea id="msg" placeholder="الصق الرسالة هنا..." class="speak"></textarea>
+<textarea id="msg" placeholder="Paste message here"></textarea>
 
 <div class="card">
 
 <h2 class="speak">Threat Status</h2>
 
-<div id="status" class="speak">—</div>
+<div id="status" class="speak">-</div>
 
 <div class="speak">
 Risk Level :
@@ -160,205 +129,188 @@ Risk Level :
 </div>
 
 <div class="progress">
-<div class="bar" id="bar"></div>
+<div id="bar" class="bar"></div>
 </div>
 
 <div style="margin-top:15px">
 
 <strong class="speak">MITRE ATT&CK :</strong>
 
-<span id="type" class="speak">—</span>
+<span id="type" class="speak">-</span>
 
 </div>
 
 </div>
 
 <div id="rec" class="rec safe speak">
-
 Waiting for analysis
-
 </div>
 
 </div>
 
 <script>
 
-let lang="ar";
-let audioEnabled=false;
-
-/* تفعيل الصوت بعد أول نقرة */
+let lang="en"
+let audioEnabled=false
+let dangerMode=false
 
 document.body.addEventListener("click",()=>{
-audioEnabled=true;
-});
+audioEnabled=true
+})
 
-/* الكلمات المشبوهة */
+function speak(text){
 
-const words=[
-"verify","account","bank","password","confirm",
-"login","click","transfer","crypto","gift",
+if(!audioEnabled)return
 
-"تحقق","حساب","بنكي","كلمة المرور",
-"تأكيد","الدخول","اضغط","تحويل"
-];
+speechSynthesis.cancel()
 
-/* كشف الروابط */
+let u=new SpeechSynthesisUtterance(text)
 
-function detectLinks(text){
+u.lang="en-US"
 
-let r=/https?:\/\/[^\s]+/g;
-
-let links=text.match(r);
-
-if(!links)return 0;
-
-return links.length*30;
+speechSynthesis.speak(u)
 
 }
 
-/* نوع الهجوم */
+/* قراءة العناصر بالماوس */
+
+document.addEventListener("mouseover",e=>{
+
+if(e.target.classList.contains("speak")){
+
+let t=e.target.innerText
+
+if(t && t.length<120)speak(t)
+
+}
+
+})
+
+/* مربع النص للمكفوفين */
+
+const msg=document.getElementById("msg")
+
+msg.addEventListener("mouseenter",()=>{
+
+speak("You are at the message input field")
+
+})
+
+/* القائمة الكبيرة للكلمات المشبوهة */
+
+const suspiciousWords=[
+
+"verify","verification","account","bank","password","confirm",
+"login","click","transfer","crypto","bitcoin","wallet",
+"gift","winner","prize","urgent","security","alert",
+"suspended","limited","reset","update","billing",
+"payment","invoice","transaction","claim","reward",
+"lottery","jackpot","bonus","promotion","congratulations",
+
+"تحقق","تأكيد","حساب","بنكي","كلمة المرور",
+"الدخول","اضغط","تحويل","جائزة","مبروك",
+"فزت","رابط","تحديث","أمني","تنبيه",
+"إعادة تعيين","فاتورة","دفع","معاملة",
+"هدية","مكافأة","عرض","تسجيل الدخول",
+"حسابك معلق","تأكيد الهوية"
+
+]
+
+function detectLinks(text){
+
+let r=/https?:\/\/[^\s]+/g
+
+let links=text.match(r)
+
+if(!links)return 0
+
+return links.length*30
+
+}
 
 function attackType(text){
 
-if(text.includes("password")||text.includes("كلمة المرور")){
+if(text.includes("password")||text.includes("login")){
 
-return "Credential Harvesting – MITRE T1056";
+return "Credential Harvesting – MITRE T1056"
 
 }
 
 if(text.includes("http")){
 
-return "Malicious Link – MITRE T1204";
+return "Malicious Link – MITRE T1204"
 
 }
 
-return "Phishing – MITRE T1566";
+return "Phishing – MITRE T1566"
 
 }
 
 /* التحليل */
 
-let timer;
+let timer
 
 msg.addEventListener("input",()=>{
 
-clearTimeout(timer);
+clearTimeout(timer)
 
-timer=setTimeout(analyze,3000);
+timer=setTimeout(analyze,3000)
 
-});
+})
 
 function analyze(){
 
-let text=msg.value.toLowerCase();
+let text=msg.value.toLowerCase()
 
-let score=0;
+let score=0
 
-words.forEach(w=>{
-if(text.includes(w))score+=15;
-});
+suspiciousWords.forEach(w=>{
+if(text.includes(w))score+=10
+})
 
-score+=detectLinks(text);
+score+=detectLinks(text)
 
-if(score>100)score=100;
+if(score>100)score=100
 
-scoreEl.innerText=score;
+scoreEl.innerText=score
 
-bar.style.width=score+"%";
+bar.style.width=score+"%"
 
-let type=attackType(text);
+let type=attackType(text)
 
-typeEl.innerText=type;
+typeEl.innerText=type
 
 if(score>=30){
 
-document.body.classList.add("dangerMode");
+dangerMode=true
 
-status.innerText="⚠️ Suspicious message";
+status.innerText="⚠ Suspicious message"
 
-rec.className="rec danger";
+rec.className="rec danger"
 
-rec.innerText="Do not click links or share sensitive data";
+rec.innerText="Do not click links or share sensitive data"
 
-speak("Suspicious message. Attack type "+type);
-
-}else{
-
-document.body.classList.remove("dangerMode");
-
-status.innerText="✔️ Message safe";
-
-rec.className="rec safe";
-
-rec.innerText="No threat detected";
-
-speak("Message safe. No threat detected");
-
-}
-
-}
-
-/* الصوت */
-
-function speak(text){
-
-if(!audioEnabled)return;
-
-speechSynthesis.cancel();
-
-let u=new SpeechSynthesisUtterance(text);
-
-u.lang="en-US";
-
-speechSynthesis.speak(u);
-
-}
-
-/* قراءة العناصر */
-
-document.addEventListener("mouseover",(e)=>{
-
-if(e.target.classList.contains("speak")){
-
-let t=e.target.innerText || e.target.placeholder;
-
-if(t && t.length<120){
-
-speak(t);
-
-}
-
-}
-
-});
-
-/* اللغة */
-
-function toggleLang(){
-
-if(lang=="ar"){
-
-lang="en";
-
-subtitle.innerText="Suspicious Message Analyzer";
-
-msg.placeholder="Paste message here";
+speak("Suspicious message. Attack type "+type)
 
 }else{
 
-lang="ar";
+dangerMode=false
 
-subtitle.innerText="منصة تحليل الرسائل المشبوهة";
+status.innerText="✔ Message safe"
 
-msg.placeholder="الصق الرسالة هنا";
+rec.className="rec safe"
+
+rec.innerText="No threat detected"
+
+speak("Message safe")
 
 }
 
 }
 
-/* تقرير */
+/* التقرير */
 
-function generateReport(){
+reportBtn.onclick=function(){
 
 let report=
 
@@ -376,64 +328,67 @@ ${rec.innerText}
 Analyzed Message:
 ${msg.value}
 
-Generated by Falcon SOC`;
+Generated by Falcon SOC`
 
-let w=window.open();
+let w=window.open()
 
-w.document.write("<pre>"+report+"</pre>");
+w.document.write("<pre>"+report+"</pre>")
 
 }
 
-/* عناصر */
+const scoreEl=document.getElementById("score")
+const bar=document.getElementById("bar")
+const status=document.getElementById("status")
+const typeEl=document.getElementById("type")
+const rec=document.getElementById("rec")
+const reportBtn=document.getElementById("reportBtn")
 
-const scoreEl=document.getElementById("score");
-const bar=document.getElementById("bar");
-const status=document.getElementById("status");
-const typeEl=document.getElementById("type");
-const rec=document.getElementById("rec");
-const msg=document.getElementById("msg");
+/* خلفية Matrix */
 
-/* Matrix */
+const canvas=document.getElementById("matrix")
+const ctx=canvas.getContext("2d")
 
-const canvas=document.getElementById("matrix");
-const ctx=canvas.getContext("2d");
+canvas.height=window.innerHeight
+canvas.width=window.innerWidth
 
-canvas.height=window.innerHeight;
-canvas.width=window.innerWidth;
+const letters="01FALCONSOC"
+const matrix=letters.split("")
 
-const letters="FALCONSOC01";
-const matrix=letters.split("");
+const fontSize=16
+const columns=canvas.width/fontSize
 
-const size=14;
-const columns=canvas.width/size;
-const drops=[];
+const drops=[]
 
-for(let x=0;x<columns;x++)drops[x]=1;
+for(let x=0;x<columns;x++)drops[x]=1
 
 function draw(){
 
-ctx.fillStyle="rgba(0,0,0,0.05)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="rgba(0,0,0,0.05)"
+ctx.fillRect(0,0,canvas.width,canvas.height)
 
-ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
+ctx.fillStyle=dangerMode?"red":"#00ff9c"
 
-ctx.font=size+"px monospace";
+ctx.font=fontSize+"px monospace"
 
 for(let i=0;i<drops.length;i++){
 
-let text=matrix[Math.floor(Math.random()*matrix.length)];
+let text=matrix[Math.floor(Math.random()*matrix.length)]
 
-ctx.fillText(text,i*size,drops[i]*size);
+ctx.fillText(text,i*fontSize,drops[i]*fontSize)
 
-if(drops[i]*size>canvas.height && Math.random()>0.975)drops[i]=0;
+if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
 
-drops[i]++;
+drops[i]=0
+
+}
+
+drops[i]++
 
 }
 
 }
 
-setInterval(draw,33);
+setInterval(draw,35)
 
 </script>
 
