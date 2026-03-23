@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
@@ -63,6 +63,16 @@ transition:0.4s;
 
 .safe{color:#00ff88;}
 .danger{color:#ff0033;}
+
+.btn{
+padding:8px 15px;
+margin:10px;
+border:1px solid #00f5d4;
+background:transparent;
+color:#00f5d4;
+cursor:pointer;
+border-radius:10px;
+}
 </style>
 </head>
 
@@ -72,18 +82,21 @@ transition:0.4s;
 
 <div class="container">
 
+<button class="btn" onclick="toggleLang()">EN / AR</button>
+<button class="btn" onclick="generateReport()">REPORT</button>
+
 <h1 class="speakable">🦅 BlackFalcon SOC</h1>
-<div class="speakable">منصة تحليل الرسائل المشبوهة</div>
+<div class="speakable" id="subtitle">منصة تحليل الرسائل المشبوهة</div>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 <div class="card">
 
-<h2 class="speakable">حالة التهديد</h2>
+<h2 class="speakable" id="threatTitle">حالة التهديد</h2>
 <div id="status" class="speakable">—</div>
 
 <div class="speakable">
-نسبة الخطورة: <span id="score">0</span>%
+<span id="riskLabel">نسبة الخطورة:</span> <span id="score">0</span>%
 </div>
 
 <div class="progress">
@@ -102,77 +115,47 @@ transition:0.4s;
 
 <script>
 
+let currentLang="ar";
+
 /* ===== الصوت ===== */
 function speak(text){
 if(!text) return;
 speechSynthesis.cancel();
 let msg=new SpeechSynthesisUtterance(text);
-msg.lang="ar-SA";
+msg.lang=currentLang==="ar"?"ar-SA":"en-US";
 speechSynthesis.speak(msg);
 }
 
+/* قراءة عند المرور */
 document.addEventListener("mouseover",e=>{
 if(e.target.classList.contains("speakable")){
 speak(e.target.innerText);
 }
 });
 
+/* صوت مربع النص */
 const msg=document.getElementById("msg");
 
 msg.addEventListener("focus",()=>{
-speak("مكان إدخال الرسالة");
+speak(currentLang==="ar"?
+"مكان إدخال الرسالة":
+"Message input field");
 });
 
-/* ===== قائمة ضخمة جداً (أكثر من 200 كلمة) ===== */
+/* ===== كلمات مشبوهة ===== */
 const suspiciousWords=[
-
-"تحقق من حسابك البنكي","تحقق من حسابك","تحديث الحساب","كلمة المرور","otp",
-"رمز التحقق","بطاقة ائتمان","رقم البطاقة","cvv","iban","swift",
-"اضغط هنا","انقر هنا","عرض محدود","عرض خاص","فرصة لا تعوض",
-"ربح سريع","اربح الآن","مجاناً","هدية مجانية","جائزة","فزت",
-"تحويل بنكي","حوالة عاجلة","استثمار","مضاعفة أموالك",
-"بيتكوين","crypto","bitcoin","double your money",
-"http://","https://","bit.ly","tinyurl",".ru",".cn",".tk",".ml",
-"verify your account","account suspended","reset password",
-"update payment","bank transfer","credit card","claim prize",
-"urgent action","limited offer","click here now","act now",
-
-/* 💥 إضافتك الكبيرة */
-"خصم 50%","جنيه إسترليني","بنك","الإفلاس","نقدي","كاش","كاش كاش كاش",
-"مكافأة نقدية","سحب نقدي","قرض","استرداد","استثمار مضمون","أرباح فورية",
-"عرض مذهل","لا تفوت","عاجل","اطلب الآن","سجل الآن","عرض حصري",
-"ربح كبير","نتائج مضمونة","عرض رائع","عرض خاص","عرض لا يصدق",
-"مجاني 100%","دخول مجاني","استشارة مجانية","هدية مجانية",
-"أموال مجانية","عرض سعر مجاني","تجربة مجانية",
-"ضمان استرداد الأموال","تخلص من الديون","زيادة الإيرادات",
-"زيادة المبيعات","دخل فوري","دخل سهل","حر","مجانا",
-"وفر المال","وفر الكثير","عرض ترويجي","سعر","أفضل سعر",
-"أفضل عرض","أفضل صفقة","مبالغ طائلة","مليون دولار",
-"ضمان","ربح صافٍ","خالٍ من المخاطر","دعوة خاصة",
-"انقر هنا","انقر أدناه","اضغط الآن","قدم الآن",
-"اشتر الآن","اتصل الآن","ابدأ الآن","سجل الآن",
-"لا تضيع الوقت","لفترة محدودة","ينتهي اليوم",
-"فرصة العمر","حصري","خاص","فوري","عاجل للغاية",
-"أنت فائز","فائز","الفائز","يانصيب","كازينو",
-"رهان","مقامرة","جائزة كبرى",
-
-/* EN */
-"free money","guaranteed profit","risk free","fast cash",
-"easy money","bonus","reward","lottery","winner",
-"earn money","make money fast","get rich",
-"no risk","high return","investment opportunity",
-"urgent response","act immediately","limited time deal",
-"exclusive offer","claim now","buy now","order now",
-"instant profit","cash bonus","double income"
-
+"تحقق من حسابك","حسابك البنكي","otp","verify","bank","password",
+"credit card","bitcoin","http","urgent","click here","free money",
+"مجاناً","جائزة","اضغط هنا","تحويل بنكي","استثمار","ربح سريع"
 ];
 
 /* ===== تحليل ===== */
-let timer;
+let lastResult="";
+let lastType="";
+let lastRec="";
 
 msg.addEventListener("input",()=>{
-clearTimeout(timer);
-timer=setTimeout(analyze,1000);
+setTimeout(analyze,800);
 });
 
 function analyze(){
@@ -181,31 +164,17 @@ let text=msg.value.toLowerCase();
 let score=0;
 
 suspiciousWords.forEach(w=>{
-if(text.includes(w)) score+=15;
+if(text.includes(w)) score+=20;
 });
-
-/* رفع الحساسية */
-if(text.includes("تحقق") || text.includes("verify")) score+=30;
-if(text.includes("bank") || text.includes("حساب")) score+=30;
-if(text.includes("http")) score+=25;
 
 if(score>100) score=100;
 
-/* نوع الهجوم */
 let type="—";
 
-if(text.includes("تحقق")||text.includes("verify")||text.includes("otp")){
-type="تصيد احتيالي";
-}
-else if(text.includes("bank")||text.includes("card")){
-type="سرقة بيانات";
-}
-else if(text.includes("bitcoin")||text.includes("investment")){
-type="احتيال مالي";
-}
-else if(text.includes("http")){
-type="رابط ضار";
-}
+if(text.includes("verify")||text.includes("تحقق")) type="Phishing";
+else if(text.includes("bank")) type="Data Theft";
+else if(text.includes("bitcoin")) type="Financial Scam";
+else if(text.includes("http")) type="Malicious Link";
 
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
@@ -214,26 +183,84 @@ document.getElementById("mitre").innerText="MITRE: "+type;
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 
-if(score>25){
-
-status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
-rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
-rec.className="danger speakable";
+if(score>30){
 
 document.body.classList.add("dangerMode");
 
+if(currentLang==="ar"){
+status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
+rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
 speak("تحذير الرسالة غير آمنة");
+lastResult="غير آمن";
+lastRec="لا تضغط الروابط ولا تشارك بياناتك";
+}else{
+status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
+rec.innerHTML="⚠️ Do not click links or share data";
+speak("Warning. This message is unsafe");
+lastResult="UNSAFE";
+lastRec="Do not click links or share data";
+}
+
+lastType=type;
 
 }else{
 
-status.innerHTML="<span class='safe'>✔️ آمن</span>";
-rec.innerHTML="✔️ لا يوجد تهديد واضح";
-rec.className="safe speakable";
-
 document.body.classList.remove("dangerMode");
 
+if(currentLang==="ar"){
+status.innerHTML="<span class='safe'>✔️ آمن</span>";
+rec.innerHTML="✔️ لا يوجد تهديد واضح";
 speak("الرسالة آمنة");
+lastResult="آمن";
+lastRec="لا يوجد تهديد واضح";
+}else{
+status.innerHTML="<span class='safe'>✔️ SAFE</span>";
+rec.innerHTML="✔️ No threat detected";
+speak("This message is safe");
+lastResult="SAFE";
+lastRec="No threat detected";
 }
+
+lastType=type;
+
+}
+
+}
+
+/* ===== زر اللغة ===== */
+function toggleLang(){
+
+currentLang=currentLang==="ar"?"en":"ar";
+
+if(currentLang==="en"){
+document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
+document.getElementById("threatTitle").innerText="Threat Status";
+document.getElementById("riskLabel").innerText="Risk Score:";
+msg.placeholder="Paste message here";
+}else{
+document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
+document.getElementById("threatTitle").innerText="حالة التهديد";
+document.getElementById("riskLabel").innerText="نسبة الخطورة:";
+msg.placeholder="الصق الرسالة هنا";
+}
+
+}
+
+/* ===== تقرير ===== */
+function generateReport(){
+
+let report=`
+🦅 BlackFalcon SOC REPORT
+
+Result: ${lastResult}
+Threat Type: ${lastType}
+Recommendation: ${lastRec}
+
+-------------------------
+Generated by BlackFalcon
+`;
+
+alert(report);
 
 }
 
