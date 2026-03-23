@@ -80,7 +80,7 @@ background:none;color:#00f5d4;border-radius:10px;cursor:pointer;
 let lang="ar";
 let lastResult="", lastType="", lastRec="", lastScore=0;
 
-/* صوت */
+/* ===== صوت ===== */
 function speak(text){
 if(!text) return;
 let u=new SpeechSynthesisUtterance(text);
@@ -98,12 +98,11 @@ speak(e.target.innerText);
 
 /* مربع النص */
 const msg=document.getElementById("msg");
-
 msg.addEventListener("focus",()=>{
 speak(lang==="ar"?"أنت في مربع إدخال النص":"You are in text box");
 });
 
-/* كلمات */
+/* ===== كلمات ===== */
 const words=[
 "تحقق من حسابك البنكي","verify your bank account",
 "otp","password","bank","bitcoin",
@@ -111,7 +110,7 @@ const words=[
 "مجاناً","جائزة","اربح","تحويل","استثمار"
 ];
 
-/* تحليل */
+/* ===== تحليل ===== */
 let t;
 msg.addEventListener("input",()=>{
 clearTimeout(t);
@@ -123,7 +122,7 @@ function analyze(){
 let text=msg.value.toLowerCase();
 let score=0;
 
-if(text.includes("تحقق من حسابك البنكي")) score+=70;
+if(text.includes("تحقق من حسابك البنكي")) score+=80;
 
 words.forEach(w=>{
 if(text.includes(w)) score+=15;
@@ -132,7 +131,6 @@ if(text.includes(w)) score+=15;
 if(text.includes("http")) score+=25;
 
 if(score>100) score=100;
-
 lastScore=score;
 
 /* MITRE */
@@ -192,7 +190,7 @@ lastRec="No threat";
 lastType=type;
 }
 
-/* لغة */
+/* ===== لغة ===== */
 function toggleLang(){
 lang=lang==="ar"?"en":"ar";
 
@@ -206,70 +204,66 @@ msg.placeholder=
 lang==="ar"?"الصق الرسالة هنا":"Paste message here";
 }
 
-/* PDF احترافي */
+/* ===== PDF احترافي (بدون خراب عربي) ===== */
 function generatePDF(){
 
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
 
-doc.setR2L(true);
-
-/* خلفية */
-doc.setFillColor(0,0,0);
-doc.rect(0,0,210,297,"F");
+/* عربي */
+doc.setLanguage("ar");
 
 /* لوقو */
-doc.setFontSize(40);
-doc.setTextColor(0,255,200);
-doc.text("🦅",105,35,null,null,"center");
+doc.setFontSize(35);
+doc.text("🦅",105,25,null,null,"center");
 
 /* اسم */
-doc.setFontSize(20);
-doc.text("BlackFalcon SOC",105,50,null,null,"center");
+doc.setFontSize(18);
+doc.text("BlackFalcon SOC",105,40,null,null,"center");
 
-doc.setTextColor(255,255,255);
+/* عنوان */
 doc.setFontSize(14);
+doc.text(lang==="ar"?"تقرير أمني":"Security Report",105,55,null,null,"center");
 
-doc.text(lang==="ar"?"تقرير أمني":"Security Report",105,65,null,null,"center");
+/* خط */
+doc.line(20,65,190,65);
 
 /* النص */
-let input=msg.value||"---";
-let wrapped=doc.splitTextToSize(input,160);
+let input = msg.value || "---";
+let wrapped = doc.splitTextToSize(input,160);
 
-if(lang==="ar"){
-doc.text("النص:",180,90,{align:"right"});
-doc.text(wrapped,180,100,{align:"right"});
-}else{
-doc.setR2L(false);
-doc.text("Input:",20,90);
-doc.text(wrapped,20,100);
-}
-
-/* النتائج */
 doc.setFontSize(12);
 
 if(lang==="ar"){
-doc.setR2L(true);
-doc.text("النتيجة: "+lastResult,180,150,{align:"right"});
-doc.text("النوع: "+lastType,180,165,{align:"right"});
-doc.text("الخطورة: "+lastScore+"%",180,180,{align:"right"});
-doc.text("التوصية: "+lastRec,180,195,{align:"right"});
+doc.text("النص:",180,80,{align:"right"});
+doc.text(wrapped,180,90,{align:"right"});
 }else{
-doc.setR2L(false);
-doc.text("Result: "+lastResult,20,150);
-doc.text("Type: "+lastType,20,165);
-doc.text("Risk: "+lastScore+"%",20,180);
-doc.text("Recommendation: "+lastRec,20,195);
+doc.text("Input:",20,80);
+doc.text(wrapped,20,90);
+}
+
+/* النتائج */
+if(lang==="ar"){
+doc.text("النتيجة: "+lastResult,180,140,{align:"right"});
+doc.text("النوع: "+lastType,180,155,{align:"right"});
+doc.text("الخطورة: "+lastScore+"%",180,170,{align:"right"});
+doc.text("التوصية: "+lastRec,180,185,{align:"right"});
+}else{
+doc.text("Result: "+lastResult,20,140);
+doc.text("Type: "+lastType,20,155);
+doc.text("Risk: "+lastScore+"%",20,170);
+doc.text("Recommendation: "+lastRec,20,185);
 }
 
 /* بار */
 doc.setFillColor(255,0,0);
 doc.rect(20,250,lastScore*1.5,8,"F");
 
+/* حفظ */
 doc.save("BlackFalcon_Report.pdf");
 }
 
-/* Matrix */
+/* ===== Matrix ===== */
 const c=document.getElementById("matrix");
 const ctx=c.getContext("2d");
 c.width=innerWidth;c.height=innerHeight;
