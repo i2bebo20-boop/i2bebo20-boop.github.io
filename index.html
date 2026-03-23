@@ -73,6 +73,21 @@ color:#00f5d4;
 cursor:pointer;
 border-radius:10px;
 }
+
+.reportBox{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#000;
+border:2px solid #00f5d4;
+padding:25px;
+border-radius:20px;
+width:350px;
+box-shadow:0 0 30px #00f5d4;
+z-index:999;
+display:none;
+}
 </style>
 </head>
 
@@ -83,7 +98,7 @@ border-radius:10px;
 <div class="container">
 
 <button class="btn" onclick="toggleLang()">EN / AR</button>
-<button class="btn" onclick="generateReport()">REPORT</button>
+<button class="btn" onclick="showReport()">REPORT</button>
 
 <h1 class="speakable">🦅 BlackFalcon SOC</h1>
 <div class="speakable" id="subtitle">منصة تحليل الرسائل المشبوهة</div>
@@ -113,9 +128,13 @@ border-radius:10px;
 
 </div>
 
+<!-- تقرير -->
+<div class="reportBox" id="reportBox"></div>
+
 <script>
 
 let currentLang="ar";
+let timer;
 
 /* ===== الصوت ===== */
 function speak(text){
@@ -126,55 +145,68 @@ msg.lang=currentLang==="ar"?"ar-SA":"en-US";
 speechSynthesis.speak(msg);
 }
 
-/* قراءة عند المرور */
-document.addEventListener("mouseover",e=>{
-if(e.target.classList.contains("speakable")){
-speak(e.target.innerText);
-}
-});
-
-/* صوت مربع النص */
-const msg=document.getElementById("msg");
-
-msg.addEventListener("focus",()=>{
-speak(currentLang==="ar"?
-"مكان إدخال الرسالة":
-"Message input field");
-});
-
-/* ===== كلمات مشبوهة ===== */
+/* ===== كلمات ضخمة ===== */
 const suspiciousWords=[
-"تحقق من حسابك","حسابك البنكي","otp","verify","bank","password",
+"تحقق من حسابك البنكي","تحقق من حسابك","otp","verify","bank","password",
 "credit card","bitcoin","http","urgent","click here","free money",
-"مجاناً","جائزة","اضغط هنا","تحويل بنكي","استثمار","ربح سريع"
+"مجاناً","جائزة","اضغط هنا","تحويل بنكي","استثمار","ربح سريع",
+"عرض محدود","عرض خاص","فرصة","كسب المال","راتب عالي","استرجاع حساب",
+"account suspended","reset password","update payment","claim prize",
+"limited offer","act now","bonus","reward","lottery","winner",
+
+/* كلماتك الكثيرة */
+"خصم 50%","بنك","الإفلاس","نقدي","مكافأة نقدية","كاش",
+"قرض","استثمار مضمون","أرباح فورية","عرض مذهل","لا تفوت","عاجل",
+"اطلب الآن","سجل الآن","free money","guaranteed profit",
+"fast cash","easy money","double your money","earn money fast",
+"investment opportunity","risk free","exclusive offer"
 ];
 
 /* ===== تحليل ===== */
-let lastResult="";
-let lastType="";
-let lastRec="";
+
+const msg=document.getElementById("msg");
 
 msg.addEventListener("input",()=>{
-setTimeout(analyze,800);
+clearTimeout(timer);
+timer=setTimeout(analyze,1200); /* تأخير */
 });
+
+let lastResult="",lastType="",lastRec="";
 
 function analyze(){
 
 let text=msg.value.toLowerCase();
 let score=0;
 
+/* 💥 رفع خطورة العبارة */
+if(text.includes("تحقق من حسابك البنكي")){
+score=100;
+}
+
+/* كلمات */
 suspiciousWords.forEach(w=>{
-if(text.includes(w)) score+=20;
+if(text.includes(w)) score+=15;
 });
+
+if(text.includes("http")) score+=25;
 
 if(score>100) score=100;
 
+/* نوع الهجوم */
 let type="—";
 
-if(text.includes("verify")||text.includes("تحقق")) type="Phishing";
-else if(text.includes("bank")) type="Data Theft";
-else if(text.includes("bitcoin")) type="Financial Scam";
-else if(text.includes("http")) type="Malicious Link";
+if(text.includes("تحقق")||text.includes("verify")||text.includes("otp")){
+type=currentLang==="ar"?"تصيد احتيالي":"Phishing";
+}
+else if(text.includes("bank")||text.includes("card")){
+type=currentLang==="ar"?"سرقة بيانات":"Data Theft";
+}
+else if(text.includes("bitcoin")||text.includes("investment")){
+type=currentLang==="ar"?"احتيال مالي":"Financial Scam";
+}
+else if(text.includes("http")){
+type=currentLang==="ar"?"رابط ضار":"Malicious Link";
+}
 
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
@@ -183,20 +215,20 @@ document.getElementById("mitre").innerText="MITRE: "+type;
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 
-if(score>30){
+if(score>25){
 
 document.body.classList.add("dangerMode");
 
 if(currentLang==="ar"){
 status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
 rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
-speak("تحذير الرسالة غير آمنة");
+speak("تحذير الرسالة غير آمنة. لا تضغط الروابط ولا تشارك بياناتك");
 lastResult="غير آمن";
 lastRec="لا تضغط الروابط ولا تشارك بياناتك";
 }else{
 status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
 rec.innerHTML="⚠️ Do not click links or share data";
-speak("Warning. This message is unsafe");
+speak("Warning. Message is unsafe. Do not click links");
 lastResult="UNSAFE";
 lastRec="Do not click links or share data";
 }
@@ -227,40 +259,29 @@ lastType=type;
 
 }
 
-/* ===== زر اللغة ===== */
+/* ===== اللغة ===== */
 function toggleLang(){
-
 currentLang=currentLang==="ar"?"en":"ar";
-
-if(currentLang==="en"){
-document.getElementById("subtitle").innerText="Suspicious Message Analyzer";
-document.getElementById("threatTitle").innerText="Threat Status";
-document.getElementById("riskLabel").innerText="Risk Score:";
-msg.placeholder="Paste message here";
-}else{
-document.getElementById("subtitle").innerText="منصة تحليل الرسائل المشبوهة";
-document.getElementById("threatTitle").innerText="حالة التهديد";
-document.getElementById("riskLabel").innerText="نسبة الخطورة:";
-msg.placeholder="الصق الرسالة هنا";
+document.getElementById("subtitle").innerText=
+currentLang==="ar"?"منصة تحليل الرسائل المشبوهة":"Suspicious Message Analyzer";
 }
 
-}
+/* ===== تقرير احترافي ===== */
+function showReport(){
 
-/* ===== تقرير ===== */
-function generateReport(){
+let box=document.getElementById("reportBox");
 
-let report=`
-🦅 BlackFalcon SOC REPORT
+box.style.display="block";
 
-Result: ${lastResult}
-Threat Type: ${lastType}
-Recommendation: ${lastRec}
-
--------------------------
-Generated by BlackFalcon
+box.innerHTML=`
+<h2>🦅 BlackFalcon SOC</h2>
+<hr>
+<p><b>${currentLang==="ar"?"النتيجة":"Result"}:</b> ${lastResult}</p>
+<p><b>${currentLang==="ar"?"نوع الهجوم":"Threat Type"}:</b> ${lastType}</p>
+<p><b>${currentLang==="ar"?"التوصية":"Recommendation"}:</b> ${lastRec}</p>
+<br>
+<button onclick="document.getElementById('reportBox').style.display='none'">Close</button>
 `;
-
-alert(report);
 
 }
 
