@@ -5,7 +5,6 @@
 <title>BlackFalcon SOC</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -85,7 +84,7 @@ border-radius:10px;
 <div class="container">
 
 <button class="btn" onclick="toggleLang()">EN / AR</button>
-<button class="btn" onclick="generatePDF()">PDF REPORT</button>
+<button class="btn" onclick="generateReport()">PDF REPORT</button>
 
 <h1 class="speakable">🦅 BlackFalcon SOC</h1>
 <div class="speakable" id="subtitle">منصة تحليل الرسائل المشبوهة</div>
@@ -116,7 +115,7 @@ border-radius:10px;
 <script>
 
 let currentLang="ar";
-let lastResult="", lastType="", lastRec="";
+let lastResult="", lastType="", lastRec="", lastMitre="";
 
 /* ===== صوت ===== */
 function speak(text){
@@ -127,7 +126,7 @@ msg.lang=currentLang==="ar"?"ar-SA":"en-US";
 speechSynthesis.speak(msg);
 }
 
-/* قراءة عند المرور */
+/* قراءة بالماوس */
 document.addEventListener("mouseover",e=>{
 if(e.target.classList.contains("speakable")){
 speak(e.target.innerText);
@@ -139,35 +138,17 @@ const msg=document.getElementById("msg");
 
 msg.addEventListener("focus",()=>{
 speak(currentLang==="ar"?
-"أنت الآن في مربع إدخال الرسالة":
-"You are in the message input field");
+"مكان إدخال الرسالة":
+"Message input field");
 });
 
-/* ===== كلمات ضخمة جداً ===== */
+/* ===== كلمات قوية ===== */
 const suspiciousWords=[
-
-/* كلمات قوية جداً */
 "تحقق من حسابك البنكي","verify your bank account",
-"تحديث بياناتك البنكية","update your banking info",
-
-/* قائمتك الطويلة */
-"خصم 50%","مجاناً","جائزة","اضغط هنا","انقر هنا",
-"اربح الآن","ربح سريع","استثمار","مضاعفة أموالك",
-"كاش","قرض","استرداد","عرض حصري","عرض محدود",
-"free money","guaranteed profit","urgent","click now",
-"limited time","act now","winner","lottery","bonus",
-
-/* إضافات إنجليزية قوية */
-"earn money fast","work from home","no risk investment",
-"double your income","instant profit","crypto investment",
-"bitcoin offer","claim now","verify identity","security alert",
-"account suspended","reset password","bank transfer",
-"wire transfer","credit card details","cvv number",
-"enter otp","confirm login","unusual activity detected",
-
-/* روابط */
-"http://","https://","bit.ly","tinyurl",".ru",".cn",".tk",".gq",".ml"
-
+"otp","password","bank","credit card",
+"bitcoin","crypto","http","https",
+"urgent","click here","free money","مجاناً",
+"جائزة","اضغط هنا","تحويل بنكي","استثمار"
 ];
 
 /* ===== تحليل ===== */
@@ -175,7 +156,7 @@ let timer;
 
 msg.addEventListener("input",()=>{
 clearTimeout(timer);
-timer=setTimeout(analyze,1200); // تأخير
+timer=setTimeout(analyze,1200);
 });
 
 function analyze(){
@@ -183,9 +164,8 @@ function analyze(){
 let text=msg.value.toLowerCase();
 let score=0;
 
-/* رفع خطورة العبارات المهمة */
+/* رفع خطورة */
 if(text.includes("تحقق من حسابك البنكي")) score+=60;
-if(text.includes("verify your bank account")) score+=60;
 
 suspiciousWords.forEach(w=>{
 if(text.includes(w)) score+=10;
@@ -195,17 +175,31 @@ if(text.includes("http")) score+=25;
 
 if(score>100) score=100;
 
-/* نوع الهجوم */
+/* ===== MITRE حقيقي ===== */
 let type="—";
+let mitre="—";
 
-if(text.includes("verify")||text.includes("تحقق")) type="Phishing";
-else if(text.includes("bank")||text.includes("card")) type="Data Theft";
-else if(text.includes("bitcoin")||text.includes("investment")) type="Financial Scam";
-else if(text.includes("http")) type="Malicious Link";
+if(text.includes("verify")||text.includes("تحقق")||text.includes("otp")){
+type="Phishing";
+mitre="T1566 - Phishing";
+}
+else if(text.includes("http")||text.includes("link")){
+type="Malicious Link";
+mitre="T1204 - User Execution";
+}
+else if(text.includes("bitcoin")||text.includes("investment")){
+type="Financial Scam";
+mitre="T1657 - Financial Fraud";
+}
+else if(text.includes("download")||text.includes("install")){
+type="Malware";
+mitre="T1059 - Command Execution";
+}
 
+/* عرض */
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
-document.getElementById("mitre").innerText="MITRE: "+type;
+document.getElementById("mitre").innerText="MITRE: "+mitre;
 
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
@@ -217,18 +211,16 @@ document.body.classList.add("dangerMode");
 if(currentLang==="ar"){
 status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
 rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
-speak("تحذير. الرسالة غير آمنة. لا تضغط الروابط");
+speak("تحذير الرسالة غير آمنة");
 lastResult="غير آمن";
 lastRec="لا تضغط الروابط ولا تشارك بياناتك";
 }else{
 status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
 rec.innerHTML="⚠️ Do not click links or share data";
-speak("Warning. This message is unsafe. Do not click links");
+speak("Warning this message is unsafe");
 lastResult="UNSAFE";
 lastRec="Do not click links or share data";
 }
-
-lastType=type;
 
 }else{
 
@@ -248,8 +240,10 @@ lastResult="SAFE";
 lastRec="No threat detected";
 }
 
-lastType=type;
 }
+
+lastType=type;
+lastMitre=mitre;
 
 }
 
@@ -271,20 +265,36 @@ msg.placeholder="الصق الرسالة هنا";
 }
 
 /* ===== PDF احترافي ===== */
-function generatePDF(){
+function generateReport(){
 
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
 
-doc.setFontSize(18);
-doc.text("🦅 BlackFalcon SOC REPORT",20,20);
+doc.setFontSize(22);
+doc.text("🦅 BlackFalcon SOC",20,20);
+
+doc.setFontSize(14);
+doc.text("Security Report",20,35);
+
+doc.line(20,40,190,40);
 
 doc.setFontSize(12);
-doc.text("Result: "+lastResult,20,40);
-doc.text("Threat Type: "+lastType,20,50);
-doc.text("Recommendation: "+lastRec,20,60);
+doc.text("Result: "+lastResult,20,55);
+doc.text("Threat Type: "+lastType,20,65);
+doc.text("MITRE: "+lastMitre,20,75);
+doc.text("Risk: "+document.getElementById("score").innerText+"%",20,85);
+
+let recText=doc.splitTextToSize("Recommendation: "+lastRec,170);
+doc.text(recText,20,100);
+
+doc.rect(15,45,180,90);
+
+doc.text("Generated by BlackFalcon SOC",20,140);
 
 doc.save("BlackFalcon_Report.pdf");
+
+speak(currentLang==="ar"?"تم إنشاء التقرير":"Report generated");
+
 }
 
 /* ===== Matrix ===== */
