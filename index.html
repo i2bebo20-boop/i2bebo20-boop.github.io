@@ -71,7 +71,6 @@ cursor:pointer;
 <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" class="logo">
 <h1>BlackFalcon X</h1>
 
-<button onclick="toggleVoice()">🎙️ تشغيل / إيقاف الصوت</button>
 <button onclick="generatePDF()">📄 تقرير</button>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
@@ -90,12 +89,10 @@ cursor:pointer;
 <script>
 
 let lastResult="", lastType="", lastRec="", lastMsg="";
-let voiceMode = true;
 let timer;
 
 /* 🔊 نطق */
 function speak(t){
-if(!voiceMode) return;
 speechSynthesis.cancel();
 let u=new SpeechSynthesisUtterance(t);
 u.lang="ar-SA";
@@ -103,7 +100,7 @@ u.rate=0.9;
 speechSynthesis.speak(u);
 }
 
-/* 🔊 قراءة النتائج */
+/* 🔊 قراءة النتائج بعد التحليل */
 function speakAll(){
 let text = "نتيجة التحليل " + lastResult +
 ". نسبة الخطر " + document.getElementById("score").innerText +
@@ -170,33 +167,8 @@ lastRec="لا يوجد تهديد";
 
 lastType=type;
 
-/* 🔊 صوت فقط بعد التحليل */
+/* 🔊 نطق تلقائي بعد التحليل */
 speakAll();
-}
-
-/* 🎙️ تشغيل/إيقاف الصوت */
-function toggleVoice(){
-voiceMode=!voiceMode;
-alert(voiceMode?"تم تشغيل الصوت":"تم إيقاف الصوت");
-}
-
-/* 🎙️ أوامر صوتية دايم */
-function startContinuousVoice(){
-let recg = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recg.lang="ar-SA";
-recg.continuous=true;
-recg.interimResults=false;
-
-recg.onresult = function(e){
-let cmd = e.results[e.results.length-1][0].transcript;
-if(cmd.includes("حلل")) analyze();
-if(cmd.includes("تقرير")) generatePDF();
-if(cmd.includes("امسح")) { msg.value=""; speak("تم مسح النص"); }
-};
-
-recg.onerror = recg.start;
-recg.onend = recg.start; // دايم
-recg.start();
 }
 
 /* 📄 تقرير PDF */
@@ -225,14 +197,11 @@ doc.text("Recommendation:",20,165);
 doc.text(lastRec,20,175);
 
 doc.save("BlackFalconX.pdf");
+
+/* 🔊 صوت التقرير */
 speak("تم إنشاء التقرير");
 }
 
-/* 🔊 بدء كل شيء دايم عند تحميل الصفحة */
-window.onload = () => {
-speak("تم تشغيل نظام بلاك فالكون. النظام جاهز للتحليل الصوتي");
-startContinuousVoice();
-};
 </script>
 
 </body>
