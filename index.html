@@ -2,65 +2,58 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>BlackFalcon X</title>
+<title>BlackFalcon SOC</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{
 margin:0;
-background:black;
-color:#00ffe0;
+background:black; /* خلفية سوداء ثابتة */
+color:#00f5d4;
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
 }
 
-.container{text-align:center;margin-top:50px;}
-
-.logo{
-width:90px;
-filter:drop-shadow(0 0 20px #00ffe0);
-}
+.container{text-align:center;margin-top:70px;}
 
 textarea{
 width:80%;
 height:130px;
-background:#000;
-border:1px solid #00ffe0;
-border-radius:15px;
-color:#00ffe0;
-padding:15px;
+background:rgba(0,0,0,0.6);
+border:1px solid #00f5d4;
+border-radius:20px;
+padding:20px;
+color:#00f5d4;
 }
 
 .card{
 width:80%;
-margin:20px auto;
-padding:20px;
-background:#000000aa;
-border-radius:20px;
-box-shadow:0 0 25px #00ffe0;
+margin:30px auto;
+padding:25px;
+border-radius:25px;
+background:rgba(0,0,0,0.6);
 }
 
 .bar{
-height:12px;
-background:linear-gradient(to right,#00ff88,#ff0033);
+height:10px;
+background:red;
 width:0%;
-border-radius:10px;
 transition:0.4s;
-}
-
-button{
-margin:5px;
-padding:8px 15px;
-background:none;
-border:1px solid #00ffe0;
-color:#00ffe0;
-cursor:pointer;
 }
 
 .safe{color:#00ff88;}
 .danger{color:#ff0033;}
+
+.btn{
+padding:8px 15px;
+margin:10px;
+border:1px solid #00f5d4;
+background:transparent;
+color:#00f5d4;
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -68,12 +61,12 @@ cursor:pointer;
 
 <div class="container">
 
-<img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" class="logo">
-<h1>BlackFalcon X</h1>
+<h1>🦅 BlackFalcon SOC</h1>
 
-<button onclick="generatePDF()">📄 تقرير</button>
+<button class="btn" onclick="toggleLang()">EN / AR</button>
+<button class="btn" onclick="generatePDF()">REPORT</button>
 
-<textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
+<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 <div class="card">
 <div id="status">—</div>
@@ -82,69 +75,67 @@ cursor:pointer;
 <div id="type">Type: —</div>
 </div>
 
-<div id="rec">✔️ جاهز</div>
+<div id="rec">✔️ بانتظار التحليل</div>
 
 </div>
 
 <script>
 
+let currentLang="ar";
 let lastResult="", lastType="", lastRec="", lastMsg="";
-let timer;
 
-/* 🔊 نطق */
-function speak(t){
+/* ===== صوت ===== */
+function speak(text){
 speechSynthesis.cancel();
-let u=new SpeechSynthesisUtterance(t);
-u.lang="ar-SA";
-u.rate=0.9;
+let u=new SpeechSynthesisUtterance(text);
+u.lang=currentLang==="ar"?"ar-SA":"en-US";
 speechSynthesis.speak(u);
 }
 
-/* 🔊 قراءة النتائج بعد التحليل */
-function speakAll(){
-let text = "نتيجة التحليل " + lastResult +
-". نسبة الخطر " + document.getElementById("score").innerText +
-" بالمئة. نوع التهديد " + lastType +
-". التوصية " + lastRec;
-speak(text);
-}
-
-/* كلمات مشبوهة */
-const words=[
-"otp","password","bank","bitcoin","crypto","login",
-"http","verify","urgent","click","free",
-"تحقق","بنك","كلمة المرور","رابط","جائزة","اضغط"
-];
-
+/* مربع النص */
 const msg=document.getElementById("msg");
 
-/* ⏳ تحليل بعد 2 ثانية توقف الكتابة */
-msg.addEventListener("input",()=>{
-clearTimeout(timer);
-timer = setTimeout(()=>{
-analyze();
-},2000);
+msg.addEventListener("focus",()=>{
+speak(currentLang==="ar"?"أدخل الرسالة":"Enter message");
 });
 
-/* 🧠 تحليل الرسائل */
+/* ===== كلمات مشبوهة ===== */
+const suspiciousWords=[
+"تحقق من حسابك البنكي","verify your bank account",
+"otp","bank","password","bitcoin","http","urgent",
+"free money","click here","مجاناً","جائزة","اضغط هنا",
+"استثمار","ربح سريع","عرض حصري","winner","lottery"
+];
+
+/* ===== تحليل ===== */
+let timer;
+
+msg.addEventListener("input",()=>{
+clearTimeout(timer);
+timer=setTimeout(analyze,2000); // ينتظر ثانيتين بعد الكتابة
+});
+
 function analyze(){
+
 let text=msg.value.toLowerCase();
 lastMsg=msg.value;
 
 let score=0;
 
-if(text.includes("otp")) score+=30;
-if(text.includes("password")) score+=25;
-if(text.includes("http")) score+=20;
-if(text.includes("bank")) score+=20;
-if(text.includes("bitcoin")) score+=20;
-if(text.includes("تحقق")) score+=25;
+if(text.includes("تحقق من حسابك البنكي")) score+=60;
+
+suspiciousWords.forEach(w=>{
+if(text.includes(w)) score+=10;
+});
+
+if(text.includes("http")) score+=25;
 
 if(score>100) score=100;
 
+/* نوع الهجوم */
 let type="Safe";
 
-if(text.includes("تحقق")||text.includes("verify")) type="Phishing";
+if(text.includes("verify")||text.includes("تحقق")) type="Phishing";
 else if(text.includes("bank")) type="Data Theft";
 else if(text.includes("bitcoin")) type="Financial Scam";
 else if(text.includes("http")) type="Malicious Link";
@@ -153,53 +144,102 @@ document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
 document.getElementById("type").innerText="Type: "+type;
 
-if(score>40){
-document.getElementById("status").innerHTML="<span class='danger'>⚠️ خطر</span>";
-document.getElementById("rec").innerHTML="⚠️ لا تضغط أي رابط";
-lastResult="خطر";
-lastRec="لا تضغط أي رابط ولا تشارك بياناتك";
+let status=document.getElementById("status");
+let rec=document.getElementById("rec");
+
+if(score>30){
+
+if(currentLang==="ar"){
+status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
+rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
+speak("تحذير الرسالة غير آمنة");
+lastResult="UNSAFE";
+lastRec="Do not click links or share data";
 }else{
-document.getElementById("status").innerHTML="<span class='safe'>✔️ آمن</span>";
-document.getElementById("rec").innerHTML="✔️ لا يوجد تهديد";
-lastResult="آمن";
-lastRec="لا يوجد تهديد";
+status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
+rec.innerHTML="⚠️ Do not click links or share data";
+speak("Warning unsafe message");
+lastResult="UNSAFE";
+lastRec="Do not click links or share data";
+}
+
+}else{
+
+if(currentLang==="ar"){
+status.innerHTML="<span class='safe'>✔️ آمن</span>";
+rec.innerHTML="✔️ لا يوجد تهديد";
+speak("الرسالة آمنة");
+lastResult="SAFE";
+lastRec="No threat detected";
+}else{
+status.innerHTML="<span class='safe'>✔️ SAFE</span>";
+rec.innerHTML="✔️ No threat detected";
+speak("Message is safe");
+lastResult="SAFE";
+lastRec="No threat detected";
+}
+
 }
 
 lastType=type;
 
-/* 🔊 نطق تلقائي بعد التحليل */
-speakAll();
 }
 
-/* 📄 تقرير PDF */
+/* ===== اللغة ===== */
+function toggleLang(){
+currentLang=currentLang==="ar"?"en":"ar";
+
+msg.placeholder=currentLang==="ar"?"الصق الرسالة هنا":"Paste message here";
+}
+
+/* ===== PDF ===== */
 function generatePDF(){
+
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
+
+/* خلفية */
 doc.setFillColor(0,0,0);
 doc.rect(0,0,210,297,"F");
+
+/* لون */
 doc.setTextColor(0,255,200);
 
-/* لوقو */
-doc.addImage("https://cdn-icons-png.flaticon.com/512/616/616554.png","PNG",85,10,40,40);
+/* لوقو جديد: 🦅 نسر */
+doc.setFontSize(30);
+doc.text("🦅",105,30,null,null,"center");
 
-doc.setFontSize(16);
-doc.text("BlackFalcon X Report",105,60,null,null,"center");
+/* عنوان */
+doc.setFontSize(18);
+doc.text("BlackFalcon SOC",105,45,null,null,"center");
 
+doc.setFontSize(12);
+doc.text("Security Report",105,55,null,null,"center");
+
+/* خط */
+doc.line(20,65,190,65);
+
+/* محتوى */
 doc.setFontSize(11);
+
 doc.text("Message:",20,80);
 doc.text(doc.splitTextToSize(lastMsg||"Empty",170),20,90);
 
-doc.text("Result: "+lastResult,20,130);
-doc.text("Type: "+lastType,20,140);
-doc.text("Risk: "+document.getElementById("score").innerText+"%",20,150);
+doc.text("Result: "+lastResult,20,120);
+doc.text("Type: "+lastType,20,130);
+doc.text("Risk: "+document.getElementById("score").innerText+"%",20,140);
 
-doc.text("Recommendation:",20,165);
-doc.text(lastRec,20,175);
+doc.text("Recommendation:",20,155);
+doc.text(doc.splitTextToSize(lastRec,170),20,165);
 
-doc.save("BlackFalconX.pdf");
+/* Footer */
+doc.text("Generated by BlackFalcon SOC",105,280,null,null,"center");
 
-/* 🔊 صوت التقرير */
-speak("تم إنشاء التقرير");
+doc.save("BlackFalcon_Report.pdf");
+
+/* صوت */
+speak(currentLang==="ar"?"تم إنشاء التقرير":"Report generated");
+
 }
 
 </script>
