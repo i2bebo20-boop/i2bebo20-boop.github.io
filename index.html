@@ -18,17 +18,40 @@ overflow:hidden;
 
 canvas{position:fixed;top:0;left:0;z-index:-1;}
 
-.container{text-align:center;margin-top:70px;}
+.container{text-align:center;margin-top:60px;}
 
-.logo{
-font-size:60px;
+.logo svg{
+width:90px;
+fill:#00f5d4;
 }
 
 .title{
 font-size:22px;
+margin:10px 0;
+}
+
+/* أزرار */
+.top-buttons{
 margin-bottom:20px;
 }
 
+.btn{
+padding:10px 18px;
+margin:5px;
+border:1px solid #00f5d4;
+background:transparent;
+color:#00f5d4;
+cursor:pointer;
+border-radius:10px;
+transition:0.3s;
+}
+
+.btn:hover{
+background:#00f5d4;
+color:black;
+}
+
+/* الإدخال */
 textarea{
 width:80%;
 height:130px;
@@ -39,6 +62,7 @@ padding:20px;
 color:#00f5d4;
 }
 
+/* كرت */
 .card{
 width:80%;
 margin:30px auto;
@@ -58,14 +82,6 @@ transition:0.4s;
 .safe{color:#00ff88;}
 .danger{color:#ff0033;}
 
-.btn{
-padding:8px 15px;
-margin:10px;
-border:1px solid #00f5d4;
-background:transparent;
-color:#00f5d4;
-cursor:pointer;
-}
 </style>
 </head>
 
@@ -75,18 +91,27 @@ cursor:pointer;
 
 <div class="container">
 
-<div class="logo">🦅</div>
+<!-- 🦅 لوقو نسر -->
+<div class="logo">
+<svg viewBox="0 0 64 64">
+<path d="M32 2 L42 22 L62 24 L46 38 L50 58 L32 48 L14 58 L18 38 L2 24 L22 22 Z"/>
+</svg>
+</div>
+
 <div class="title">BlackFalcon SOC</div>
 
-<button class="btn" onclick="generatePDF()">تقرير</button>
+<div class="top-buttons">
+<button class="btn" onclick="toggleLang()">EN / AR</button>
+<button class="btn" onclick="generatePDF()">REPORT</button>
+</div>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 <div class="card">
 <div id="status">—</div>
-<div>نسبة الخطورة: <span id="score">0</span>%</div>
+<div><span id="riskText">نسبة الخطورة:</span> <span id="score">0</span>%</div>
 <div class="bar" id="bar"></div>
-<div id="type">النوع: —</div>
+<div id="type">—</div>
 </div>
 
 <div id="rec">✔️ بانتظار التحليل</div>
@@ -95,22 +120,18 @@ cursor:pointer;
 
 <script>
 
+let lang="ar";
 let lastResult="", lastType="", lastRec="", lastMsg="";
 
-/* 🔊 صوت عربي */
+/* صوت */
 function speak(text){
 speechSynthesis.cancel();
 let u=new SpeechSynthesisUtterance(text);
-u.lang="ar-SA";
+u.lang = lang==="ar"?"ar-SA":"en-US";
 speechSynthesis.speak(u);
 }
 
 const msg=document.getElementById("msg");
-
-/* كلمات */
-const words=[
-"تحقق","otp","bank","http","bitcoin","ربح","جائزة","اضغط"
-];
 
 /* تحليل */
 let timer;
@@ -126,6 +147,8 @@ lastMsg=msg.value;
 
 let score=0;
 
+const words=["verify","otp","bank","http","bitcoin","جائزة","تحقق","اضغط"];
+
 words.forEach(w=>{
 if(text.includes(w)) score+=15;
 });
@@ -135,96 +158,97 @@ if(text.includes("تحقق من حسابك البنكي")) score+=40;
 
 if(score>100) score=100;
 
-let type="آمن";
+let type="Safe";
 
-if(text.includes("تحقق")) type="تصيد احتيالي";
-else if(text.includes("bank")) type="سرقة بيانات";
-else if(text.includes("bitcoin")) type="احتيال مالي";
-else if(text.includes("http")) type="رابط ضار";
+if(text.includes("verify")||text.includes("تحقق")) type="Phishing";
+else if(text.includes("bank")) type="Data Theft";
+else if(text.includes("bitcoin")) type="Financial Scam";
+else if(text.includes("http")) type="Malicious Link";
 
-/* UI */
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
-document.getElementById("type").innerText="النوع: "+type;
+document.getElementById("type").innerText = (lang==="ar"?"النوع: ":"Type: ")+type;
 
 if(score>30){
-document.getElementById("status").innerHTML="<span class='danger'>⚠️ غير آمن</span>";
-document.getElementById("rec").innerText="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
-
+document.getElementById("status").innerHTML="<span class='danger'>⚠️ "+(lang==="ar"?"غير آمن":"UNSAFE")+"</span>";
 lastResult="UNSAFE";
 lastRec="Do NOT click links or share sensitive data";
 }else{
-document.getElementById("status").innerHTML="<span class='safe'>✔️ آمن</span>";
-document.getElementById("rec").innerText="✔️ لا يوجد تهديد";
-
+document.getElementById("status").innerHTML="<span class='safe'>✔️ "+(lang==="ar"?"آمن":"SAFE")+"</span>";
 lastResult="SAFE";
 lastRec="No threat detected";
 }
 
+document.getElementById("rec").innerText = lang==="ar"
+? (score>30?"⚠️ لا تضغط الروابط":"✔️ لا يوجد تهديد")
+: lastRec;
+
 lastType=type;
 
-/* 🔊 صوت عربي كامل */
-speak("نتيجة التحليل " + (score>30?"غير آمن":"آمن") + ". " + document.getElementById("rec").innerText);
+/* صوت */
+if(lang==="ar"){
+speak("نتيجة التحليل " + (score>30?"غير آمن":"آمن"));
+}else{
+speak("Result " + lastResult);
+}
 
 }
 
-/* ===== PDF احترافي ===== */
+/* تبديل اللغة */
+function toggleLang(){
+lang = lang==="ar"?"en":"ar";
+
+msg.placeholder = lang==="ar"?"الصق الرسالة هنا":"Paste message here";
+document.getElementById("riskText").innerText = lang==="ar"?"نسبة الخطورة:":"Risk Score:";
+}
+
+/* PDF */
 function generatePDF(){
 
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
 
-/* خلفية */
 doc.setFillColor(0,0,0);
 doc.rect(0,0,210,297,"F");
 
-/* لون */
-doc.setDrawColor(0,255,200);
 doc.setTextColor(0,255,200);
 
-/* 🔥 رسم لوقو (بدل الإيموجي) */
-doc.circle(105,30,10); // رأس
-doc.line(105,40,105,55); // جسم
-doc.line(105,45,95,55); // جناح
-doc.line(105,45,115,55); // جناح
+/* لوقو نسر */
+doc.setDrawColor(0,255,200);
+doc.triangle(105,25,95,45,115,45,"S");
 
 /* عنوان */
 doc.setFontSize(18);
-doc.text("BlackFalcon SOC",105,65,null,null,"center");
+doc.text("BlackFalcon SOC",105,60,null,null,"center");
 
-doc.setFontSize(11);
-doc.text("Security Analysis Report",105,75,null,null,"center");
+doc.setFontSize(12);
+doc.text("Security Report",105,70,null,null,"center");
 
-/* خط */
-doc.line(20,85,190,85);
+doc.line(20,80,190,80);
 
 /* محتوى */
 doc.setFontSize(11);
 
-doc.text("Analyzed Message:",20,100);
+doc.text("Message:",20,100);
 doc.text(doc.splitTextToSize(lastMsg||"Empty",170),20,110);
 
 doc.text("Result: "+lastResult,20,140);
-doc.text("Threat Type: "+lastType,20,150);
-doc.text("Risk Score: "+document.getElementById("score").innerText+"%",20,160);
+doc.text("Type: "+lastType,20,150);
+doc.text("Risk: "+document.getElementById("score").innerText+"%",20,160);
 
 doc.text("Recommendation:",20,180);
 doc.text(doc.splitTextToSize(lastRec,170),20,190);
 
-/* Footer */
-doc.text("Generated by BlackFalcon SOC",105,280,null,null,"center");
-
 doc.save("BlackFalcon_Report.pdf");
 
 /* صوت */
-speechSynthesis.cancel();
 let u=new SpeechSynthesisUtterance("Report generated");
 u.lang="en-US";
 speechSynthesis.speak(u);
 
 }
 
-/* ===== MATRIX ===== */
+/* MATRIX */
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
 
