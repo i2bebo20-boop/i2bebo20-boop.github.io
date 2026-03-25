@@ -10,63 +10,77 @@
 <style>
 body{
 margin:0;
-background:black;
-color:#00ff88;
-font-family:'Orbitron',monospace;
-overflow:hidden;
+background:#0a0f14;
+color:#e6f1ff;
+font-family:'Orbitron',sans-serif;
 }
 
-/* MATRIX */
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-1;
+.container{
+text-align:center;
+margin-top:60px;
 }
 
-/* UI */
-.container{text-align:center;margin-top:60px;}
+h1{
+color:#00f5d4;
+letter-spacing:2px;
+}
 
 textarea{
-width:80%;
-height:140px;
-background:black;
-border:1px solid #00ff88;
+width:75%;
+height:130px;
+background:#111;
+border:1px solid #00f5d4;
+border-radius:12px;
 padding:15px;
-color:#00ff88;
+color:#fff;
+outline:none;
+}
+
+textarea:focus{
+box-shadow:0 0 10px #00f5d4;
 }
 
 .card{
-width:80%;
-margin:30px auto;
+width:75%;
+margin:25px auto;
 padding:20px;
-border:1px solid #00ff88;
+border-radius:15px;
+background:#111;
 }
 
 .bar{
-height:10px;
-background:red;
+height:8px;
+background:#00f5d4;
 width:0%;
+border-radius:10px;
+transition:0.4s;
 }
 
+.safe{color:#00ff88;}
+.danger{color:#ff4d4d;}
+
 .btn{
-padding:8px 15px;
+padding:10px 18px;
 margin:10px;
-border:1px solid #00ff88;
-background:black;
-color:#00ff88;
+border:none;
+background:#00f5d4;
+color:black;
 cursor:pointer;
+border-radius:8px;
+font-weight:bold;
+}
+
+.btn:hover{
+opacity:0.8;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="matrix"></canvas>
-
 <div class="container">
 
-<h1>BLACKFALCON SOC</h1>
+<h1>BlackFalcon SOC</h1>
 
 <button class="btn" onclick="toggleLang()">EN / AR</button>
 <button class="btn" onclick="generatePDF()">REPORT</button>
@@ -86,71 +100,35 @@ cursor:pointer;
 
 <script>
 
-/* MATRIX */
-let c=document.getElementById("matrix");
-let ctx=c.getContext("2d");
-
-c.height=window.innerHeight;
-c.width=window.innerWidth;
-
-let letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-letters=letters.split("");
-
-let fontSize=14;
-let columns=c.width/fontSize;
-
-let drops=[];
-for(let x=0;x<columns;x++) drops[x]=1;
-
-function draw(){
-ctx.fillStyle="rgba(0,0,0,0.05)";
-ctx.fillRect(0,0,c.width,c.height);
-
-ctx.fillStyle="#00ff88";
-ctx.font=fontSize+"px monospace";
-
-for(let i=0;i<drops.length;i++){
-let text=letters[Math.floor(Math.random()*letters.length)];
-ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-
-if(drops[i]*fontSize>c.height && Math.random()>0.975)
-drops[i]=0;
-
-drops[i]++;
-}
-}
-
-setInterval(draw,33);
-
-/* ===== صوت ===== */
+let currentLang="ar";
 let lastSpeak="";
-function speak(text){
-if(text===lastSpeak) return;
-lastSpeak=text;
+let lastResult="",lastType="",lastRec="",lastMsg="";
 
+/* ===== صوت مضبوط ===== */
+function speak(text){
 speechSynthesis.cancel();
+
 let u=new SpeechSynthesisUtterance(text);
-u.lang=currentLang==="ar"?"ar-SA":"en-US";
+u.lang = currentLang==="ar" ? "ar-SA" : "en-US";
 speechSynthesis.speak(u);
 }
 
-/* ===== لغة ===== */
-let currentLang="ar";
-
 /* ===== Hover للمكفوفين ===== */
 msg.addEventListener("mouseenter",()=>{
-speak(currentLang==="ar"?"مربع إدخال الرسالة":"Message input box");
+if(currentLang==="ar"){
+speak("مربع إدخال الرسالة");
+}else{
+speak("Message input box");
+}
 });
 
-/* ===== كلمات ضخمة ===== */
+/* ===== كلمات مشبوهة ===== */
 const suspiciousWords=[
-"otp","password","bank","bitcoin","crypto","wallet","http","https",
-"urgent","click","verify","account","login","security","alert",
-"free","money","offer","limited","winner","lottery","gift","bonus",
-"transfer","payment","invoice","refund","claim","update","confirm",
-"تحقق","كلمة المرور","حساب","بنك","رابط","اضغط","عاجل","تحويل",
-"جائزة","هدية","استثمار","ربح","مجانا","تأكيد","تحديث","استرجاع",
-"فاتورة","دفعة","رمز","تفعيل","تحذير","عرض","مكافأة"
+"otp","password","bank","bitcoin","crypto","wallet",
+"http","https","urgent","click","verify","account","login",
+"security alert","free money","offer","winner","lottery",
+"تحقق","كلمة المرور","حساب","بنك","رابط","اضغط","عاجل",
+"جائزة","هدية","استثمار","ربح","مجانا","تأكيد"
 ];
 
 /* ===== تحليل ===== */
@@ -161,8 +139,6 @@ clearTimeout(timer);
 timer=setTimeout(analyze,800);
 });
 
-let lastResult="",lastType="",lastRec="",lastMsg="";
-
 function analyze(){
 
 let text=msg.value.toLowerCase();
@@ -171,7 +147,7 @@ lastMsg=msg.value;
 let score=0;
 
 suspiciousWords.forEach(w=>{
-if(text.includes(w)) score+=6;
+if(text.includes(w)) score+=8;
 });
 
 if(text.includes("http")) score+=25;
@@ -179,11 +155,12 @@ if(text.includes("otp")) score+=25;
 
 if(score>100) score=100;
 
+/* النوع */
 let type="Safe";
 
 if(text.match(/verify|تحقق|login/)) type="Phishing";
 else if(text.match(/bank|account/)) type="Data Theft";
-else if(text.match(/bitcoin|crypto/)) type="Crypto Scam";
+else if(text.match(/crypto|bitcoin/)) type="Crypto Scam";
 else if(text.match(/http/)) type="Malicious Link";
 
 /* UI */
@@ -194,36 +171,45 @@ document.getElementById("type").innerText="Type: "+type;
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 
+/* ===== لغة موحدة (بدون خلط) ===== */
 if(score>35){
 
-status.innerHTML="⚠️ "+(currentLang==="ar"?"غير آمن":"UNSAFE");
+if(currentLang==="ar"){
+status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
+lastResult="غير آمن";
+lastRec="لا تضغط الروابط ولا تشارك بياناتك";
+}else{
+status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
 lastResult="UNSAFE";
-
-lastRec=currentLang==="ar"?
-"لا تضغط الروابط ولا تشارك بياناتك":
-"Do not click links or share data";
+lastRec="Do not click links or share data";
+}
 
 }else{
 
-status.innerHTML="✔️ "+(currentLang==="ar"?"آمن":"SAFE");
+if(currentLang==="ar"){
+status.innerHTML="<span class='safe'>✔️ آمن</span>";
+lastResult="آمن";
+lastRec="لا يوجد تهديد";
+}else{
+status.innerHTML="<span class='safe'>✔️ SAFE</span>";
 lastResult="SAFE";
+lastRec="No threat detected";
+}
 
-lastRec=currentLang==="ar"?
-"لا يوجد تهديد":
-"No threat detected";
 }
 
 rec.innerHTML=lastRec;
 
-/* 🔊 قراءة تلقائية */
-speak(lastResult+" . "+lastRec);
+/* 🔊 قراءة بنفس اللغة فقط */
+speak(lastResult + ". " + lastRec);
 
 lastType=type;
 }
 
-/* ===== اللغة ===== */
+/* ===== تغيير اللغة ===== */
 function toggleLang(){
 currentLang=currentLang==="ar"?"en":"ar";
+
 msg.placeholder=currentLang==="ar"?"الصق الرسالة هنا":"Paste message here";
 }
 
@@ -233,10 +219,10 @@ function generatePDF(){
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
 
-doc.setFillColor(0,0,0);
+doc.setFillColor(10,15,20);
 doc.rect(0,0,210,297,"F");
 
-doc.setTextColor(0,255,0);
+doc.setTextColor(0,245,212);
 
 let ar=currentLang==="ar";
 
