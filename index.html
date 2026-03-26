@@ -1,193 +1,258 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>BlackFalcon SOC™</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+‏<!DOCTYPE html>
+‏<html lang="ar">
+‏<head>
+‏<meta charset="UTF-8">
+‏<title>BlackFalcon SOC</title>
 
-<style>
-body{
-margin:0;
-font-family:'Cairo',sans-serif;
-background:radial-gradient(circle at top,#001a12,#000);
-color:#00ffb3;
-transition:0.5s;
+‏<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+‏<style>
+‏body{
+‏margin:0;
+‏background:black;
+‏color:#00f5d4;
+‏font-family:'Orbitron',sans-serif;
+‏overflow:hidden;
+‏transition:0.6s;
 }
-header{text-align:center;padding:20px;border-bottom:1px solid #00ffb333;}
-button{
-background:#000;color:#00ffb3;border:1px solid #00ffb3;
-padding:6px 14px;border-radius:8px;cursor:pointer;margin:3px;
+
+‏body.dangerMode{
+‏background:#140000;
+‏box-shadow:inset 0 0 300px #ff0033;
 }
-.container{
-max-width:1200px;margin:20px auto;padding:25px;
-background:rgba(0,20,15,0.95);
-border-radius:20px;
+
+‏canvas{position:fixed;top:0;left:0;z-index:-1;}
+
+‏.container{text-align:center;margin-top:70px;}
+
+‏textarea{
+‏width:80%;
+‏height:130px;
+‏background:rgba(0,0,0,0.6);
+‏border:1px solid #00f5d4;
+‏border-radius:20px;
+‏padding:20px;
+‏color:#00f5d4;
+‏font-size:16px;
+‏outline:none;
 }
-textarea{
-width:100%;height:140px;background:#000;
-border:2px solid #00ffb3;border-radius:15px;
-padding:15px;color:#00ffb3;font-size:15px;
-resize:none;
+
+‏.card{
+‏width:80%;
+‏margin:30px auto;
+‏padding:25px;
+‏border-radius:25px;
+‏background:rgba(0,0,0,0.6);
+‏box-shadow:0 0 30px #00f5d422;
+‏text-align:left;
 }
-.card{
-background:#000;padding:20px;border-radius:15px;
-box-shadow:0 0 20px #00ffb322;margin-top:15px;
+
+‏.progress{
+‏height:10px;
+‏background:#111;
+‏border-radius:20px;
+‏overflow:hidden;
 }
-.progress{height:12px;background:#111;border-radius:10px;margin-top:10px;}
-.bar{height:100%;width:0%;background:#00ffb3;border-radius:10px;transition:0.5s;}
-.log{max-height:150px;overflow:auto;font-size:12px;background:#111;padding:10px;border-radius:10px;}
-footer{text-align:center;padding:15px;font-size:12px;border-top:1px solid #00ffb333;}
-.alertMode{
-background:radial-gradient(circle at top,#330000,#000)!important;
-color:#ff4d4d!important;
+
+‏.bar{
+‏height:100%;
+‏width:0%;
+‏background:#ff0033;
+‏transition:0.4s;
 }
-</style>
-</head>
 
-<body>
+‏.safe{color:#00ff88;}
+‏.danger{color:#ff0033;}
+‏</style>
+‏</head>
 
-<header>
-<h1>🦅 BlackFalcon SOC™</h1>
-<p>Advanced SOC Simulation Platform</p>
-<button onclick="exportReport()">Export Report</button>
-</header>
+‏<body>
 
-<div class="container">
+‏<canvas id="matrix"></canvas>
 
-<textarea id="msg" placeholder="Paste suspicious message here..."></textarea>
+‏<div class="container">
 
-<div class="card">
-<h3>Threat Status</h3>
-<p id="status">—</p>
-<p>Risk Score: <span id="score">0</span>%</p>
-<div class="progress"><div class="bar" id="bar"></div></div>
-<p id="mitre">MITRE: —</p>
-<p>Incident ID: <span id="incident">—</span></p>
-</div>
+‏<h1 class="speakable">🦅 BlackFalcon SOC</h1>
+‏<div class="speakable">منصة تحليل الرسائل المشبوهة</div>
 
-<div class="card">
-<h3>Threat Intelligence Feed</h3>
-<p id="feed">System Ready...</p>
-</div>
+‏<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
-<div class="card">
-<h3>Statistics</h3>
-<canvas id="chart"></canvas>
-</div>
+‏<div class="card">
 
-<div class="card">
-<h3>Incident Log</h3>
-<div class="log" id="log"></div>
-</div>
+‏<h2 class="speakable">حالة التهديد</h2>
+‏<div id="status" class="speakable">—</div>
 
-</div>
+‏<div class="speakable">
+نسبة الخطورة: <span id="score">0</span>%
+‏</div>
 
-<footer>
-BlackFalcon SOC™ – Enterprise Simulation Platform
-</footer>
+‏<div class="progress">
+‏<div class="bar" id="bar"></div>
+‏</div>
 
-<script>
+‏<div id="mitre" class="speakable">MITRE: —</div>
 
-let stats={safe:0,medium:0,high:0};
+‏</div>
 
-const suspiciousWords=[
-"verify","urgent","bank","password","free","bitcoin",
-"reset","click here","limited","act now","secure"
+‏<div id="rec" class="speakable safe">
+✔️ بانتظار التحليل
+‏</div>
+
+‏</div>
+
+‏<script>
+
+/* ===== الصوت ===== */
+‏function speak(text){
+‏if(!text) return;
+‏speechSynthesis.cancel();
+‏let msg=new SpeechSynthesisUtterance(text);
+‏msg.lang="ar-SA";
+‏speechSynthesis.speak(msg);
+}
+
+/* قراءة عند المرور */
+‏document.addEventListener("mouseover",e=>{
+‏if(e.target.classList.contains("speakable")){
+‏speak(e.target.innerText);
+}
+});
+
+/* صوت مربع النص */
+‏const msg=document.getElementById("msg");
+
+‏msg.addEventListener("focus",()=>{
+‏speak("مكان إدخال الرسالة");
+});
+
+/* ===== كلمات مشبوهة (كبيرة جداً) ===== */
+‏const suspiciousWords=[
+
+"تحقق من حسابك البنكي","تحقق من حسابك","تحديث الحساب","كلمة المرور",
+‏"otp","رمز التحقق","بطاقة ائتمان","رقم البطاقة","cvv","iban","swift",
+
+"اضغط هنا","انقر هنا","عرض محدود","عرض خاص","فرصة لا تعوض",
+"ربح سريع","اربح الآن","مجاناً","هدية مجانية","جائزة","فزت",
+
+"تحويل بنكي","حوالة عاجلة","استثمار","مضاعفة أموالك",
+"بيتكوين","crypto","bitcoin","double your money",
+
+‏"http://","https://","bit.ly","tinyurl",".ru",".cn",".tk",
+
+‏"verify your account","account suspended","reset password",
+‏"update payment","bank transfer","credit card","claim prize",
+‏"urgent action","limited offer","click here now","act now",
+
+/* إضافاتك */
+"خصم 50%","بنك","الإفلاس","نقدي","مكافأة نقدية","كاش",
+"قرض","استرداد","استثمار مضمون","أرباح فورية",
+"عرض مذهل","لا تفوت","عاجل","اطلب الآن","سجل الآن",
+
+‏"free money","guaranteed profit","risk free","fast cash",
+‏"easy money","bonus","reward","lottery","winner"
+
 ];
 
-function generateIncident(){
-return "INC-"+Date.now().toString().slice(-6);
-}
+/* ===== تحليل ===== */
+‏let timer;
 
-function speak(text){
-let s=new SpeechSynthesisUtterance(text);
-s.rate=0.95;s.pitch=1;s.volume=1;
-speechSynthesis.cancel();
-speechSynthesis.speak(s);
-}
-
-function analyze(){
-let t=document.getElementById("msg").value.toLowerCase();
-if(t.length<3) return;
-
-let score=0;
-
-suspiciousWords.forEach(w=>{
-if(t.includes(w)) score+=10;
+‏msg.addEventListener("input",()=>{
+‏clearTimeout(timer);
+‏timer=setTimeout(analyze,800);
 });
 
-let links=t.match(/https?:\/\/[^\s]+/g);
-if(links && links.length>2) score+=20;
+‏function analyze(){
 
-if(t.includes("bit.ly")||t.includes("tinyurl")) score+=25;
+‏let text=msg.value.toLowerCase();
+‏let score=0;
 
-if(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/.test(t)) score+=35;
-
-if(t.includes("<form")||t.includes("input type=")) score+=30;
-
-if(t.includes("xn--")) score+=30;
-
-let status="";
-if(score>=80){status="HIGH RISK";stats.high++;document.body.classList.add("alertMode");}
-else if(score>=40){status="SUSPICIOUS";stats.medium++;document.body.classList.remove("alertMode");}
-else{status="SAFE";stats.safe++;document.body.classList.remove("alertMode");}
-
-document.getElementById("status").innerText=status;
-document.getElementById("score").innerText=score;
-document.getElementById("bar").style.width=score+"%";
-
-let mitre=[];
-if(score>=60) mitre.push("T1566 Phishing");
-if(links) mitre.push("T1204 User Execution");
-if(t.includes("password")) mitre.push("T1555 Credentials");
-
-document.getElementById("mitre").innerText="MITRE: "+mitre.join(", ");
-
-let inc=generateIncident();
-document.getElementById("incident").innerText=inc;
-
-let log=document.getElementById("log");
-log.innerHTML+=`[${new Date().toLocaleTimeString()}] ${inc} - ${status} (${score}%)<br>`;
-
-document.getElementById("feed").innerText=
-status+" detected at "+new Date().toLocaleTimeString();
-
-speak(`${status} threat detected. Risk score ${score} percent.`);
-
-updateChart();
-}
-
-document.getElementById("msg").addEventListener("input",analyze);
-
-let chart=new Chart(document.getElementById("chart"),{
-type:'doughnut',
-data:{
-labels:['Safe','Suspicious','High'],
-datasets:[{data:[0,0,0],
-backgroundColor:['#00ffb3','#ffd633','#ff4d4d']}]
-}
+‏suspiciousWords.forEach(w=>{
+‏if(text.includes(w)) score+=10;
 });
-function updateChart(){
-chart.data.datasets[0].data=[stats.safe,stats.medium,stats.high];
-chart.update();
+
+‏if(text.includes("http")) score+=20;
+
+‏if(score>100) score=100;
+
+/* نوع الهجوم */
+‏let type="—";
+
+‏if(text.includes("verify") || text.includes("otp")){
+‏type="Phishing";
+}
+‏else if(text.includes("bank") || text.includes("card")){
+‏type="سرقة بيانات";
+}
+‏else if(text.includes("bitcoin") || text.includes("investment")){
+‏type="احتيال مالي";
+}
+‏else if(text.includes("http")){
+‏type="رابط ضار";
 }
 
-function exportReport(){
-let data={
-platform:"BlackFalcon SOC™",
-stats:stats,
-timestamp:new Date(),
-};
-let blob=new Blob([JSON.stringify(data,null,2)],
-{type:"application/json"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="BlackFalcon_Report.json";
-a.click();
+‏document.getElementById("score").innerText=score;
+‏document.getElementById("bar").style.width=score+"%";
+‏document.getElementById("mitre").innerText="MITRE: "+type;
+
+‏let status=document.getElementById("status");
+‏let rec=document.getElementById("rec");
+
+‏if(score>30){
+
+‏status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
+‏rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
+‏rec.className="danger speakable";
+
+‏document.body.classList.add("dangerMode");
+
+/* صوت */
+‏speak("تحذير الرسالة غير آمنة");
+
+‏}else{
+
+‏status.innerHTML="<span class='safe'>✔️ آمن</span>";
+‏rec.innerHTML="✔️ لا يوجد تهديد واضح";
+‏rec.className="safe speakable";
+
+‏document.body.classList.remove("dangerMode");
+
+‏speak("الرسالة آمنة");
 }
 
-</script>
-</body>
-</html>
-  
+}
+
+‏/* ===== Matrix ===== */
+‏const canvas=document.getElementById("matrix");
+‏const ctx=canvas.getContext("2d");
+
+‏canvas.height=window.innerHeight;
+‏canvas.width=window.innerWidth;
+
+‏const letters="01BLACKFALCON";
+‏const fontSize=14;
+‏const columns=canvas.width/fontSize;
+‏const drops=[];
+
+‏for(let i=0;i<columns;i++){drops[i]=1;}
+
+‏function draw(){
+
+‏ctx.fillStyle="rgba(0,0,0,0.05)";
+‏ctx.fillRect(0,0,canvas.width,canvas.height);
+
+‏ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
+
+‏for(let i=0;i<drops.length;i++){
+‏let text=letters[Math.floor(Math.random()*letters.length)];
+‏ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+‏drops[i]++;
+‏if(drops[i]*fontSize>canvas.height) drops[i]=0;
+}
+
+}
+
+‏setInterval(draw,35);
+
+‏</script>
+‏</body>
+‏</html>
