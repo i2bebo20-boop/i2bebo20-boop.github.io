@@ -1,335 +1,296 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>BlackFalcon SOC</title>
+‏<!DOCTYPE html>
+‏<html lang="ar">
+‏<head>
+‏<meta charset="UTF-8">
+‏<title>BlackFalcon SOC</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+‏<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
-<style>
+‏<style>
 
-:root{
---neon-green:#00ffcc;
---danger-red:#ff0033;
+‏:root{
+‏--neon-green:#00ffcc;
+‏--danger-red:#ff0033;
 }
 
-body{
-margin:0;
-background:black;
-color:var(--neon-green);
-font-family:'Orbitron',sans-serif;
-overflow:hidden;
-transition:0.4s;
+‏body{
+‏margin:0;
+‏background:black;
+‏color:var(--neon-green);
+‏font-family:'Orbitron',sans-serif;
+‏overflow:hidden;
+‏transition:0.4s;
 }
 
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-1;
+‏canvas{
+‏position:fixed;
+‏top:0;
+‏left:0;
+‏z-index:-1;
 }
 
-.container{
-text-align:center;
-margin-top:60px;
+‏.container{
+‏text-align:center;
+‏margin-top:60px;
 }
 
-h1{
-font-size:40px;
-text-shadow:0 0 15px var(--neon-green);
+‏h1{
+‏font-size:40px;
+‏text-shadow:0 0 15px var(--neon-green);
 }
 
-.lang-btn{
-margin-top:10px;
+‏.lang-btn{
+‏margin-top:10px;
 }
 
-textarea{
-width:80%;
-height:130px;
-background:rgba(0,0,0,0.7);
-border:1px solid var(--neon-green);
-border-radius:20px;
-padding:20px;
-color:var(--neon-green);
-margin-top:20px;
-box-shadow:0 0 10px var(--neon-green);
+‏textarea{
+‏width:80%;
+‏height:130px;
+‏background:rgba(0,0,0,0.7);
+‏border:1px solid var(--neon-green);
+‏border-radius:20px;
+‏padding:20px;
+‏color:var(--neon-green);
+‏margin-top:20px;
+‏box-shadow:0 0 10px var(--neon-green);
 }
 
-.card{
-width:80%;
-margin:30px auto;
-padding:25px;
-border-radius:20px;
-background:rgba(0,0,0,0.7);
-box-shadow:0 0 20px var(--neon-green);
+‏.card{
+‏width:80%;
+‏margin:30px auto;
+‏padding:25px;
+‏border-radius:20px;
+‏background:rgba(0,0,0,0.7);
+‏box-shadow:0 0 20px var(--neon-green);
 }
 
-.bar{
-height:10px;
-background:var(--neon-green);
-width:0%;
-transition:0.4s;
+‏.bar{
+‏height:10px;
+‏background:var(--neon-green);
+‏width:0%;
+‏transition:0.4s;
 }
 
-.safe{color:#00ff88;}
-.danger{color:var(--danger-red);}
+‏.safe{color:#00ff88;}
+‏.danger{color:var(--danger-red);}
 
-button{
-padding:8px 15px;
-border:1px solid var(--neon-green);
-background:transparent;
-color:var(--neon-green);
-cursor:pointer;
-border-radius:10px;
+‏button{
+‏padding:8px 15px;
+‏border:1px solid var(--neon-green);
+‏background:transparent;
+‏color:var(--neon-green);
+‏cursor:pointer;
+‏border-radius:10px;
 }
 
 /* 🔴 وضع الخطر */
-.danger-mode{
-color:var(--danger-red);
+‏.danger-mode{
+‏color:var(--danger-red);
 }
 
-.danger-mode textarea,
-.danger-mode .card,
-.danger-mode button{
-border-color:var(--danger-red);
-box-shadow:0 0 15px var(--danger-red);
+‏.danger-mode textarea,
+‏.danger-mode .card,
+‏.danger-mode button{
+‏border-color:var(--danger-red);
+‏box-shadow:0 0 15px var(--danger-red);
 }
 
-.danger-mode .bar{
-background:var(--danger-red);
+‏.danger-mode .bar{
+‏background:var(--danger-red);
 }
 
-</style>
-</head>
+‏</style>
+‏</head>
 
-<body>
+‏<body>
 
-<canvas id="matrix"></canvas>
+‏<canvas id="matrix"></canvas>
 
-<div class="container">
+‏<div class="container">
 
-<h1>🦅 BlackFalcon SOC</h1>
+‏<h1>🦅 BlackFalcon SOC</h1>
 
-<div class="lang-btn">
-<button id="langBtn" onclick="toggleLang()">AR / EN</button>
-</div>
+‏<div class="lang-btn">
+‏<button id="langBtn" onclick="toggleLang()">AR / EN</button>
+‏</div>
 
-<textarea id="msg"></textarea>
+‏<textarea id="msg"></textarea>
 
-<div class="card">
-<div id="status">—</div>
-<div id="riskLabel">Risk</div>
-<div><span id="score">0</span>%</div>
-<div class="bar" id="bar"></div>
-<div id="type">Type: —</div>
-<div id="mitre">MITRE: —</div>
-</div>
+‏<div class="card">
+‏<div id="status">—</div>
+‏<div id="riskLabel">Risk</div>
+‏<div><span id="score">0</span>%</div>
+‏<div class="bar" id="bar"></div>
+‏<div id="type">Type: —</div>
+‏<div id="mitre">MITRE: —</div>
+‏</div>
 
-<div id="rec"></div>
+‏<div id="rec"></div>
 
-</div>
+‏</div>
 
-<script>
+‏<script>
 
-let currentLang="ar";
+‏let currentLang="ar";
 
-/* 🔊 إعداد الصوت */
-let speakTimer;
-let audioEnabled=false;
-
-function speak(text){
-
-if(!audioEnabled) return;
-
-clearTimeout(speakTimer);
-
-speakTimer=setTimeout(()=>{
-
-speechSynthesis.cancel();
-
-let u=new SpeechSynthesisUtterance(text);
-u.lang=currentLang==="ar"?"ar-SA":"en-US";
-u.rate=0.9;
-
-speechSynthesis.speak(u);
-
-},800);
+/* 🔊 صوت مع تأخير */
+‏let speakTimer;
+‏function speak(text){
+‏clearTimeout(speakTimer);
+‏speakTimer=setTimeout(()=>{
+‏speechSynthesis.cancel();
+‏let u=new SpeechSynthesisUtterance(text);
+‏u.lang=currentLang==="ar"?"ar-SA":"en-US";
+‏u.rate=0.9;
+‏speechSynthesis.speak(u);
+},1200);
 }
 
-/* 👆 تفعيل الصوت عند الضغط على مربع النص */
-let msg=document.getElementById("msg");
-
-msg.addEventListener("focus",()=>{
-
-if(!audioEnabled){
-audioEnabled=true;
-
-/* حل Safari */
-let unlock=new SpeechSynthesisUtterance(" ");
-unlock.volume=0;
-speechSynthesis.speak(unlock);
+/* 🚨 إنذار */
+‏function alarm(){
+‏let ctx=new AudioContext();
+‏let osc=ctx.createOscillator();
+‏osc.type="square";
+‏osc.frequency.setValueAtTime(700,ctx.currentTime);
+‏osc.connect(ctx.destination);
+‏osc.start();
+‏setTimeout(()=>osc.stop(),200);
 }
-
-if(currentLang==="ar"){
-speak("أنت الآن في مربع إدخال النص");
-}else{
-speak("You are now in the text input field");
-}
-
-setTimeout(readFullResult,1000);
-
-});
 
 /* 🌐 لغة */
-const lang={
-ar:{
-placeholder:"الصق الرسالة هنا",
-risk:"درجة الخطر",
-safe:"✔️ آمن",
-danger:"⚠️ تهديد",
-recSafe:"لا يوجد تهديد",
-recDanger:"لا تتفاعل مع الرسالة"
+‏const lang={
+‏ar:{
+‏placeholder:"الصق الرسالة هنا",
+‏risk:"درجة الخطر",
+‏safe:"✔️ آمن",
+‏danger:"⚠️ تهديد",
+‏recSafe:"لا يوجد تهديد",
+‏recDanger:"لا تتفاعل مع الرسالة"
 },
-en:{
-placeholder:"Paste message",
-risk:"Risk",
-safe:"✔️ SAFE",
-danger:"⚠️ THREAT",
-recSafe:"No threat detected",
-recDanger:"Do not interact"
+‏en:{
+‏placeholder:"Paste message",
+‏risk:"Risk",
+‏safe:"✔️ SAFE",
+‏danger:"⚠️ THREAT",
+‏recSafe:"No threat detected",
+‏recDanger:"Do not interact"
 }
 };
 
-/* 🧠 قراءة النتيجة */
-function readFullResult(){
+/* 👆 صوت عند الضغط */
+‏let msg=document.getElementById("msg");
 
-let score=document.getElementById("score").innerText;
-let status=document.getElementById("status").innerText;
-let rec=document.getElementById("rec").innerText;
+‏msg.addEventListener("focus",()=>{
+‏speak(currentLang==="ar"?
+"أنت الآن في مربع إدخال النص":
+‏"You are now in the text input field");
+});
 
-let text;
+‏/* 🖱️ Hover ذكي */
+‏document.addEventListener("mouseenter",(e)=>{
+‏let el=e.target;
 
-if(currentLang==="ar"){
-text=`النتيجة ${status}. نسبة الخطر ${score} بالمئة. التوصية ${rec}`;
-}else{
-text=`Result is ${status}. Risk is ${score} percent. Recommendation ${rec}`;
-}
+‏if(el.id==="msg") speak(currentLang==="ar"?"مربع إدخال النص":"Text input");
+‏if(el.id==="langBtn") speak(currentLang==="ar"?"زر تغيير اللغة":"Language button");
 
-speak(text);
-}
+‏},true);
 
 /* تحليل */
-const high=[
-"password","otp","bank","crypto","bitcoin",
-"كلمة المرور","تحقق",
-"تحقق من حسابك البنكي",
-"bank verification",
-"verify your bank",
-"verify your account",
-"bank account suspended"
-];
+‏const high=["password","otp","bank","crypto","كلمة المرور"];
+‏const medium=["http","bit.ly","click","urgent","اضغط"];
 
-const medium=[
-"http","https","bit.ly","click","urgent","login","account","اضغط"
-];
+‏msg.addEventListener("input",analyze);
 
-msg.addEventListener("input",analyze);
+‏function analyze(){
 
-function analyze(){
+‏let text=msg.value.toLowerCase();
+‏let score=0;
 
-let text=msg.value.toLowerCase();
-let score=0;
+‏high.forEach(w=>{ if(text.includes(w)) score+=25; });
+‏medium.forEach(w=>{ if(text.includes(w)) score+=15; });
 
-/* حساب */
-high.forEach(w=>{ if(text.includes(w)) score+=25; });
-medium.forEach(w=>{ if(text.includes(w)) score+=15; });
+‏if(score>100) score=100;
 
-if(score>100) score=100;
+‏document.getElementById("score").innerText=score;
+‏document.getElementById("bar").style.width=score+"%";
 
-document.getElementById("score").innerText=score;
-document.getElementById("bar").style.width=score+"%";
+‏let status=document.getElementById("status");
+‏let rec=document.getElementById("rec");
 
-let status=document.getElementById("status");
-let rec=document.getElementById("rec");
+‏if(score>30){
 
-if(score>30){
+‏document.body.classList.add("danger-mode");
 
-document.body.classList.add("danger-mode");
+‏status.innerHTML="<span class='danger'>"+lang[currentLang].danger+"</span>";
+‏rec.innerText=lang[currentLang].recDanger;
 
-status.innerHTML="<span class='danger'>"+lang[currentLang].danger+"</span>";
-rec.innerText=lang[currentLang].recDanger;
+‏alarm();
+‏speak(lang[currentLang].danger);
 
-speak(lang[currentLang].danger);
+‏}else{
 
-}else{
+‏document.body.classList.remove("danger-mode");
 
-document.body.classList.remove("danger-mode");
+‏status.innerHTML="<span class='safe'>"+lang[currentLang].safe+"</span>";
+‏rec.innerText=lang[currentLang].recSafe;
 
-status.innerHTML="<span class='safe'>"+lang[currentLang].safe+"</span>";
-rec.innerText=lang[currentLang].recSafe;
+‏speak(lang[currentLang].safe);
 
-speak(lang[currentLang].safe);
-
-}
-
-/* قراءة بعد التحليل */
-if(audioEnabled){
-setTimeout(readFullResult,800);
 }
 
 }
 
 /* تغيير اللغة */
-function toggleLang(){
+‏function toggleLang(){
 
-currentLang=currentLang==="ar"?"en":"ar";
+‏currentLang=currentLang==="ar"?"en":"ar";
 
-msg.placeholder=lang[currentLang].placeholder;
-document.getElementById("riskLabel").innerText=lang[currentLang].risk;
+‏msg.placeholder=lang[currentLang].placeholder;
+‏document.getElementById("riskLabel").innerText=lang[currentLang].risk;
 
-speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
-
-}
-
-/* 🟢 MATRIX */
-const canvas=document.getElementById("matrix");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-const letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const fontSize=14;
-const columns=canvas.width/fontSize;
-
-const drops=[];
-for(let i=0;i<columns;i++){drops[i]=1;}
-
-function draw(){
-
-ctx.fillStyle="rgba(0,0,0,0.05)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.fillStyle="#00ffcc";
-ctx.font=fontSize+"px monospace";
-
-for(let i=0;i<drops.length;i++){
-
-let text=letters[Math.floor(Math.random()*letters.length)];
-ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-
-if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
-drops[i]=0;
-}
-
-drops[i]++;
-}
+‏speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
 
 }
 
-setInterval(draw,33);
+‏/* 🟢 MATRIX احترافي */
+‏const canvas=document.getElementById("matrix");
+‏const ctx=canvas.getContext("2d");
 
-</script>
+‏canvas.width=window.innerWidth;
+‏canvas.height=window.innerHeight;
 
-</body>
-</html>
+‏const letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+‏const fontSize=14;
+‏const columns=canvas.width/fontSize;
+
+‏const drops=[];
+‏for(let i=0;i<columns;i++){drops[i]=1;}
+
+‏function draw(){
+
+‏ctx.fillStyle="rgba(0,0,0,0.05)";
+‏ctx.fillRect(0,0,canvas.width,canvas.height);
+
+‏ctx.fillStyle="#00ffcc";
+‏ctx.font=fontSize+"px monospace";
+
+‏for(let i=0;i<drops.length;i++){
+
+‏let text=letters[Math.floor(Math.random()*letters.length)];
+‏ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+
+‏if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
+‏drops[i]=0;
+}
+
+‏drops[i]++;
+}
+
+}
+
+‏setInterval(draw,33);
+
+‏</script>
+
+‏</body>
+‏</html>
