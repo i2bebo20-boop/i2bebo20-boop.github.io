@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-
 :root{
 --neon-green:#00ffcc;
 --danger-red:#ff0033;
@@ -19,7 +18,6 @@ background:black;
 color:var(--neon-green);
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
-transition:0.4s;
 }
 
 canvas{
@@ -37,10 +35,6 @@ margin-top:60px;
 h1{
 font-size:40px;
 text-shadow:0 0 15px var(--neon-green);
-}
-
-.lang-btn{
-margin-top:10px;
 }
 
 textarea{
@@ -83,14 +77,8 @@ cursor:pointer;
 border-radius:10px;
 }
 
-/* 🔴 وضع الخطر */
-.danger-mode{
-color:var(--danger-red);
-}
-
 .danger-mode textarea,
-.danger-mode .card,
-.danger-mode button{
+.danger-mode .card{
 border-color:var(--danger-red);
 box-shadow:0 0 15px var(--danger-red);
 }
@@ -98,7 +86,6 @@ box-shadow:0 0 15px var(--danger-red);
 .danger-mode .bar{
 background:var(--danger-red);
 }
-
 </style>
 </head>
 
@@ -110,15 +97,13 @@ background:var(--danger-red);
 
 <h1>🦅 BlackFalcon SOC</h1>
 
-<div class="lang-btn">
-<button id="langBtn" onclick="toggleLang()">AR / EN</button>
-</div>
+<button onclick="toggleLang()">AR / EN</button>
 
 <textarea id="msg"></textarea>
 
 <div class="card">
 <div id="status">—</div>
-<div id="riskLabel">Risk</div>
+<div>Risk</div>
 <div><span id="score">0</span>%</div>
 <div class="bar" id="bar"></div>
 <div id="type">Type: —</div>
@@ -133,9 +118,13 @@ background:var(--danger-red);
 
 let currentLang="ar";
 
-/* 🔊 إعداد الصوت */
+/* 🔊 صوت */
 let speakTimer;
 let audioEnabled=false;
+
+function cleanText(text){
+return text.replace(/[⚠️✔️🚨]/g,"");
+}
 
 function speak(text){
 
@@ -147,16 +136,16 @@ speakTimer=setTimeout(()=>{
 
 speechSynthesis.cancel();
 
-let u=new SpeechSynthesisUtterance(text);
+let u=new SpeechSynthesisUtterance(cleanText(text));
 u.lang=currentLang==="ar"?"ar-SA":"en-US";
 u.rate=0.9;
 
 speechSynthesis.speak(u);
 
-},800);
+},1500);
 }
 
-/* 👆 تفعيل الصوت عند الضغط على مربع النص */
+/* 👆 تفعيل الصوت */
 let msg=document.getElementById("msg");
 
 msg.addEventListener("focus",()=>{
@@ -164,19 +153,14 @@ msg.addEventListener("focus",()=>{
 if(!audioEnabled){
 audioEnabled=true;
 
-/* حل Safari */
 let unlock=new SpeechSynthesisUtterance(" ");
 unlock.volume=0;
 speechSynthesis.speak(unlock);
 }
 
-if(currentLang==="ar"){
-speak("أنت الآن في مربع إدخال النص");
-}else{
-speak("You are now in the text input field");
-}
+speak(currentLang==="ar"?"مربع إدخال النص":"Text input");
 
-setTimeout(readFullResult,1000);
+setTimeout(readFullResult,1200);
 
 });
 
@@ -184,70 +168,71 @@ setTimeout(readFullResult,1000);
 const lang={
 ar:{
 placeholder:"الصق الرسالة هنا",
-risk:"درجة الخطر",
-safe:"✔️ آمن",
-danger:"⚠️ تهديد",
+safe:"آمن",
+danger:"تهديد",
 recSafe:"لا يوجد تهديد",
 recDanger:"لا تتفاعل مع الرسالة"
 },
 en:{
 placeholder:"Paste message",
-risk:"Risk",
-safe:"✔️ SAFE",
-danger:"⚠️ THREAT",
+safe:"SAFE",
+danger:"THREAT",
 recSafe:"No threat detected",
 recDanger:"Do not interact"
 }
 };
 
-/* 🧠 قراءة النتيجة */
-function readFullResult(){
-
-let score=document.getElementById("score").innerText;
-let status=document.getElementById("status").innerText;
-let rec=document.getElementById("rec").innerText;
-
-let text;
-
-if(currentLang==="ar"){
-text=`النتيجة ${status}. نسبة الخطر ${score} بالمئة. التوصية ${rec}`;
-}else{
-text=`Result is ${status}. Risk is ${score} percent. Recommendation ${rec}`;
-}
-
-speak(text);
-}
-
 /* تحليل */
 const high=[
-"password","otp","bank","crypto","bitcoin",
-"كلمة المرور","تحقق",
-"تحقق من حسابك البنكي",
-"bank verification",
-"verify your bank",
-"verify your account",
-"bank account suspended"
+"password","otp","bank","crypto",
+"كلمة المرور","تحقق","تحقق من حسابك البنكي",
+"verify your bank","bank verification"
 ];
 
-const medium=[
-"http","https","bit.ly","click","urgent","login","account","اضغط"
-];
+const medium=["http","bit.ly","click","urgent","login","account"];
 
-msg.addEventListener("input",analyze);
+let timer;
+
+msg.addEventListener("input",()=>{
+clearTimeout(timer);
+timer=setTimeout(analyze,1200);
+});
 
 function analyze(){
 
 let text=msg.value.toLowerCase();
 let score=0;
 
-/* حساب */
 high.forEach(w=>{ if(text.includes(w)) score+=25; });
 medium.forEach(w=>{ if(text.includes(w)) score+=15; });
 
 if(score>100) score=100;
 
+/* نوع الهجوم */
+let type="Safe";
+let mitre="None";
+
+if(text.includes("verify")||text.includes("تحقق")){
+type="Phishing";
+mitre="TA0001 - T1566";
+}
+else if(text.includes("password")||text.includes("otp")){
+type="Credential Theft";
+mitre="TA0006 - T1003";
+}
+else if(text.includes("bank")){
+type="Bank Scam";
+mitre="TA0040";
+}
+else if(text.includes("http")){
+type="Malicious Link";
+mitre="TA0011 - T1071";
+}
+
 document.getElementById("score").innerText=score;
 document.getElementById("bar").style.width=score+"%";
+document.getElementById("type").innerText="Type: "+type;
+document.getElementById("mitre").innerText="MITRE: "+mitre;
 
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
@@ -272,11 +257,30 @@ speak(lang[currentLang].safe);
 
 }
 
-/* قراءة بعد التحليل */
 if(audioEnabled){
-setTimeout(readFullResult,800);
+setTimeout(readFullResult,1000);
 }
 
+}
+
+/* 🧠 قراءة */
+function readFullResult(){
+
+let score=document.getElementById("score").innerText;
+let status=document.getElementById("status").innerText;
+let rec=document.getElementById("rec").innerText;
+let type=document.getElementById("type").innerText;
+let mitre=document.getElementById("mitre").innerText;
+
+let text;
+
+if(currentLang==="ar"){
+text=`النتيجة ${status}. نسبة الخطر ${score} بالمئة. نوع الهجوم ${type}. ${mitre}. التوصية ${rec}`;
+}else{
+text=`Result is ${status}. Risk is ${score} percent. Attack type ${type}. ${mitre}. Recommendation ${rec}`;
+}
+
+speak(text);
 }
 
 /* تغيير اللغة */
@@ -285,13 +289,12 @@ function toggleLang(){
 currentLang=currentLang==="ar"?"en":"ar";
 
 msg.placeholder=lang[currentLang].placeholder;
-document.getElementById("riskLabel").innerText=lang[currentLang].risk;
 
 speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
 
 }
 
-/* 🟢 MATRIX */
+/* 🔴 MATRIX أحمر */
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
 
@@ -310,7 +313,7 @@ function draw(){
 ctx.fillStyle="rgba(0,0,0,0.05)";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle="#00ffcc";
+ctx.fillStyle="#ff0033"; // 🔴 فقط الخلفية
 ctx.font=fontSize+"px monospace";
 
 for(let i=0;i<drops.length;i++){
