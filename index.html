@@ -5,6 +5,7 @@
 ‏<title>BlackFalcon SOC</title>
 
 ‏<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+‏<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 ‏<style>
 ‏body{
@@ -13,15 +14,7 @@
 ‏color:#00f5d4;
 ‏font-family:'Orbitron',sans-serif;
 ‏overflow:hidden;
-‏transition:0.6s;
 }
-
-‏body.dangerMode{
-‏background:#140000;
-‏box-shadow:inset 0 0 300px #ff0033;
-}
-
-‏canvas{position:fixed;top:0;left:0;z-index:-1;}
 
 ‏.container{text-align:center;margin-top:70px;}
 
@@ -33,8 +26,6 @@
 ‏border-radius:20px;
 ‏padding:20px;
 ‏color:#00f5d4;
-‏font-size:16px;
-‏outline:none;
 }
 
 ‏.card{
@@ -43,114 +34,77 @@
 ‏padding:25px;
 ‏border-radius:25px;
 ‏background:rgba(0,0,0,0.6);
-‏box-shadow:0 0 30px #00f5d422;
-‏text-align:left;
-}
-
-‏.progress{
-‏height:10px;
-‏background:#111;
-‏border-radius:20px;
-‏overflow:hidden;
 }
 
 ‏.bar{
-‏height:100%;
+‏height:10px;
+‏background:red;
 ‏width:0%;
-‏background:#ff0033;
 ‏transition:0.4s;
 }
 
 ‏.safe{color:#00ff88;}
 ‏.danger{color:#ff0033;}
+
+‏.btn{
+‏padding:8px 15px;
+‏margin:10px;
+‏border:1px solid #00f5d4;
+‏background:transparent;
+‏color:#00f5d4;
+‏cursor:pointer;
+}
 ‏</style>
 ‏</head>
 
 ‏<body>
 
-‏<canvas id="matrix"></canvas>
-
 ‏<div class="container">
 
-‏<h1 class="speakable">🦅 BlackFalcon SOC</h1>
-‏<div class="speakable">منصة تحليل الرسائل المشبوهة</div>
+‏<h1>🦅 BlackFalcon SOC</h1>
+
+‏<button class="btn" onclick="toggleLang()">EN / AR</button>
+‏<button class="btn" onclick="generatePDF()">REPORT</button>
 
 ‏<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
 ‏<div class="card">
-
-‏<h2 class="speakable">حالة التهديد</h2>
-‏<div id="status" class="speakable">—</div>
-
-‏<div class="speakable">
-نسبة الخطورة: <span id="score">0</span>%
-‏</div>
-
-‏<div class="progress">
+‏<div id="status">—</div>
+‏<div>Risk: <span id="score">0</span>%</div>
 ‏<div class="bar" id="bar"></div>
+‏<div id="type">Type: —</div>
 ‏</div>
 
-‏<div id="mitre" class="speakable">MITRE: —</div>
-
-‏</div>
-
-‏<div id="rec" class="speakable safe">
-✔️ بانتظار التحليل
-‏</div>
+‏<div id="rec">✔️ بانتظار التحليل</div>
 
 ‏</div>
 
 ‏<script>
 
-/* ===== الصوت ===== */
+‏let currentLang="ar";
+‏let lastResult="", lastType="", lastRec="", lastMsg="";
+
+/* ===== صوت ===== */
 ‏function speak(text){
-‏if(!text) return;
 ‏speechSynthesis.cancel();
-‏let msg=new SpeechSynthesisUtterance(text);
-‏msg.lang="ar-SA";
-‏speechSynthesis.speak(msg);
+‏let u=new SpeechSynthesisUtterance(text);
+‏u.lang=currentLang==="ar"?"ar-SA":"en-US";
+‏speechSynthesis.speak(u);
 }
 
-/* قراءة عند المرور */
-‏document.addEventListener("mouseover",e=>{
-‏if(e.target.classList.contains("speakable")){
-‏speak(e.target.innerText);
-}
-});
-
-/* صوت مربع النص */
+/* مربع النص */
 ‏const msg=document.getElementById("msg");
 
 ‏msg.addEventListener("focus",()=>{
-‏speak("مكان إدخال الرسالة");
+‏speak(currentLang==="ar"?"أدخل الرسالة":"Enter message");
 });
 
-/* ===== كلمات مشبوهة (كبيرة جداً) ===== */
+/* ===== كلمات مشبوهة ===== */
 ‏const suspiciousWords=[
-
-"تحقق من حسابك البنكي","تحقق من حسابك","تحديث الحساب","كلمة المرور",
-‏"otp","رمز التحقق","بطاقة ائتمان","رقم البطاقة","cvv","iban","swift",
-
-"اضغط هنا","انقر هنا","عرض محدود","عرض خاص","فرصة لا تعوض",
-"ربح سريع","اربح الآن","مجاناً","هدية مجانية","جائزة","فزت",
-
-"تحويل بنكي","حوالة عاجلة","استثمار","مضاعفة أموالك",
-"بيتكوين","crypto","bitcoin","double your money",
-
-‏"http://","https://","bit.ly","tinyurl",".ru",".cn",".tk",
-
-‏"verify your account","account suspended","reset password",
-‏"update payment","bank transfer","credit card","claim prize",
-‏"urgent action","limited offer","click here now","act now",
-
-/* إضافاتك */
-"خصم 50%","بنك","الإفلاس","نقدي","مكافأة نقدية","كاش",
-"قرض","استرداد","استثمار مضمون","أرباح فورية",
-"عرض مذهل","لا تفوت","عاجل","اطلب الآن","سجل الآن",
-
-‏"free money","guaranteed profit","risk free","fast cash",
-‏"easy money","bonus","reward","lottery","winner"
-
+"تحقق من حسابك البنكي","verify your bank account",
+‏"otp","bank","password","bitcoin","http","urgent",
+‏"free money","click here","مجاناً","جائزة","اضغط هنا",
+"استثمار","ربح سريع","عرض حصري","winner","lottery"
 ];
 
 /* ===== تحليل ===== */
@@ -158,101 +112,138 @@
 
 ‏msg.addEventListener("input",()=>{
 ‏clearTimeout(timer);
-‏timer=setTimeout(analyze,800);
+‏timer=setTimeout(analyze,1200);
 });
 
 ‏function analyze(){
 
 ‏let text=msg.value.toLowerCase();
+‏lastMsg=msg.value;
+
 ‏let score=0;
+
+‏if(text.includes("تحقق من حسابك البنكي")) score+=60;
 
 ‏suspiciousWords.forEach(w=>{
 ‏if(text.includes(w)) score+=10;
 });
 
-‏if(text.includes("http")) score+=20;
+‏if(text.includes("http")) score+=25;
 
 ‏if(score>100) score=100;
 
 /* نوع الهجوم */
-‏let type="—";
+‏let type="Safe";
 
-‏if(text.includes("verify") || text.includes("otp")){
-‏type="Phishing";
-}
-‏else if(text.includes("bank") || text.includes("card")){
-‏type="سرقة بيانات";
-}
-‏else if(text.includes("bitcoin") || text.includes("investment")){
-‏type="احتيال مالي";
-}
-‏else if(text.includes("http")){
-‏type="رابط ضار";
-}
+‏if(text.includes("verify")||text.includes("تحقق")) type="Phishing";
+‏else if(text.includes("bank")) type="Data Theft";
+‏else if(text.includes("bitcoin")) type="Financial Scam";
+‏else if(text.includes("http")) type="Malicious Link";
 
 ‏document.getElementById("score").innerText=score;
 ‏document.getElementById("bar").style.width=score+"%";
-‏document.getElementById("mitre").innerText="MITRE: "+type;
+‏document.getElementById("type").innerText="Type: "+type;
 
 ‏let status=document.getElementById("status");
 ‏let rec=document.getElementById("rec");
 
 ‏if(score>30){
 
+‏if(currentLang==="ar"){
 ‏status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
 ‏rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
-‏rec.className="danger speakable";
-
-‏document.body.classList.add("dangerMode");
-
-/* صوت */
 ‏speak("تحذير الرسالة غير آمنة");
+‏lastResult="UNSAFE";
+‏lastRec="Do not click links or share data";
+‏}else{
+‏status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
+‏rec.innerHTML="⚠️ Do not click links or share data";
+‏speak("Warning unsafe message");
+‏lastResult="UNSAFE";
+‏lastRec="Do not click links or share data";
+}
 
 ‏}else{
 
+‏if(currentLang==="ar"){
 ‏status.innerHTML="<span class='safe'>✔️ آمن</span>";
-‏rec.innerHTML="✔️ لا يوجد تهديد واضح";
-‏rec.className="safe speakable";
-
-‏document.body.classList.remove("dangerMode");
-
+‏rec.innerHTML="✔️ لا يوجد تهديد";
 ‏speak("الرسالة آمنة");
+‏lastResult="SAFE";
+‏lastRec="No threat detected";
+‏}else{
+‏status.innerHTML="<span class='safe'>✔️ SAFE</span>";
+‏rec.innerHTML="✔️ No threat detected";
+‏speak("Message is safe");
+‏lastResult="SAFE";
+‏lastRec="No threat detected";
 }
 
 }
 
-‏/* ===== Matrix ===== */
-‏const canvas=document.getElementById("matrix");
-‏const ctx=canvas.getContext("2d");
-
-‏canvas.height=window.innerHeight;
-‏canvas.width=window.innerWidth;
-
-‏const letters="01BLACKFALCON";
-‏const fontSize=14;
-‏const columns=canvas.width/fontSize;
-‏const drops=[];
-
-‏for(let i=0;i<columns;i++){drops[i]=1;}
-
-‏function draw(){
-
-‏ctx.fillStyle="rgba(0,0,0,0.05)";
-‏ctx.fillRect(0,0,canvas.width,canvas.height);
-
-‏ctx.fillStyle=document.body.classList.contains("dangerMode")?"red":"#00f5d4";
-
-‏for(let i=0;i<drops.length;i++){
-‏let text=letters[Math.floor(Math.random()*letters.length)];
-‏ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-‏drops[i]++;
-‏if(drops[i]*fontSize>canvas.height) drops[i]=0;
-}
+‏lastType=type;
 
 }
 
-‏setInterval(draw,35);
+/* ===== اللغة ===== */
+‏function toggleLang(){
+‏currentLang=currentLang==="ar"?"en":"ar";
+
+‏msg.placeholder=currentLang==="ar"?"الصق الرسالة هنا":"Paste message here";
+}
+
+‏/* ===== PDF ===== */
+‏function generatePDF(){
+
+‏const { jsPDF } = window.jspdf;
+‏let doc=new jsPDF();
+
+/* خلفية */
+‏doc.setFillColor(0,0,0);
+‏doc.rect(0,0,210,297,"F");
+
+/* لون */
+‏doc.setTextColor(0,255,200);
+
+/* لوقو */
+‏doc.setFontSize(30);
+‏doc.text("🦅",105,30,null,null,"center");
+
+/* عنوان */
+‏doc.setFontSize(18);
+‏doc.text("BlackFalcon SOC",105,45,null,null,"center");
+
+‏doc.setFontSize(12);
+‏doc.text("Security Report",105,55,null,null,"center");
+
+/* خط */
+‏doc.line(20,65,190,65);
+
+/* محتوى */
+‏doc.setFontSize(11);
+
+‏doc.text("Message:",20,80);
+‏doc.text(doc.splitTextToSize(lastMsg||"Empty",170),20,90);
+
+‏doc.text("Result: "+lastResult,20,120);
+‏doc.text("Type: "+lastType,20,130);
+‏doc.text("Risk: "+document.getElementById("score").innerText+"%",20,140);
+
+‏doc.text("Recommendation:",20,155);
+‏doc.text(doc.splitTextToSize(lastRec,170),20,165);
+
+‏/* Footer */
+‏doc.text("Generated by BlackFalcon SOC",105,280,null,null,"center");
+
+‏doc.save("BlackFalcon_Report.pdf");
+
+/* صوت */
+‏speak(currentLang==="ar"?"تم إنشاء التقرير":"Report generated");
+
+}
 
 ‏</script>
+
 ‏</body>
 ‏</html>
+
