@@ -32,7 +32,9 @@ canvas{position:fixed;top:0;left:0;z-index:-1;}
 .container{text-align:center;margin-top:70px;}
 
 .logo{font-size:60px;}
-.title{font-size:22px;}
+.title{font-size:22px;margin-bottom:5px;}
+
+.lang-btn{margin-top:5px;}
 
 textarea{
 width:80%;
@@ -65,7 +67,6 @@ transition:0.4s;
 
 .btn{
 padding:8px 15px;
-margin-top:10px;
 border:1px solid #00f5d4;
 background:transparent;
 color:#00f5d4;
@@ -83,9 +84,13 @@ border-radius:10px;
 <div class="container">
 
 <div class="logo">🦅</div>
-<div class="title" id="title">BlackFalcon SOC</div>
 
+<!-- 🔥 زر تحت اللوقو -->
+<div class="lang-btn">
 <button class="btn" onclick="toggleLang()" id="langBtn">EN</button>
+</div>
+
+<div class="title">BlackFalcon SOC</div>
 
 <textarea id="msg"></textarea>
 
@@ -105,62 +110,73 @@ border-radius:10px;
 
 let lang="ar";
 
-/* ===== ترجمة كاملة ===== */
+/* ===== ترجمة ===== */
 const t={
 ar:{
-placeholder:"الصق الرسالة هنا...",
-safe:"✔️ آمن",
+placeholder:"الصق الرسالة أو الرابط هنا...",
 unsafe:"⚠️ تهديد",
-recSafe:"لا يوجد تهديد، تابع بحذر",
-recDanger:"لا تتفاعل مع الرسالة. أبلغ فريق الأمن السيبراني (SOC) أو CERT فوراً.",
-risk:"نسبة الخطورة",
+safe:"آمن",
+recDanger:"لا تتفاعل مع الرسالة. قم بالإبلاغ فوراً لفريق الأمن السيبراني (SOC) أو الجهات المختصة مثل CERT.",
+recSafe:"لا يوجد تهديد واضح.",
 type:"نوع التهديد",
-mitre:"مايتر أتاك"
+mitre:"مايتر أتاك",
+inputVoice:"مربع إدخال النص أو الرابط"
 },
 en:{
-placeholder:"Paste message here...",
-safe:"✔️ SAFE",
+placeholder:"Paste message or link here...",
 unsafe:"⚠️ THREAT",
-recSafe:"No threat detected, proceed with caution",
-recDanger:"Do not interact. Report to SOC or CERT immediately.",
-risk:"Risk",
+safe:"SAFE",
+recDanger:"Do not interact. Report to SOC team or CERT immediately.",
+recSafe:"No clear threat detected.",
 type:"Type",
-mitre:"MITRE ATT&CK"
+mitre:"MITRE ATT&CK",
+inputVoice:"Input field for message or link"
 }
 };
 
-/* ===== صوت قوي ===== */
+/* ===== صوت ===== */
 function speak(text){
 speechSynthesis.cancel();
-
 let u=new SpeechSynthesisUtterance(text);
 u.lang = (lang==="ar") ? "ar-SA" : "en-US";
-u.rate=1;
-u.pitch=1;
-
 speechSynthesis.speak(u);
 }
+
+/* ===== Hover صوت ===== */
+const msg=document.getElementById("msg");
+
+msg.addEventListener("mouseover",()=>{
+speak(t[lang].inputVoice);
+});
 
 /* ===== تحديث اللغة ===== */
 function updateLang(){
 msg.placeholder=t[lang].placeholder;
-document.getElementById("riskText").innerHTML=t[lang].risk+": <span id='score'>"+document.getElementById("score").innerText+"</span>%";
-document.getElementById("langBtn").innerText = (lang==="ar") ? "EN" : "AR";
+document.getElementById("langBtn").innerText=(lang==="ar")?"EN":"AR";
 }
 
 /* ===== تبديل ===== */
 function toggleLang(){
-lang = (lang==="ar") ? "en" : "ar";
+lang = (lang==="ar")?"en":"ar";
 updateLang();
-analyze(); // إعادة تحليل عشان يترجم النتيجة
+analyze();
 }
 
-/* ===== كلمات ===== */
-const words=["verify","otp","bank","password","http","bitcoin","تحقق","كلمة المرور","البنك"];
+/* ===== كلمات مشبوهة قوية 🔥 ===== */
+const highRisk=[
+"password","otp","verify","bank","crypto","bitcoin",
+"login","account","secure","wallet","transfer",
+"كلمة المرور","رمز","تحقق","البنك","تحويل","محفظة"
+];
+
+const mediumRisk=[
+"http","https","bit.ly","tinyurl","click","urgent",
+"free","winner","prize","gift","offer",
+"اضغط","جائزة","مجانا","عرض","رابط"
+];
 
 /* ===== تحليل ===== */
 let timer;
-const msg=document.getElementById("msg");
 
 msg.addEventListener("input",()=>{
 clearTimeout(timer);
@@ -172,14 +188,27 @@ function analyze(){
 let text=msg.value.toLowerCase();
 let score=0;
 
-words.forEach(w=>{
+/* حساب قوي */
+highRisk.forEach(w=>{
+if(text.includes(w)) score+=25;
+});
+
+mediumRisk.forEach(w=>{
 if(text.includes(w)) score+=15;
 });
 
-if(text.includes("http")) score+=30;
+/* روابط */
+if(text.includes("http")||text.includes("bit.ly")||text.includes("tinyurl")){
+score+=40;
+}
+
+/* تكرار */
+let repeat=(text.match(/http|verify|otp|bank/g)||[]).length;
+score+=repeat*10;
+
 if(score>100) score=100;
 
-/* MITRE */
+/* ===== MITRE ===== */
 let type="Safe", mitre="None";
 
 if(text.includes("verify")||text.includes("تحقق")){
@@ -189,6 +218,10 @@ mitre="T1566";
 else if(text.includes("password")||text.includes("otp")){
 type="Credential Theft";
 mitre="T1003";
+}
+else if(text.includes("crypto")){
+type="Financial Scam";
+mitre="Impact";
 }
 else if(text.includes("http")){
 type="Malicious Link";
@@ -205,7 +238,7 @@ let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 let alertBg=document.getElementById("alertBg");
 
-/* خطر */
+/* 🔴 خطر */
 if(score>30){
 
 alertBg.style.display="block";
@@ -213,25 +246,25 @@ alertBg.style.display="block";
 status.innerHTML="<span class='danger'>"+t[lang].unsafe+"</span>";
 rec.innerHTML="🚨 "+t[lang].recDanger;
 
-speak(t[lang].unsafe + ". " + t[lang].recDanger);
+speak(t[lang].unsafe+" "+type+" "+t[lang].recDanger);
 
 }
 
-/* آمن */
+/* 🟢 آمن */
 else{
 
 alertBg.style.display="none";
 
 status.innerHTML="<span class='safe'>"+t[lang].safe+"</span>";
-rec.innerHTML="✔️ "+t[lang].recSafe;
+rec.innerHTML=t[lang].recSafe;
 
-speak(t[lang].safe + ". " + t[lang].recSafe);
-
-}
+speak(t[lang].safe+" "+t[lang].recSafe);
 
 }
 
-/* أول تشغيل */
+}
+
+/* تشغيل */
 updateLang();
 
 /* ===== MATRIX ===== */
