@@ -15,53 +15,43 @@ font-family:'Orbitron',sans-serif;
 overflow:hidden;
 }
 
-/* خلفية خفيفة 🔴 */
-.alert{
+.alert-bg{
 position:fixed;
+top:0;
+left:0;
 width:100%;
 height:100%;
-background:rgba(255,0,0,0.12);
+background:rgba(255,0,0,0.25);
 display:none;
-z-index:0;
 }
 
-.container{
-text-align:center;
-margin-top:60px;
-}
+canvas{position:fixed;top:0;left:0;z-index:-1;}
 
-.logo{font-size:60px;}
-
-.lang-btn{
-margin-top:10px;
-}
+.container{text-align:center;margin-top:70px;}
 
 textarea{
 width:80%;
-height:140px;
-margin-top:20px;
+height:130px;
 background:rgba(0,0,0,0.6);
-border:2px solid #00f5d4;
+border:1px solid #00f5d4;
 border-radius:20px;
+padding:20px;
 color:#00f5d4;
-padding:15px;
+margin-top:20px;
 }
 
 .card{
 width:80%;
 margin:30px auto;
-padding:20px;
-border-radius:20px;
+padding:25px;
+border-radius:25px;
 background:rgba(0,0,0,0.6);
-border:1px solid #00f5d4;
+box-shadow:0 0 25px #00f5d433;
 }
 
-.bar{
-height:8px;
-background:red;
-width:0%;
-transition:0.4s;
-}
+.bar{height:10px;background:#ff0033;width:0%;}
+.safe{color:#00ff88;}
+.danger{color:#ff0033;}
 
 .btn{
 padding:8px 15px;
@@ -76,147 +66,170 @@ border-radius:10px;
 
 <body>
 
-<div id="alert" class="alert"></div>
+<div id="alertBg" class="alert-bg"></div>
+<canvas id="matrix"></canvas>
 
 <div class="container">
 
-<div class="logo">🦅</div>
+<h1>🦅 BlackFalcon SOC</h1>
 
-<div class="lang-btn">
-<button class="btn" onclick="toggleLang()" data-voice="lang">EN / AR</button>
-</div>
+<button class="btn" onclick="toggleLang()" id="langBtn">EN</button>
 
-<textarea id="msg" data-voice="input"></textarea>
+<textarea id="msg"></textarea>
 
 <div class="card">
-<div id="status" data-voice="status">—</div>
-<div id="riskText" data-voice="risk">Risk: <span id="score">0</span>%</div>
+<div id="status">—</div>
+<div id="riskLabel">Risk:</div>
+<div><span id="score">0</span>%</div>
 <div class="bar" id="bar"></div>
-<div id="type" data-voice="type">Type: —</div>
-<div id="mitre" data-voice="mitre">MITRE: —</div>
+<div id="type">Type: —</div>
+<div id="mitre">MITRE: —</div>
 </div>
 
-<div id="rec" data-voice="rec"></div>
+<div id="rec"></div>
 
 </div>
 
 <script>
 
-let lang="ar";
+let currentLang="ar";
 
-/* ===== ترجمة ===== */
-const t={
-ar:{
-input:"مربع إدخال النص أو الرابط",
-statusSafe:"آمن",
-statusDanger:"تهديد",
-recDanger:"لا تتفاعل مع الرسالة. أبلغ فريق الأمن السيبراني فوراً",
-recSafe:"لا يوجد تهديد واضح",
-risk:"نسبة الخطورة",
-type:"نوع التهديد",
-mitre:"مايتر أتاك",
-lang:"زر تغيير اللغة"
-},
-en:{
-input:"Input field for message or link",
-statusSafe:"SAFE",
-statusDanger:"THREAT",
-recDanger:"Do not interact. Report to SOC immediately",
-recSafe:"No threat detected",
-risk:"Risk",
-type:"Type",
-mitre:"MITRE ATT&CK",
-lang:"Language switch button"
-}
-};
-
-/* ===== صوت ===== */
+/* ===== صوت احترافي ===== */
 function speak(text){
 speechSynthesis.cancel();
 let u=new SpeechSynthesisUtterance(text);
-u.lang = (lang==="ar")?"ar-SA":"en-US";
+
+u.lang = currentLang==="ar" ? "ar-SA" : "en-US";
+u.rate = 0.95;
+u.pitch = 1.1;
+u.volume = 1;
+
 speechSynthesis.speak(u);
 }
 
-/* ===== Hover لكل العناصر 🔥 ===== */
-document.querySelectorAll("[data-voice]").forEach(el=>{
-el.addEventListener("mouseover",()=>{
-let key = el.getAttribute("data-voice");
-if(t[lang][key]){
-speak(t[lang][key]);
+/* 🔊 إنذار */
+function alarm(){
+let ctx=new AudioContext();
+let osc=ctx.createOscillator();
+osc.type="sawtooth";
+osc.frequency.setValueAtTime(600,ctx.currentTime);
+osc.connect(ctx.destination);
+osc.start();
+setTimeout(()=>osc.stop(),200);
 }
+
+/* 🌐 نصوص */
+const langData={
+ar:{
+placeholder:"الصق الرسالة هنا...",
+risk:"درجة الخطر:",
+safe:"✔️ آمن",
+danger:"⚠️ تهديد",
+safeMsg:"لا يوجد تهديد",
+dangerMsg:"لا تتفاعل مع الرسالة. أبلغ الأمن السيبراني فوراً"
+},
+en:{
+placeholder:"Paste message here...",
+risk:"Risk:",
+safe:"✔️ SAFE",
+danger:"⚠️ THREAT",
+safeMsg:"No threat detected",
+dangerMsg:"Do not interact. Report immediately"
+}
+};
+
+/* 🖱️ قراءة عند المرور */
+function addHoverVoice(el,textAr,textEn){
+el.addEventListener("mouseenter",()=>{
+speak(currentLang==="ar"?textAr:textEn);
 });
+}
+
+/* كلمات */
+const highRisk=["password","otp","bank","crypto","bitcoin","كلمة المرور","تحقق"];
+const mediumRisk=["http","https","bit.ly","click","urgent","login","account","اضغط"];
+
+let msg=document.getElementById("msg");
+let timer;
+
+msg.addEventListener("input",()=>{
+clearTimeout(timer);
+timer=setTimeout(analyze,1000);
 });
 
-/* ===== تحليل ===== */
-const msg=document.getElementById("msg");
-
-msg.addEventListener("input", analyze);
-
+/* تحليل */
 function analyze(){
 
 let text=msg.value.toLowerCase();
 let score=0;
 
-/* كلمات قوية */
-["password","otp","verify","bank","تحقق","كلمة المرور"].forEach(w=>{
-if(text.includes(w)) score+=25;
-});
-
-/* روابط */
-if(text.includes("http")||text.includes("bit.ly")) score+=40;
+highRisk.forEach(w=>{ if(text.includes(w)) score+=25; });
+mediumRisk.forEach(w=>{ if(text.includes(w)) score+=15; });
 
 if(score>100) score=100;
 
-/* MITRE */
-let type="Safe", mitre="None";
+let type="Safe";
+let mitre="None";
 
-if(text.includes("verify")){type="Phishing"; mitre="T1566";}
-if(text.includes("password")){type="Credential Theft"; mitre="T1003";}
-if(text.includes("http")){type="Malicious Link"; mitre="T1071";}
+if(text.includes("password")||text.includes("otp")){
+type="Credential Theft";
+mitre="T1003";
+}
+else if(text.includes("http")){
+type="Malicious Link";
+mitre="T1071";
+}
 
 /* عرض */
-scoreEl.innerText=score;
-bar.style.width=score+"%";
-typeEl.innerText=t[lang].type+": "+type;
-mitreEl.innerText=t[lang].mitre+": "+mitre;
+document.getElementById("score").innerText=score;
+document.getElementById("bar").style.width=score+"%";
+
+let status=document.getElementById("status");
+let rec=document.getElementById("rec");
+let alertBg=document.getElementById("alertBg");
 
 if(score>30){
 
-alert.style.display="block";
+alertBg.style.display="block";
+alarm();
 
-status.innerText=t[lang].statusDanger;
-rec.innerText=t[lang].recDanger;
+status.innerHTML="<span class='danger'>"+langData[currentLang].danger+"</span>";
+rec.innerText=langData[currentLang].dangerMsg;
 
-speak(t[lang].statusDanger + " " + t[lang].recDanger);
+/* 🔊 قراءة */
+speak(langData[currentLang].dangerMsg);
 
 }else{
 
-alert.style.display="none";
+alertBg.style.display="none";
 
-status.innerText=t[lang].statusSafe;
-rec.innerText=t[lang].recSafe;
+status.innerHTML="<span class='safe'>"+langData[currentLang].safe+"</span>";
+rec.innerText=langData[currentLang].safeMsg;
 
-speak(t[lang].statusSafe);
-
-}
+speak(langData[currentLang].safeMsg);
 
 }
 
-/* عناصر */
-const scoreEl=document.getElementById("score");
-const bar=document.getElementById("bar");
-const typeEl=document.getElementById("type");
-const mitreEl=document.getElementById("mitre");
-const status=document.getElementById("status");
-const rec=document.getElementById("rec");
-const alert=document.getElementById("alert");
+}
 
-/* ===== لغة ===== */
+/* تغيير اللغة */
 function toggleLang(){
-lang = (lang==="ar")?"en":"ar";
-analyze();
+
+currentLang = currentLang==="ar"?"en":"ar";
+
+document.getElementById("langBtn").innerText = currentLang==="ar"?"EN":"AR";
+
+msg.placeholder = langData[currentLang].placeholder;
+document.getElementById("riskLabel").innerText = langData[currentLang].risk;
+
+/* قراءة تغيير اللغة */
+speak(currentLang==="ar"?"تم تغيير اللغة إلى العربية":"Language switched to English");
+
 }
+
+/* تفعيل hover صوت */
+addHoverVoice(msg,"مربع إدخال النص","Text input field");
+addHoverVoice(document.getElementById("langBtn"),"زر تغيير اللغة","Language button");
 
 </script>
 
