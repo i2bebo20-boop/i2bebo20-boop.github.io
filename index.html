@@ -7,12 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+
+:root{
+--neon-green:#00ffcc;
+--danger-red:#ff0033;
+}
+
 body{
 margin:0;
 background:black;
-color:#00ff00;
+color:var(--neon-green);
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
+transition:0.4s;
 }
 
 canvas{
@@ -27,7 +34,10 @@ text-align:center;
 margin-top:60px;
 }
 
-h1{font-size:40px;}
+h1{
+font-size:40px;
+text-shadow:0 0 15px var(--neon-green);
+}
 
 .lang-btn{
 margin-top:10px;
@@ -37,11 +47,12 @@ textarea{
 width:80%;
 height:130px;
 background:rgba(0,0,0,0.7);
-border:1px solid #00ff00;
+border:1px solid var(--neon-green);
 border-radius:20px;
 padding:20px;
-color:#00ff00;
+color:var(--neon-green);
 margin-top:20px;
+box-shadow:0 0 10px var(--neon-green);
 }
 
 .card{
@@ -50,26 +61,44 @@ margin:30px auto;
 padding:25px;
 border-radius:20px;
 background:rgba(0,0,0,0.7);
-box-shadow:0 0 20px #00ff00;
+box-shadow:0 0 20px var(--neon-green);
 }
 
 .bar{
 height:10px;
-background:red;
+background:var(--neon-green);
 width:0%;
+transition:0.4s;
 }
 
 .safe{color:#00ff88;}
-.danger{color:red;}
+.danger{color:var(--danger-red);}
 
 button{
 padding:8px 15px;
-border:1px solid #00ff00;
+border:1px solid var(--neon-green);
 background:transparent;
-color:#00ff00;
+color:var(--neon-green);
 cursor:pointer;
 border-radius:10px;
 }
+
+/* 🔴 وضع الخطر */
+.danger-mode{
+color:var(--danger-red);
+}
+
+.danger-mode textarea,
+.danger-mode .card,
+.danger-mode button{
+border-color:var(--danger-red);
+box-shadow:0 0 15px var(--danger-red);
+}
+
+.danger-mode .bar{
+background:var(--danger-red);
+}
+
 </style>
 </head>
 
@@ -81,7 +110,6 @@ border-radius:10px;
 
 <h1>🦅 BlackFalcon SOC</h1>
 
-<!-- 🔽 زر تحت الاسم -->
 <div class="lang-btn">
 <button id="langBtn" onclick="toggleLang()">AR / EN</button>
 </div>
@@ -105,13 +133,17 @@ border-radius:10px;
 
 let currentLang="ar";
 
-/* 🔊 صوت */
+/* 🔊 صوت مع تأخير */
+let speakTimer;
 function speak(text){
+clearTimeout(speakTimer);
+speakTimer=setTimeout(()=>{
 speechSynthesis.cancel();
 let u=new SpeechSynthesisUtterance(text);
 u.lang=currentLang==="ar"?"ar-SA":"en-US";
 u.rate=0.9;
 speechSynthesis.speak(u);
+},1200);
 }
 
 /* 🚨 إنذار */
@@ -125,44 +157,47 @@ osc.start();
 setTimeout(()=>osc.stop(),200);
 }
 
-/* 🌐 ترجمة */
+/* 🌐 لغة */
 const lang={
 ar:{
 placeholder:"الصق الرسالة هنا",
 risk:"درجة الخطر",
-safe:"آمن",
-danger:"تهديد",
+safe:"✔️ آمن",
+danger:"⚠️ تهديد",
 recSafe:"لا يوجد تهديد",
 recDanger:"لا تتفاعل مع الرسالة"
 },
 en:{
 placeholder:"Paste message",
 risk:"Risk",
-safe:"SAFE",
-danger:"THREAT",
+safe:"✔️ SAFE",
+danger:"⚠️ THREAT",
 recSafe:"No threat detected",
 recDanger:"Do not interact"
 }
 };
 
-/* 🧠 قراءة عند المرور على أي عنصر */
-document.addEventListener("mouseover",(e)=>{
+/* 👆 صوت عند الضغط */
+let msg=document.getElementById("msg");
 
+msg.addEventListener("focus",()=>{
+speak(currentLang==="ar"?
+"أنت الآن في مربع إدخال النص":
+"You are now in the text input field");
+});
+
+/* 🖱️ Hover ذكي */
+document.addEventListener("mouseenter",(e)=>{
 let el=e.target;
 
 if(el.id==="msg") speak(currentLang==="ar"?"مربع إدخال النص":"Text input");
-else if(el.id==="langBtn") speak(currentLang==="ar"?"زر تغيير اللغة":"Language button");
-else if(el.id==="status") speak(currentLang==="ar"?"حالة التهديد":"Threat status");
-else if(el.id==="rec") speak(currentLang==="ar"?"التوصية":"Recommendation");
-else if(el.id==="score") speak(currentLang==="ar"?"نسبة الخطر":"Risk percentage");
+if(el.id==="langBtn") speak(currentLang==="ar"?"زر تغيير اللغة":"Language button");
 
-});
+},true);
 
 /* تحليل */
-const high=["password","otp","bank","كلمة المرور"];
-const medium=["http","bit.ly","click","اضغط"];
-
-let msg=document.getElementById("msg");
+const high=["password","otp","bank","crypto","كلمة المرور"];
+const medium=["http","bit.ly","click","urgent","اضغط"];
 
 msg.addEventListener("input",analyze);
 
@@ -184,6 +219,8 @@ let rec=document.getElementById("rec");
 
 if(score>30){
 
+document.body.classList.add("danger-mode");
+
 status.innerHTML="<span class='danger'>"+lang[currentLang].danger+"</span>";
 rec.innerText=lang[currentLang].recDanger;
 
@@ -191,6 +228,8 @@ alarm();
 speak(lang[currentLang].danger);
 
 }else{
+
+document.body.classList.remove("danger-mode");
 
 status.innerHTML="<span class='safe'>"+lang[currentLang].safe+"</span>";
 rec.innerText=lang[currentLang].recSafe;
@@ -220,7 +259,7 @@ const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
 
-const letters="01";
+const letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const fontSize=14;
 const columns=canvas.width/fontSize;
 
@@ -232,7 +271,7 @@ function draw(){
 ctx.fillStyle="rgba(0,0,0,0.05)";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle="#00ff00";
+ctx.fillStyle="#00ffcc";
 ctx.font=fontSize+"px monospace";
 
 for(let i=0;i<drops.length;i++){
