@@ -21,7 +21,7 @@ canvas{position:fixed;top:0;left:0;z-index:-1;}
 .container{text-align:center;margin-top:70px;}
 
 .logo{font-size:60px;}
-.title{font-size:22px;margin-bottom:20px;}
+.title{font-size:22px;margin-bottom:10px;}
 
 textarea{
 width:80%;
@@ -73,6 +73,7 @@ border-radius:10px;
 <div class="logo">🦅</div>
 <div class="title">BlackFalcon SOC</div>
 
+<!-- زر اللغة تحت الاسم -->
 <button class="btn" onclick="toggleLang()">EN / AR</button>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
@@ -91,7 +92,6 @@ border-radius:10px;
 <script>
 
 let currentLang="ar";
-let lastResult="", lastType="", lastRec="", lastMsg="";
 
 /* ===== صوت ===== */
 function speak(text){
@@ -108,17 +108,15 @@ msg.addEventListener("focus",()=>{
 speak(currentLang==="ar"?"مكان إدخال الرسالة":"Enter message field");
 });
 
-/* ===== كلمات مشبوهة (موسعة 🔥) ===== */
-const suspiciousWords=[
-"تحقق","حسابك","البنك","كلمة المرور","otp","رمز التحقق",
-"bank","password","verify","login","urgent","alert",
-"http","https","bit.ly","tinyurl","click here","اضغط هنا",
-"free","gift","winner","lottery","prize","جائزة","مجانا",
-"bitcoin","crypto","wallet","استثمار","ربح","عرض حصري",
-"account suspended","تم ايقاف الحساب","security alert",
-"update info","confirm identity","paypal","visa","mastercard",
-"limited offer","act now","danger","risk","warning",
-"click link","login now","secure your account"
+/* ===== كلمات قوية / متوسطة ===== */
+const highRisk=[
+"password","otp","verify","bank","bitcoin","crypto",
+"كلمة المرور","رمز","تحقق","البنك"
+];
+
+const mediumRisk=[
+"http","https","bit.ly","tinyurl","click","urgent",
+"login","account","free","winner","جائزة","اضغط"
 ];
 
 /* ===== تحليل ===== */
@@ -132,38 +130,48 @@ timer=setTimeout(analyze,1200);
 function analyze(){
 
 let text=msg.value.toLowerCase();
-lastMsg=msg.value;
 
 let score=0;
 
-/* حساب */
-suspiciousWords.forEach(w=>{
-if(text.includes(w)) score+=8;
+/* حساب متقدم */
+highRisk.forEach(w=>{
+if(text.includes(w)) score+=25;
 });
 
-if(text.includes("http")||text.includes("bit.ly")||text.includes("tinyurl")) score+=30;
+mediumRisk.forEach(w=>{
+if(text.includes(w)) score+=15;
+});
+
+/* روابط */
+if(text.includes("http")||text.includes("bit.ly")||text.includes("tinyurl")){
+score+=35;
+}
+
+/* تكرار */
+let repeat=(text.match(/http|verify|otp|bank/g)||[]).length;
+score += repeat * 10;
 
 if(score>100) score=100;
 
-/* ===== MITRE ===== */
+/* ===== MITRE ATT&CK ===== */
 let type="Safe";
 let mitre="None";
 
 if(text.includes("verify")||text.includes("تحقق")){
 type="Phishing";
-mitre="T1566 - Phishing";
+mitre="TA0001 - Initial Access | T1566 Phishing";
 }
 else if(text.includes("password")||text.includes("otp")){
 type="Credential Theft";
-mitre="T1003 - Credential Access";
+mitre="TA0006 - Credential Access | T1003";
 }
 else if(text.includes("bitcoin")||text.includes("crypto")){
 type="Financial Scam";
-mitre="Impact - Financial Theft";
+mitre="TA0040 - Impact";
 }
 else if(text.includes("http")){
 type="Malicious Link";
-mitre="T1071 - Command & Control";
+mitre="TA0011 - Command & Control | T1071";
 }
 
 /* عرض */
@@ -179,17 +187,16 @@ if(score>30){
 
 document.body.style.background="#200000";
 
+/* توصيات احترافية */
 if(currentLang==="ar"){
-status.innerHTML="<span class='danger'>⚠️ غير آمن</span>";
-rec.innerHTML="⚠️ لا تضغط الروابط ولا تشارك بياناتك";
-speak("تحذير. الرسالة غير آمنة. لا تضغط الروابط ولا تشارك بياناتك");
+status.innerHTML="<span class='danger'>⚠️ تهديد عالي</span>";
+rec.innerHTML="🚨 يوصى بعدم التفاعل مع الرسالة. قم بإبلاغ فريق الأمن السيبراني (SOC) فوراً، وتواصل مع الجهات المختصة مثل CERT. لا تشارك أي بيانات حساسة.";
+speak("تحذير تهديد عالي. يوصى بإبلاغ فريق الأمن السيبراني وعدم مشاركة البيانات");
 }else{
-status.innerHTML="<span class='danger'>⚠️ UNSAFE</span>";
-rec.innerHTML="⚠️ Do not click links or share data";
-speak("Warning. Unsafe message. Do not click links or share data");
+status.innerHTML="<span class='danger'>⚠️ HIGH RISK</span>";
+rec.innerHTML="🚨 Do not interact. Report to SOC team immediately and contact CERT. Do not share sensitive data.";
+speak("High risk detected. Report to security operations center immediately");
 }
-
-lastResult="UNSAFE";
 
 }
 
@@ -200,19 +207,15 @@ document.body.style.background="black";
 
 if(currentLang==="ar"){
 status.innerHTML="<span class='safe'>✔️ آمن</span>";
-rec.innerHTML="✔️ لا يوجد تهديد";
-speak("الرسالة آمنة");
+rec.innerHTML="✔️ لا يوجد تهديد. يمكنك المتابعة مع الحذر العام.";
+speak("لا يوجد تهديد");
 }else{
 status.innerHTML="<span class='safe'>✔️ SAFE</span>";
-rec.innerHTML="✔️ No threat detected";
-speak("Message is safe");
+rec.innerHTML="✔️ No threat detected. Proceed with general caution.";
+speak("No threat detected");
 }
 
-lastResult="SAFE";
-
 }
-
-lastType=type;
 
 }
 
@@ -222,7 +225,7 @@ currentLang=currentLang==="ar"?"en":"ar";
 msg.placeholder=currentLang==="ar"?"الصق الرسالة هنا":"Paste message here";
 }
 
-/* ===== MATRIX 🔥 ===== */
+/* ===== MATRIX ===== */
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
 
