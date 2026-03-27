@@ -144,7 +144,59 @@ msg.addEventListener("focus", () => {
     speak(currentLang==="ar"?"أنت الآن في مربع إدخال النص":"You are now in the text input field");
 });
 
-// 🧠 تحليل فعلي (pattern + behavior + context)
+// 🧠 كلمات التحليل
+const high = [
+"password","otp","bank","crypto","bitcoin","كلمة المرور","تحقق","تحقق من حسابك البنكي",
+"bank verification","verify your bank","verify your account","bank account suspended",
+// ✅ الكلمات الجديدة اللي أعطيتك إياها كلها بالعربي والانجليزي
+"$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
+"بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير",
+"مليار","مليار دولار","ملياردير","البطاقة مقبولة","البطاقات المقبولة","نقدي","مكافأة نقدية","سحب نقدي",
+"كاش كاش كاش","كازينو","سنتات مقابل الدولار","يفحص","شيك أو حوالة بريدية","احصل على خصمك","يكلف","التكاليف",
+"ائتمان","مكاتب الائتمان","بطاقة إئتمان","عروض بطاقات الائتمان","ائتمان أو مدين","اتفاق","دَين","تخفيض","دولارات",
+"ضاعف","ضاعف ثروتك","يكسب","اربح دولارات","اربح نقوداً","اكسب دخلاً إضافياً","اربح من المنزل","اربح شهرياً",
+"اكسب شهريًا","اكسب أسبوعياً","دخل سنوي","دخل سهل","شروط ميسرة","حر","مجاناً","مقابل دولار واحد فقط","دخول مجاني",
+"استشارة مجانية","هدية مجانية","استضافة مجانية","معلومات مجانية","الاستثمار الحر","عضوية مجانية","أموال مجانية",
+"معاينة مجانية","عرض سعر مجاني","تجربة مجانية","استرداد كامل المبلغ","التخلص من الديون","يتبرع","وديعة مضمونة",
+"زيادة الإيرادات","زيادة المبيعات/حركة المرور","أرباح فورية","دخل فوري","تأمين","استثمار","نصائح استثمارية","القروض",
+"اكسب دولارات","ضمان استرداد الأموال","القرض العقاري","أسعار الرهن العقاري","يعرض","مجاني بالكامل","دولار واحد فقط",
+"سعر","ضمان السعر","الأرباح","يقتبس","إعادة التمويل","وفر المال","وفر الكثير من المال","رهناً بالموافقة الائتمانية",
+"دولار أمريكي","لماذا تدفع أكثر؟","دخلك","مضمون بنسبة 100%","ادخل الآن","بادر بالتحرك سريعاً","عرض مذهل","قدم الآن",
+"كما شاهدتم على","أفضل عرض","ربح كبير","لا تفوت","انقر أدناه","انقر هنا","الصفقة ستنتهي قريباً","لا تحذف",
+"ضاعف أموالك","عرض حصري","عرض رائع","عضوية مجانية","احصل عليه الآن","أخبار رائعة","نتائج مضمونة","معلومات هامة",
+"زيادة المبيعات","توفير فوري","لفترة محدودة","قراءة ضرورية","للعملاء الجدد فقط","بدون شروط","بدون تكلفة",
+"لا حاجة لفحص الائتمان","لا يوجد أي التزام","بدون أي التزامات","مرة واحدة في العمر","متوفر هنا فقط","اطلب الآن",
+"الأرباح المحتملة","ربح صافٍ","خالٍ من المخاطر","دعوة خاصة","عرض خاص","هذا لن يدوم","عاجل","لن أصدق","تحقق من حسابك البنكي",
+"رقم 1","مجاني 100%","خصم 100%","راضٍ بنسبة 100%","دخل إضافي","مندهش","مدهش","عرض مذهل","أشياء رائعة","اندهش",
+"كن متفاجئاً","كن مدير نفسك","أفضل صفقة","أفضل عرض","أفضل سعر","أفضل الأسعار","مبالغ طائلة","علاوة","لا أستطيع العيش بدونها",
+"توحيد الديون","ضاعف أموالك","ضاعف دخلك","تم تخفيضها بشكل كبير","اكسب أموالاً إضافية","اكسب المال","توقع أن تربح",
+"إضافي","نقود إضافية","دخل إضافي","رائع","عرض رائع","عرض رائع","سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني",
+"احصل على أموالك","صفقة رائعة","انضم إلى الملايين","أقل سعر","اكسب المال","مليون دولار","ضمان استرداد الأموال",
+"جائزة","يعد","ربح صافٍ","خالٍ من المخاطر","رضاكم مضمون","وفر حتى","عرض ترويجي خاص","الأفضل","الآلاف",
+"عرض لا يُضاهى","لا يصدق","غير محدود","رائع","لن تصدق عينيك","وصول","ادخل الآن","يمثل","بادر بالتحرك فوراً",
+"تم الآن","بادر بالتحرك الآن!","فعل","الإجراء المطلوب","قدّم طلبك هنا","قدم الآن","قدم طلبك الآن!","قدم طلبك عبر الإنترنت",
+"انضم إلى العضوية","قبل فوات الأوان","كونك عضواً","يشتري","اشتر مباشرة","اشتري الآن","اشتر اليوم","يتصل","مكالمة مجانية",
+"اتصل الآن مجاناً","اتصل بي","اتصل الآن","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء",
+"اطلب الآن","انقر","انقر أدناه","انقر هنا","انقر هنا للتحميل","انقر الآن","انقر على هذا الرابط","انقر للحصول على",
+"انقر للإزالة","اتصل بنا فوراً","الصفقة ستنتهي قريباً","افعل ذلك الآن","افعل ذلك اليوم","لا تحذف","لا تتردد","لا تضيع الوقت",
+"عرض حصري","تاريخ الانتهاء","ينتهي العرض اليوم","النداء الأخير","للوصول الفوري","بسعر فقط","لك","يوم الجمعة الذي يسبق [العطلة]",
+"أبعده","احصل عليه الآن","احصل على أموالك","ابدأ الآن","ابدأ الآن","عرض رائع","أسرع","في الحال","المعلومات التي طلبتها",
+"المعلومات التي طلبتها","فوري","لفترة محدودة","للعملاء الجدد فقط","الآن","الآن فقط","ينتهي العرض","مرة واحدة في العمر",
+"فقط","اطلب الآن","اطلب اليوم","يرجى القراءة","اشتر الآن","سجل مجاناً","سجل مجاناً اليوم","الكميات محدودة","اتخذ إجراءً",
+"بادر بالتحرك الآن","هذا لن يدوم","لفترة محدودة","اليوم","عاجل للغاية","محاكمة","عاجل","ماذا تنتظر؟","العرض ساري حتى نفاذ الكمية",
+"أنت فائز","قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات","تغيير كلمة المرور",
+"انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات","حمل الآن","إشعار نهائي","برنامج مكافحة فيروسات مجاني",
+"تجربة مجانية","تحديث هام","يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن",
+"تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة","تحذير من التصيد الاحتيالي",
+"دفع آمن","خرق أمني","تحديث أمني","تحديث الحساب","التحقق من الهوية","رسالة تحذير","راهن الآن","فوز كبير","لعبة البلاك جاك",
+"مكافأة الكازينو","اسحب أموالك الآن","انقر للفوز","ضاعف أموالك","وصول حصري","رقائق البطاطس المجانية","دورات مجانية",
+"المقامرة عبر الإنترنت","عرض مميز","جوائز فورية","الفوز بالجائزة الكبرى","موزع مباشر","الفائز باليانصيب","فرصة حظ",
+"المراهنات عبر الإنترنت","كازينو على الإنترنت","الألعاب عبر الإنترنت","بطولة البوكر","رهان خالٍ من المخاطر",
+"جائزة كبرى في ماكينات القمار","أدر العجلة واربح","جرب مجاناً","عرض لكبار الشخصيات","تم الإعلان عن الفائز","الأرقام الفائزة"
+];
+
+const medium = ["http","https","bit.ly","click","urgent","login","account","اضغط"];
+
 msg.addEventListener("input", () => {
     clearTimeout(analyzeTimer);
     analyzeTimer = setTimeout(analyze, 1000);
@@ -153,161 +205,81 @@ msg.addEventListener("input", () => {
 function analyze(){
     let text = msg.value.toLowerCase();
     let score = 0;
-    let indicators = [];
 
-    // 🔍 اكتشاف روابط مشبوهة
-    if(text.match(/http|bit\.ly|tinyurl|t\.co/)){
-        score += 20;
-        indicators.push("link");
-    }
+    high.forEach(w=>{ if(text.includes(w.toLowerCase())) score += 10; }); // كلمات عالية جداً
+    medium.forEach(w=>{ if(text.includes(w.toLowerCase())) score += 15; });
 
-    // 🔍 كلمات حساسة
-    if(text.match(/password|otp|verify|login|كلمة المرور|رمز/)){
-        score += 25;
-        indicators.push("credential");
-    }
-
-    // 🔍 ضغط واستعجال
-    if(text.match(/urgent|immediately|now|حالاً|فوراً/)){
-        score += 15;
-        indicators.push("urgency");
-    }
-
-    // 🔍 فلوس / بنك
-    if(text.match(/bank|iban|credit|visa|paypal|بنك|بطاقة/)){
-        score += 25;
-        indicators.push("financial");
-    }
-
-    // 🔍 جوائز وهمية
-    if(text.match(/winner|prize|gift|free|ربحت/)){
-        score += 20;
-        indicators.push("scam");
-    }
-
-    // 🔍 انتحال
-    if(text.match(/absher|nafath|dhl|aramex|apple|google|حكومي/)){
-        score += 20;
-        indicators.push("impersonation");
-    }
-
-    // 🎯 تحليل ذكي بالسياق
-    if(indicators.includes("link") && indicators.includes("credential")){
-        score += 20;
-    }
-
-    if(score > 100) score = 100;
-
-    // 🎯 تحديد نوع الهجوم
-    let type = "—";
-    let mitre = "—";
-
-    if(indicators.includes("financial")){
-        type = currentLang==="ar"?"احتيال مالي":"Financial Phishing";
-        mitre = "TA0001 → Initial Access | T1566.002 Phishing Link → T1056 Credential Harvesting";
-    }
-    else if(indicators.includes("credential")){
-        type = currentLang==="ar"?"سرقة بيانات":"Credential Theft";
-        mitre = "TA0006 → Credential Access | T1110 Brute Force / T1556 Modify Auth";
-    }
-    else if(indicators.includes("impersonation")){
-        type = currentLang==="ar"?"انتحال جهة":"Impersonation Attack";
-        mitre = "TA0001 Initial Access | T1585 Establish Accounts";
-    }
-    else if(indicators.includes("scam")){
-        type = currentLang==="ar"?"احتيال":"Scam";
-        mitre = "TA0001 | T1566 Phishing";
-    }
+    if(score>100) score=100;
 
     document.getElementById("score").innerText = score;
-    document.getElementById("bar").style.width = score + "%";
-    document.getElementById("type").innerText = "Type: " + type;
-    document.getElementById("mitre").innerText = "MITRE: " + mitre;
+    document.getElementById("bar").style.width=score+"%";
 
-    let status = document.getElementById("status");
-    let rec = document.getElementById("rec");
+    let status=document.getElementById("status");
+    let rec=document.getElementById("rec");
 
-    if(score > 30){
+    if(score>30){
         document.body.classList.add("danger-mode");
         status.innerText = currentLang==="ar"?"غير آمن":"UNSAFE";
-        rec.innerText = currentLang==="ar"?
-        "لا تضغط الروابط ولا تدخل بياناتك":
-        "Do not click links or enter data";
-        matrixColor = "#ff0033";
+        rec.innerText = currentLang==="ar"?"لا تضغط الروابط ولا تدخل بياناتك":"Do not click links or enter data";
+        matrixColor="#ff0033";
     } else {
         document.body.classList.remove("danger-mode");
         status.innerText = currentLang==="ar"?"آمن":"SAFE";
-        rec.innerText = currentLang==="ar"?
-        "لا يوجد تهديد واضح":
-        "No clear threat";
-        matrixColor = "#00ffcc";
+        rec.innerText = currentLang==="ar"?"لا يوجد تهديد واضح":"No clear threat";
+        matrixColor="#00ffcc";
     }
 
-    if(audioEnabled){
-        setTimeout(readFullResult, 500);
-    }
+    if(audioEnabled){ setTimeout(readFullResult,500); }
 }
 
-// 🔊 صوت ذكي شامل
 function readFullResult(){
-    let score = document.getElementById("score").innerText;
-    let type = document.getElementById("type").innerText;
-    let rec = document.getElementById("rec").innerText;
-
-    let text;
-
-    if(currentLang==="ar"){
-        text = `النتيجة ${score} بالمئة. ${type}. ${rec}`;
-    } else {
-        text = `Risk is ${score} percent. ${type}. ${rec}`;
-    }
-
-    speak(text);
+    let score=document.getElementById("score").innerText;
+    let rec=document.getElementById("rec").innerText;
+    let resultText=score>30?(currentLang==="ar"?"غير آمن":"UNSAFE"):(currentLang==="ar"?"آمن":"SAFE");
+    speak(`${resultText}. ${rec}`);
 }
 
-// 🌐 لغة
 function toggleLang(){
-    currentLang = currentLang === "ar" ? "en" : "ar";
-    msg.placeholder = currentLang==="ar"?"الصق الرسالة هنا":"Paste message";
-    document.getElementById("riskLabel").innerText = currentLang==="ar"?"درجة الخطر":"Risk";
+    currentLang = currentLang==="ar"?"en":"ar";
+    msg.placeholder=currentLang==="ar"?"الصق الرسالة هنا":"Paste message";
+    document.getElementById("riskLabel").innerText=currentLang==="ar"?"درجة الخطر":"Risk";
     speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
 }
 
-// 🟢 MATRIX
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 
-const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const fontSize = 14;
-const columns = canvas.width / fontSize;
-const drops = [];
+const letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const fontSize=14;
+const columns=canvas.width/fontSize;
+const drops=[];
 
-for(let i=0; i<columns; i++){ drops[i] = 1; }
+for(let i=0;i<columns;i++){drops[i]=1;}
 
-let matrixColor = "#00ffcc";
+let matrixColor="#00ffcc";
 
 function draw(){
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
+    ctx.fillStyle="rgba(0,0,0,0.05)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillStyle = matrixColor;
-    ctx.font = fontSize + "px monospace";
+    ctx.fillStyle=matrixColor;
+    ctx.font=fontSize+"px monospace";
 
-    for(let i=0; i<drops.length; i++){
-        let text = letters[Math.floor(Math.random()*letters.length)];
-        ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+    for(let i=0;i<drops.length;i++){
+        let text=letters[Math.floor(Math.random()*letters.length)];
+        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
 
-        if(drops[i]*fontSize > canvas.height && Math.random() > 0.975){
-            drops[i] = 0;
+        if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
+            drops[i]=0;
         }
         drops[i]++;
     }
 }
 
-setInterval(draw, 33);
+setInterval(draw,33);
 
 </script>
 
