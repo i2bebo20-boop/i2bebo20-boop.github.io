@@ -11,14 +11,14 @@ canvas{ position:fixed; top:0; left:0; z-index:-1; }
 .container{ text-align:center; margin-top:40px; padding-bottom: 50px; }
 h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; }
 .sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; }
-textarea{ width:85%; height:150px; background:rgba(0,0,0,0.6); border:2px solid var(--neon-green); border-radius:15px; padding:15px; color:var(--neon-green); box-shadow:0 0 15px var(--neon-green); font-size: 18px; outline: none; }
-.card{ width:85%; margin:25px auto; padding:20px; border-radius:15px; background:rgba(0,0,0,0.8); text-align: left; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); }
-.bar-container { width: 100%; height: 12px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.6s; }
-.mitre-mini, .incident-id { display: none; margin-top: 10px; font-weight: bold; }
-.recommendation-box { width: 85%; margin: 20px auto; padding: 15px; border: 1px solid var(--danger-red); border-radius: 10px; background: rgba(255, 0, 51, 0.1); color: white; display: none; text-align: left; border-left: 5px solid var(--danger-red); }
-button{ padding:12px 30px; border:2px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:25px; font-family: 'Orbitron'; font-weight: bold; transition: 0.3s; }
-button:hover { background: var(--neon-green); color: black; }
+textarea{ width:85%; height:130px; background:rgba(0,0,0,0.7); border:1px solid var(--neon-green); border-radius:15px; padding:20px; color:var(--neon-green); margin-top:10px; box-shadow:0 0 10px var(--neon-green); font-size: 18px; outline: none; }
+.card{ width:80%; margin:25px auto; padding:25px; border-radius:20px; background:rgba(0,0,0,0.7); box-shadow:0 0 20px var(--neon-green); text-align: left; }
+.bar-container { width: 100%; height: 10px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.4s; }
+.info-line { margin: 8px 0; font-size: 16px; }
+.recommendation-box { width: 80%; margin: 20px auto; padding: 15px; border: 1px solid var(--danger-red); border-radius: 10px; background: rgba(255, 0, 51, 0.1); color: white; display: none; text-align: left; }
+button{ padding:8px 20px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:10px; font-family: 'Orbitron'; }
+/* Danger Mode */
 .danger-mode { color: var(--danger-red); }
 .danger-mode textarea, .danger-mode .card, .danger-mode button { border-color: var(--danger-red); box-shadow: 0 0 15px var(--danger-red); }
 .danger-mode .bar { background: var(--danger-red); }
@@ -29,24 +29,24 @@ button:hover { background: var(--neon-green); color: black; }
 <canvas id="matrix"></canvas>
 
 <div class="container">
-    <h1 aria-label="Black Falcon SOC">🦅 BlackFalcon SOC</h1>
+    <h1>🦅 BlackFalcon SOC</h1>
     <div class="sub-title">Advanced Security Operations Platform</div>
 
-    <div style="margin-bottom: 20px;">
-        <button id="langBtn" onclick="toggleLang()" aria-live="polite">🌍 Language: Arabic</button>
+    <div style="margin-bottom: 15px;">
+        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
     </div>
 
-    <textarea id="msg" placeholder="الصق النص هنا للتحليل..." aria-label="Text analysis field"></textarea>
+    <textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
 
-    <div class="card" role="region" aria-labelledby="statusTitle">
-        <div style="font-size: 22px; font-weight: bold;" id="statusTitle">Threat Status: CLEAN</div>
-        <div class="risk-text">Risk Score: <span id="score">0</span>%</div>
+    <div class="card">
+        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
+        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
         <div class="bar-container"><div class="bar" id="bar"></div></div>
-        <div id="mitreLabel" class="mitre-mini">MITRE: T1566 - Phishing</div>
-        <div id="incidentLabel" class="incident-id">Incident ID: INC-943219</div>
+        <div class="info-line" id="mitreDiv" style="display:none;">MITRE: T1566 - Phishing</div>
+        <div class="info-line" id="incidentDiv" style="display:none;">Incident ID: INC-943219</div>
     </div>
 
-    <div id="recBox" class="recommendation-box" role="alert">
+    <div id="recBox" class="recommendation-box">
         <span id="recContent">⚠️ Recommendation: Do NOT click any links. Block sender and report immediately.</span>
     </div>
 </div>
@@ -56,32 +56,29 @@ let currentLang = "ar";
 let matrixColor = "#00ffcc";
 const msgInput = document.getElementById("msg");
 
-// --- وظيفة النطق الصوتي المحسنة ---
+// --- نظام النطق ---
 function speak(text) {
-    window.speechSynthesis.cancel(); 
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
-    utterance.rate = 0.95; // سرعة هادئة ومفهومة
-    utterance.pitch = 1.0;
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
 }
 
-// نطق عند التركيز على مربع النص
+// نطق عند دخول حقل النص
 msgInput.addEventListener("focus", () => {
-    let msg = (currentLang === "ar") ? "أنت الآن في حقل التحليل، قم بلصق الرسالة المشبوهة هنا" : "You are in the analysis field, paste the suspicious message here";
-    speak(msg);
+    let t = (currentLang === "ar") ? "أنت الآن في مربع إدخال النص" : "You are now in the text input field";
+    speak(t);
 });
 
-let lastStatus = "";
+let lastAlert = "";
 
 msgInput.addEventListener("input", () => {
     let text = msgInput.value.toLowerCase();
     let score = 0;
+    const keys = ["تحقق","كلمة المرور","بنك","password","otp","login","verify","urgent"];
     
-    // كلمات الفحص (يمكنك زيادة هذه القائمة)
-    const dangerKeys = ["تحقق","كلمة المرور","البنك","برجاء","password","otp","login","verify","urgent","account suspended"];
-    
-    dangerKeys.forEach(w => { if(text.includes(w)) score += 20; });
+    keys.forEach(k => { if(text.includes(k)) score += 25; });
     if(score > 100) score = 100;
 
     updateUI(score);
@@ -89,63 +86,63 @@ msgInput.addEventListener("input", () => {
 
 function updateUI(score) {
     const bar = document.getElementById("bar");
-    const scoreText = document.getElementById("score");
-    const statusTitle = document.getElementById("statusTitle");
+    const scoreVal = document.getElementById("score");
+    const statusLabel = document.getElementById("statusLabel");
+    const riskText = document.getElementById("riskText");
     const recBox = document.getElementById("recBox");
     const recContent = document.getElementById("recContent");
     const body = document.body;
 
-    scoreText.innerText = score;
+    scoreVal.innerText = score;
     bar.style.width = score + "%";
 
-    let currentStatusText = "";
-    let recommendationText = "";
+    let statusMsg = "";
+    let voiceMsg = "";
 
     if(score > 30) {
         body.classList.add("danger-mode");
         matrixColor = "#ff0033";
-        statusTitle.innerText = (currentLang === "ar") ? "حالة التهديد: خطر مرتفع" : "Threat Status: HIGH RISK";
         
-        currentStatusText = (currentLang === "ar") ? `تحذير! حالة التهديد خطر مرتفع. نسبة الخطر هي ${score} بالمئة.` : `Warning! High risk threat detected. Risk score is ${score} percent.`;
+        statusLabel.innerText = (currentLang === "ar") ? "حالة التهديد: غير آمن" : "Threat Status: UNSAFE";
+        riskText.innerText = (currentLang === "ar") ? "درجة الخطر:" : "Risk Score:";
         
-        recommendationText = (currentLang === "ar") ? "التوصية الأمنية: لا تقرأ الرسالة ولا تضغط على أي روابط. قم بحظر المرسل فوراً." : "Security Recommendation: Do not read the message or click any links. Block the sender immediately.";
+        let recText = (currentLang === "ar") ? "توصية: لا تضغط على الروابط وقم بحظر المرسل فوراً." : "Recommendation: Do NOT click links and block sender immediately.";
+        recContent.innerText = "⚠️ " + recText;
         
-        recContent.innerText = recommendationText;
-        document.getElementById("mitreLabel").style.display = "block";
-        document.getElementById("incidentLabel").style.display = "block";
+        document.getElementById("mitreDiv").style.display = "block";
+        document.getElementById("incidentDiv").style.display = "block";
         recBox.style.display = "block";
 
+        voiceMsg = (currentLang === "ar") ? "تحذير، الحالة غير آمنة. " + recText : "Warning, status is unsafe. " + recText;
     } else {
         body.classList.remove("danger-mode");
         matrixColor = "#00ffcc";
-        statusTitle.innerText = (currentLang === "ar") ? "حالة التهديد: آمن" : "Threat Status: CLEAN";
-        currentStatusText = (currentLang === "ar") ? "الحالة آمنة حالياً." : "The status is currently safe.";
+        statusLabel.innerText = (currentLang === "ar") ? "حالة التهديد: آمن" : "Threat Status: CLEAN";
+        riskText.innerText = (currentLang === "ar") ? "درجة الخطر:" : "Risk Score:";
         
-        document.getElementById("mitreLabel").style.display = "none";
-        document.getElementById("incidentLabel").style.display = "none";
+        document.getElementById("mitreDiv").style.display = "none";
+        document.getElementById("incidentDiv").style.display = "none";
         recBox.style.display = "none";
+        
+        voiceMsg = (currentLang === "ar") ? "الحالة آمنة." : "Status is safe.";
     }
 
-    // نطق الحالة والتوصية عند التغير
-    if(currentStatusText !== lastStatus && msgInput.value.length > 2) {
-        // نطق الحالة ثم التوصية (إذا كانت موجودة)
-        let fullVoiceOutput = currentStatusText + " " + (score > 30 ? recommendationText : "");
-        speak(fullVoiceOutput);
-        lastStatus = currentStatusText;
+    if(voiceMsg !== lastAlert && msgInput.value.length > 3) {
+        speak(voiceMsg);
+        lastAlert = voiceMsg;
     }
 }
 
 function toggleLang() {
     currentLang = (currentLang === "ar") ? "en" : "ar";
-    const btn = document.getElementById("langBtn");
-    btn.innerText = (currentLang === "ar") ? "🌍 Language: Arabic" : "🌍 Language: English";
-    msgInput.placeholder = (currentLang === "ar") ? "الصق النص هنا..." : "Paste text here...";
+    msgInput.placeholder = (currentLang === "ar") ? "الصق الرسالة هنا" : "Paste message here";
+    updateUI(document.getElementById("score").innerText); // تحديث النصوص فوراً
     
-    let langMsg = (currentLang === "ar") ? "تم تحويل الواجهة للغة العربية" : "Interface switched to English";
-    speak(langMsg);
+    let m = (currentLang === "ar") ? "تم تغيير اللغة للعربية" : "Language changed to English";
+    speak(m);
 }
 
-// Matrix Animation
+// Matrix
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
