@@ -150,28 +150,30 @@ function speak(text){
     }, 800);
 }
 
-// 👆 تفعيل الصوت عند المرور أو التركيز
+// 👆 تفعيل الصوت عند الضغط أو التركيز على مربع النص
 let msg = document.getElementById("msg");
 
-msg.addEventListener("mouseenter", enableAudio);
-msg.addEventListener("focus", enableAudio);
-
-function enableAudio(){
+msg.addEventListener("focus", () => {
     if(!audioEnabled){
         audioEnabled = true;
         let unlock = new SpeechSynthesisUtterance(" ");
         unlock.volume = 0;
         speechSynthesis.speak(unlock);
-
-        if(currentLang==="ar"){
-            speak("أنت الآن في مربع إدخال النص");
-        }else{
-            speak("You are now in the text input field");
-        }
-
-        setTimeout(readFullResult, 1000);
     }
-}
+
+    // يقول للمستخدم انه في مربع النص
+    if(currentLang==="ar"){
+        speak("أنت الآن في مربع إدخال النص");
+    } else {
+        speak("You are now in the text input field");
+    }
+});
+
+// 🔄 تحليل بعد توقف الكتابة
+msg.addEventListener("input", () => {
+    clearTimeout(analyzeTimer);
+    analyzeTimer = setTimeout(analyze, 1000); // ينتظر ثانية بعد آخر كتابة قبل التحليل
+});
 
 // 🌐 نصوص اللغة
 const lang = {
@@ -198,12 +200,6 @@ function readFullResult(){
 // ⚠️ كلمات التحليل
 const high = ["password","otp","bank","crypto","bitcoin","كلمة المرور","تحقق","تحقق من حسابك البنكي","bank verification","verify your bank","verify your account","bank account suspended"];
 const medium = ["http","https","bit.ly","click","urgent","login","account","اضغط"];
-
-// 🔄 تحليل مع تأخير لتجنب تداخل الصوت
-msg.addEventListener("input", () => {
-    clearTimeout(analyzeTimer);
-    analyzeTimer = setTimeout(analyze, 1000); // تأخير 1 ثانية
-});
 
 function analyze(){
     let text = msg.value.toLowerCase();
