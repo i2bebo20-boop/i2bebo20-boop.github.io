@@ -39,8 +39,8 @@ font-size:40px;
 text-shadow:0 0 15px var(--neon-green);
 }
 
-.lang-btn{
-margin-top:10px;
+.danger-mode h1{
+text-shadow:0 0 20px var(--danger-red);
 }
 
 textarea{
@@ -83,7 +83,7 @@ cursor:pointer;
 border-radius:10px;
 }
 
-/* 🔴 وضع الخطر */
+/* وضع الخطر */
 .danger-mode{
 color:var(--danger-red);
 }
@@ -99,6 +99,15 @@ box-shadow:0 0 15px var(--danger-red);
 background:var(--danger-red);
 }
 
+/* اهتزاز */
+@keyframes shake{
+0%{transform:translateX(0);}
+25%{transform:translateX(-5px);}
+50%{transform:translateX(5px);}
+75%{transform:translateX(-5px);}
+100%{transform:translateX(0);}
+}
+
 </style>
 </head>
 
@@ -110,15 +119,13 @@ background:var(--danger-red);
 
 <h1>🦅 BlackFalcon SOC</h1>
 
-<div class="lang-btn">
-<button id="langBtn" onclick="toggleLang()">AR / EN</button>
-</div>
+<button onclick="toggleLang()">AR / EN</button>
 
-<textarea id="msg"></textarea>
+<textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
 
 <div class="card">
 <div id="status">—</div>
-<div id="riskLabel">Risk</div>
+<div id="riskLabel">درجة الخطر</div>
 <div><span id="score">0</span>%</div>
 <div class="bar" id="bar"></div>
 <div id="type">Type: —</div>
@@ -132,55 +139,39 @@ background:var(--danger-red);
 <script>
 
 let currentLang="ar";
+let lastStatus="";
 
-/* 🔊 إعداد الصوت */
+/* صوت */
 let speakTimer;
 let audioEnabled=false;
 
 function speak(text){
-
 if(!audioEnabled) return;
 
 clearTimeout(speakTimer);
 
 speakTimer=setTimeout(()=>{
-
 speechSynthesis.cancel();
-
 let u=new SpeechSynthesisUtterance(text);
 u.lang=currentLang==="ar"?"ar-SA":"en-US";
 u.rate=0.9;
-
 speechSynthesis.speak(u);
-
 },800);
 }
 
-/* 👆 تفعيل الصوت عند الضغط على مربع النص */
+/* تفعيل الصوت */
 let msg=document.getElementById("msg");
 
 msg.addEventListener("focus",()=>{
-
 if(!audioEnabled){
 audioEnabled=true;
-
-/* حل Safari */
 let unlock=new SpeechSynthesisUtterance(" ");
 unlock.volume=0;
 speechSynthesis.speak(unlock);
 }
-
-if(currentLang==="ar"){
-speak("أنت الآن في مربع إدخال النص");
-}else{
-speak("You are now in the text input field");
-}
-
-setTimeout(readFullResult,1000);
-
 });
 
-/* 🌐 لغة */
+/* اللغة */
 const lang={
 ar:{
 placeholder:"الصق الرسالة هنا",
@@ -200,82 +191,100 @@ recDanger:"Do not interact"
 }
 };
 
-/* 🧠 قراءة النتيجة */
-function readFullResult(){
-
-let score=document.getElementById("score").innerText;
-let status=document.getElementById("status").innerText;
-let rec=document.getElementById("rec").innerText;
-
-let text;
-
-if(currentLang==="ar"){
-text=`النتيجة ${status}. نسبة الخطر ${score} بالمئة. التوصية ${rec}`;
-}else{
-text=`Result is ${status}. Risk is ${score} percent. Recommendation ${rec}`;
-}
-
-speak(text);
-}
-
 /* تحليل */
-const high=[
-"password","otp","bank","crypto","bitcoin",
-"كلمة المرور","تحقق",
-"تحقق من حسابك البنكي",
-"bank verification",
-"verify your bank",
-"verify your account",
-"bank account suspended"
-];
-
-const medium=[
-"http","https","bit.ly","click","urgent","login","account","اضغط"
-];
-
-msg.addEventListener("input",analyze);
-
 function analyze(){
 
 let text=msg.value.toLowerCase();
 let score=0;
 
-/* حساب */
+const high=["password","otp","bank","crypto","bitcoin","verify","account suspended","كلمة المرور","تحقق"];
+const medium=["http","https","bit.ly","click","urgent","login","account","اضغط"];
+
 high.forEach(w=>{ if(text.includes(w)) score+=25; });
 medium.forEach(w=>{ if(text.includes(w)) score+=15; });
 
+let links=(text.match(/http/g)||[]).length;
+if(links>=2) score+=20;
+
+if(text.includes("@") && text.includes(".")) score+=10;
+
+if(text.includes("urgent") || text.includes("فوراً")) score+=10;
+
 if(score>100) score=100;
 
-document.getElementById("score").innerText=score;
-document.getElementById("bar").style.width=score+"%";
+document.getElementById("score").innerText = score;
+document.getElementById("bar").style.width = score + "%";
 
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 
+let typeBox=document.getElementById("type");
+let mitreBox=document.getElementById("mitre");
+
+/* تصنيف */
+let type="Unknown";
+let mitre="—";
+
+if(text.includes("otp") || text.includes("password")){
+type="Phishing";
+mitre="T1566";
+}
+else if(text.includes("crypto") || text.includes("bitcoin")){
+type="Scam";
+mitre="T1648";
+}
+else if(text.includes("http")){
+type="Suspicious Link";
+mitre="T1204";
+}
+
+typeBox.innerText="Type: "+type;
+mitreBox.innerText="MITRE: "+mitre;
+
+/* الحالة */
+let newStatus = score > 30 ? "danger" : "safe";
+
+if(newStatus !== lastStatus){
+
 if(score>30){
-
 document.body.classList.add("danger-mode");
-
 status.innerHTML="<span class='danger'>"+lang[currentLang].danger+"</span>";
 rec.innerText=lang[currentLang].recDanger;
-
 speak(lang[currentLang].danger);
 
+if(score>60){
+document.body.style.animation="shake 0.3s";
+setTimeout(()=>{document.body.style.animation=""},300);
+}
+
 }else{
-
 document.body.classList.remove("danger-mode");
-
 status.innerHTML="<span class='safe'>"+lang[currentLang].safe+"</span>";
 rec.innerText=lang[currentLang].recSafe;
-
 speak(lang[currentLang].safe);
+}
+
+lastStatus = newStatus;
+}
+
+/* حفظ سجل */
+saveLog(msg.value,score,type);
 
 }
 
-/* قراءة بعد التحليل */
-if(audioEnabled){
-setTimeout(readFullResult,800);
-}
+/* logs */
+function saveLog(message,score,type){
+
+let logs=JSON.parse(localStorage.getItem("soc_logs")||"[]");
+
+logs.unshift({
+msg:message,
+score:score,
+type:type,
+time:new Date().toLocaleString()
+});
+
+localStorage.setItem("soc_logs",JSON.stringify(logs.slice(0,20)));
 
 }
 
@@ -291,7 +300,9 @@ speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
 
 }
 
-/* 🟢 MATRIX */
+msg.addEventListener("input",analyze);
+
+/* MATRIX */
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
 
