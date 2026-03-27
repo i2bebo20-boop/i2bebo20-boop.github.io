@@ -7,12 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-
 :root{
 --neon-green:#00ffcc;
 --danger-red:#ff0033;
 }
-
 body{
 margin:0;
 background:black;
@@ -21,28 +19,23 @@ font-family:'Orbitron',sans-serif;
 overflow:hidden;
 transition:0.4s;
 }
-
 canvas{
 position:fixed;
 top:0;
 left:0;
 z-index:-1;
 }
-
 .container{
 text-align:center;
 margin-top:60px;
 }
-
 h1{
 font-size:40px;
 text-shadow:0 0 15px var(--neon-green);
 }
-
 .lang-btn{
 margin-top:10px;
 }
-
 textarea{
 width:80%;
 height:130px;
@@ -54,7 +47,6 @@ color:var(--neon-green);
 margin-top:20px;
 box-shadow:0 0 10px var(--neon-green);
 }
-
 .card{
 width:80%;
 margin:30px auto;
@@ -63,17 +55,14 @@ border-radius:20px;
 background:rgba(0,0,0,0.7);
 box-shadow:0 0 20px var(--neon-green);
 }
-
 .bar{
 height:10px;
 background:var(--neon-green);
 width:0%;
 transition:0.4s;
 }
-
 .safe{color:#00ff88;}
 .danger{color:var(--danger-red);}
-
 button{
 padding:8px 15px;
 border:1px solid var(--neon-green);
@@ -82,23 +71,18 @@ color:var(--neon-green);
 cursor:pointer;
 border-radius:10px;
 }
-
-/* 🔴 وضع الخطر */
 .danger-mode{
 color:var(--danger-red);
 }
-
 .danger-mode textarea,
 .danger-mode .card,
 .danger-mode button{
 border-color:var(--danger-red);
 box-shadow:0 0 15px var(--danger-red);
 }
-
 .danger-mode .bar{
 background:var(--danger-red);
 }
-
 </style>
 </head>
 
@@ -136,10 +120,8 @@ let speakTimer;
 let analyzeTimer;
 let audioEnabled = false;
 
-// 🔊 دالة الصوت
 function speak(text){
     if(!audioEnabled) return;
-
     clearTimeout(speakTimer);
     speakTimer = setTimeout(() => {
         speechSynthesis.cancel();
@@ -147,10 +129,9 @@ function speak(text){
         u.lang = currentLang === "ar" ? "ar-SA" : "en-US";
         u.rate = 0.9;
         speechSynthesis.speak(u);
-    }, 800);
+    }, 600);
 }
 
-// 👆 تفعيل الصوت عند الضغط أو التركيز على مربع النص
 let msg = document.getElementById("msg");
 
 msg.addEventListener("focus", () => {
@@ -160,43 +141,88 @@ msg.addEventListener("focus", () => {
         unlock.volume = 0;
         speechSynthesis.speak(unlock);
     }
-
-    // يقول للمستخدم انه في مربع النص مرة وحدة فقط
-    if(currentLang==="ar"){
-        speak("أنت الآن في مربع إدخال النص");
-    } else {
-        speak("You are now in the text input field");
-    }
+    speak(currentLang==="ar"?"أنت الآن في مربع إدخال النص":"You are now in the text input field");
 });
 
-// 🌐 نصوص اللغة
-const lang = {
-    ar:{ placeholder:"الصق الرسالة هنا", risk:"درجة الخطر", safe:"✔️ آمن", danger:"⚠️ تهديد", recSafe:"لا يوجد تهديد", recDanger:"لا تتفاعل مع الرسالة" },
-    en:{ placeholder:"Paste message", risk:"Risk", safe:"✔️ SAFE", danger:"⚠️ THREAT", recSafe:"No threat detected", recDanger:"Do not interact" }
-};
-
-// ⚠️ كلمات التحليل
-const high = ["password","otp","bank","crypto","bitcoin","كلمة المرور","تحقق","تحقق من حسابك البنكي","bank verification","verify your bank","verify your account","bank account suspended"];
-const medium = ["http","https","bit.ly","click","urgent","login","account","اضغط"];
-
-// 🔄 تحليل بعد توقف الكتابة
+// 🧠 تحليل فعلي (pattern + behavior + context)
 msg.addEventListener("input", () => {
     clearTimeout(analyzeTimer);
-    analyzeTimer = setTimeout(analyze, 1000); // ينتظر ثانية بعد آخر كتابة قبل التحليل
+    analyzeTimer = setTimeout(analyze, 1000);
 });
 
-// 🧠 تحليل الرسالة
 function analyze(){
     let text = msg.value.toLowerCase();
     let score = 0;
+    let indicators = [];
 
-    high.forEach(w => { if(text.includes(w)) score += 25; });
-    medium.forEach(w => { if(text.includes(w)) score += 15; });
+    // 🔍 اكتشاف روابط مشبوهة
+    if(text.match(/http|bit\.ly|tinyurl|t\.co/)){
+        score += 20;
+        indicators.push("link");
+    }
+
+    // 🔍 كلمات حساسة
+    if(text.match(/password|otp|verify|login|كلمة المرور|رمز/)){
+        score += 25;
+        indicators.push("credential");
+    }
+
+    // 🔍 ضغط واستعجال
+    if(text.match(/urgent|immediately|now|حالاً|فوراً/)){
+        score += 15;
+        indicators.push("urgency");
+    }
+
+    // 🔍 فلوس / بنك
+    if(text.match(/bank|iban|credit|visa|paypal|بنك|بطاقة/)){
+        score += 25;
+        indicators.push("financial");
+    }
+
+    // 🔍 جوائز وهمية
+    if(text.match(/winner|prize|gift|free|ربحت/)){
+        score += 20;
+        indicators.push("scam");
+    }
+
+    // 🔍 انتحال
+    if(text.match(/absher|nafath|dhl|aramex|apple|google|حكومي/)){
+        score += 20;
+        indicators.push("impersonation");
+    }
+
+    // 🎯 تحليل ذكي بالسياق
+    if(indicators.includes("link") && indicators.includes("credential")){
+        score += 20;
+    }
 
     if(score > 100) score = 100;
 
+    // 🎯 تحديد نوع الهجوم
+    let type = "—";
+    let mitre = "—";
+
+    if(indicators.includes("financial")){
+        type = currentLang==="ar"?"احتيال مالي":"Financial Phishing";
+        mitre = "TA0001 → Initial Access | T1566.002 Phishing Link → T1056 Credential Harvesting";
+    }
+    else if(indicators.includes("credential")){
+        type = currentLang==="ar"?"سرقة بيانات":"Credential Theft";
+        mitre = "TA0006 → Credential Access | T1110 Brute Force / T1556 Modify Auth";
+    }
+    else if(indicators.includes("impersonation")){
+        type = currentLang==="ar"?"انتحال جهة":"Impersonation Attack";
+        mitre = "TA0001 Initial Access | T1585 Establish Accounts";
+    }
+    else if(indicators.includes("scam")){
+        type = currentLang==="ar"?"احتيال":"Scam";
+        mitre = "TA0001 | T1566 Phishing";
+    }
+
     document.getElementById("score").innerText = score;
     document.getElementById("bar").style.width = score + "%";
+    document.getElementById("type").innerText = "Type: " + type;
+    document.getElementById("mitre").innerText = "MITRE: " + mitre;
 
     let status = document.getElementById("status");
     let rec = document.getElementById("rec");
@@ -204,37 +230,46 @@ function analyze(){
     if(score > 30){
         document.body.classList.add("danger-mode");
         status.innerText = currentLang==="ar"?"غير آمن":"UNSAFE";
-        rec.innerText = lang[currentLang].recDanger;
+        rec.innerText = currentLang==="ar"?
+        "لا تضغط الروابط ولا تدخل بياناتك":
+        "Do not click links or enter data";
         matrixColor = "#ff0033";
     } else {
         document.body.classList.remove("danger-mode");
         status.innerText = currentLang==="ar"?"آمن":"SAFE";
-        rec.innerText = lang[currentLang].recSafe;
+        rec.innerText = currentLang==="ar"?
+        "لا يوجد تهديد واضح":
+        "No clear threat";
         matrixColor = "#00ffcc";
     }
 
-    // قراءة النتيجة مرة واحدة فقط بعد التحليل
     if(audioEnabled){
         setTimeout(readFullResult, 500);
     }
 }
 
-// 🧠 دالة قراءة النتيجة والتوصية مرة واحدة فقط
+// 🔊 صوت ذكي شامل
 function readFullResult(){
     let score = document.getElementById("score").innerText;
+    let type = document.getElementById("type").innerText;
     let rec = document.getElementById("rec").innerText;
 
-    let resultText = score > 30 ? (currentLang==="ar"?"غير آمن":"UNSAFE") : (currentLang==="ar"?"آمن":"SAFE");
+    let text;
 
-    let finalText = `${resultText}. ${rec}`;
-    speak(finalText);
+    if(currentLang==="ar"){
+        text = `النتيجة ${score} بالمئة. ${type}. ${rec}`;
+    } else {
+        text = `Risk is ${score} percent. ${type}. ${rec}`;
+    }
+
+    speak(text);
 }
 
-// 🌐 تغيير اللغة
+// 🌐 لغة
 function toggleLang(){
     currentLang = currentLang === "ar" ? "en" : "ar";
-    msg.placeholder = lang[currentLang].placeholder;
-    document.getElementById("riskLabel").innerText = lang[currentLang].risk;
+    msg.placeholder = currentLang==="ar"?"الصق الرسالة هنا":"Paste message";
+    document.getElementById("riskLabel").innerText = currentLang==="ar"?"درجة الخطر":"Risk";
     speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
 }
 
@@ -252,7 +287,7 @@ const drops = [];
 
 for(let i=0; i<columns; i++){ drops[i] = 1; }
 
-let matrixColor = "#00ffcc"; // اللون الافتراضي للماتريكس
+let matrixColor = "#00ffcc";
 
 function draw(){
     ctx.fillStyle = "rgba(0,0,0,0.05)";
