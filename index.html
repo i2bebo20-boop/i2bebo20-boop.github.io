@@ -19,7 +19,7 @@ background:black;
 color:var(--neon-green);
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
-transition:0.4s;
+transition:0.3s;
 }
 
 canvas{
@@ -64,7 +64,7 @@ box-shadow:0 0 20px var(--neon-green);
 height:10px;
 background:var(--neon-green);
 width:0%;
-transition:0.4s;
+transition:0.3s;
 }
 
 .safe{color:#00ff88;}
@@ -79,14 +79,13 @@ cursor:pointer;
 border-radius:10px;
 }
 
-/* 🔴 وضع الخطر */
+/* 🔴 فقط وقت الخطر */
 .danger-mode{
 color:var(--danger-red);
 }
 
 .danger-mode textarea,
-.danger-mode .card,
-.danger-mode button{
+.danger-mode .card{
 border-color:var(--danger-red);
 box-shadow:0 0 15px var(--danger-red);
 }
@@ -106,7 +105,7 @@ background:var(--danger-red);
 
 <h1>🦅 BlackFalcon SOC</h1>
 
-<button id="langBtn" onclick="toggleLang()">AR / EN</button>
+<button onclick="toggleLang()">AR / EN</button>
 
 <textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
 
@@ -125,80 +124,27 @@ background:var(--danger-red);
 
 <script>
 
-/* 🌐 اللغة */
+/* 🌐 */
 let currentLang="ar";
 
-/* 🔊 الصوت الذكي */
+/* 🔊 صوت */
 let audioEnabled=false;
-let lastSpoken="";
 
-function speak(text,instant=false){
-
+function speak(text){
 if(!audioEnabled) return;
-if(text===lastSpoken) return;
-
-lastSpoken=text;
-
-const run=()=>{
 speechSynthesis.cancel();
-
 let u=new SpeechSynthesisUtterance(text);
 u.lang=currentLang==="ar"?"ar-SA":"en-US";
-u.rate=0.95;
 speechSynthesis.speak(u);
-};
-
-if(instant){run();}else{setTimeout(run,400);}
-
 }
 
-function enableAudio(){
-
-if(audioEnabled) return;
-
-audioEnabled=true;
-
-let unlock=new SpeechSynthesisUtterance(" ");
-unlock.volume=0;
-speechSynthesis.speak(unlock);
-
-}
-
-/* 👆 عند الضغط */
-let msg=document.getElementById("msg");
-
+/* تفعيل */
 msg.addEventListener("focus",()=>{
-
-enableAudio();
-
-speak(currentLang==="ar"?"مربع إدخال النص":"Text input field",true);
-
+audioEnabled=true;
+speak(currentLang==="ar"?"مربع إدخال النص":"Text input field");
 });
 
-/* 🖱️ Hover */
-function hover(el,ar,en){
-
-el.addEventListener("mouseenter",()=>{
-if(!audioEnabled) return;
-speak(currentLang==="ar"?ar:en);
-});
-
-}
-
-hover(msg,"مربع إدخال النص","Text input field");
-hover(langBtn,"زر تغيير اللغة","Language button");
-hover(status,"حالة التهديد","Threat status");
-hover(score,"نسبة الخطر","Risk percentage");
-hover(rec,"التوصيات","Recommendations");
-
-/* 🧠 كلمات */
-const patterns={
-phishing:["verify","account","bank","otp","كلمة المرور","تحقق","bank suspended"],
-malware:["download","apk","exe","virus","malware"],
-scam:["win","prize","gift","تهانينا","جائزة"]
-};
-
-/* 🎯 تحليل */
+/* 🧠 تحليل قوي */
 msg.addEventListener("input",analyze);
 
 function analyze(){
@@ -208,34 +154,67 @@ let score=0;
 let type="Safe";
 let mitre="None";
 
-/* تحليل ذكي */
-for(let t in patterns){
+/* كلمات خطيرة */
+const high=["password","otp","bank","verify","login","كلمة المرور","تحقق"];
+high.forEach(w=>{ if(text.includes(w)) score+=25; });
 
-patterns[t].forEach(w=>{
-if(text.includes(w)){
-score+=25;
-type=t;
+/* روابط */
+let urlRegex=/(https?:\/\/[^\s]+)/g;
+let urls=text.match(urlRegex);
+
+if(urls){
+
+urls.forEach(url=>{
+
+score+=20;
+
+/* روابط مختصرة */
+if(url.includes("bit.ly")||url.includes("tinyurl")){
+score+=30;
+type="phishing";
 }
+
+/* دومين غريب */
+if(url.match(/\.(ru|xyz|tk|ml)/)){
+score+=25;
+type="phishing";
+}
+
+/* خداع */
+if(url.includes("paypal")||url.includes("bank")){
+score+=25;
+type="phishing";
+}
+
 });
 
 }
 
-/* روابط */
-if(text.includes("http")) score+=15;
+/* كلمات نصب */
+if(text.includes("win")||text.includes("prize")||text.includes("جائزة")){
+score+=20;
+type="scam";
+}
+
+/* malware */
+if(text.includes("apk")||text.includes("exe")){
+score+=30;
+type="malware";
+}
 
 if(score>100) score=100;
 
-/* تحديد MITRE */
+/* MITRE */
 if(type==="phishing") mitre="T1566";
 if(type==="malware") mitre="T1204";
 if(type==="scam") mitre="T1656";
 
 /* عرض */
-scoreEl.innerText=score;
+score.innerText=score;
 bar.style.width=score+"%";
 
-typeEl.innerText="Type: "+type;
-mitreEl.innerText="MITRE: "+mitre;
+document.getElementById("type").innerText="Type: "+type;
+document.getElementById("mitre").innerText="MITRE: "+mitre;
 
 /* حالة */
 if(score>30){
@@ -245,7 +224,7 @@ document.body.classList.add("danger-mode");
 status.innerHTML="<span class='danger'>⚠️ THREAT</span>";
 rec.innerText="Do not interact";
 
-speak("Threat detected",true);
+speak("Threat detected");
 
 }else{
 
@@ -254,53 +233,26 @@ document.body.classList.remove("danger-mode");
 status.innerHTML="<span class='safe'>✔ SAFE</span>";
 rec.innerText="No threat";
 
-speak("Safe",true);
+speak("Safe");
 
 }
 
-/* قراءة كاملة */
-setTimeout(readFull,800);
-
 }
 
-/* قراءة */
-function readFull(){
-
-let s=status.innerText;
-let r=rec.innerText;
-let sc=score.innerText;
-
-let text;
-
-if(currentLang==="ar"){
-text=`الحالة ${s} نسبة الخطر ${sc} بالمئة التوصية ${r}`;
-}else{
-text=`Status ${s} risk ${sc} percent recommendation ${r}`;
-}
-
-speak(text);
-
-}
-
-/* 🌐 تغيير اللغة */
+/* 🌐 */
 function toggleLang(){
-
 currentLang=currentLang==="ar"?"en":"ar";
-
 msg.placeholder=currentLang==="ar"?"الصق الرسالة":"Paste message";
-
-speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed",true);
-
 }
 
-/* 🟢 MATRIX */
+/* MATRIX */
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
 
 canvas.width=innerWidth;
 canvas.height=innerHeight;
 
-let letters="01ABCDEF";
+let letters="01ABC";
 let drops=[];
 
 for(let i=0;i<canvas.width/14;i++){drops[i]=1;}
@@ -314,7 +266,7 @@ ctx.fillStyle=document.body.classList.contains("danger-mode")?"#ff0033":"#00ffcc
 
 for(let i=0;i<drops.length;i++){
 
-let t=letters[Math.floor(Math.random()*letters.length)];
+let t=letters[Math.random()*letters.length|0];
 ctx.fillText(t,i*14,drops[i]*14);
 
 if(drops[i]*14>canvas.height && Math.random()>0.975){
