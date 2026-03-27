@@ -83,13 +83,23 @@ box-shadow:0 0 15px var(--danger-red);
 .danger-mode .bar{
 background:var(--danger-red);
 }
+#mitreSection{
+width:80%;
+margin:20px auto;
+padding:20px;
+border-radius:20px;
+background:rgba(0,0,0,0.7);
+box-shadow:0 0 20px var(--neon-green);
+display:none;
+text-align:left;
+}
 table{
-color:var(--neon-green);
 width:100%;
 border-collapse:collapse;
+color:var(--neon-green);
 }
 th, td{
-padding:5px;
+padding:8px;
 border-bottom:1px solid var(--neon-green);
 text-align:left;
 }
@@ -116,15 +126,13 @@ text-align:left;
 <div><span id="score">0</span>%</div>
 <div class="bar" id="bar"></div>
 <div id="type">Type: —</div>
-<div id="mitre">MITRE: —</div>
 </div>
 
 <div id="rec"></div>
 
-<!-- MITRE ATT&CK Section -->
-<div id="mitreSection" style="margin-top:20px;text-align:left;display:none;">
-<h3 style="color:var(--neon-green)">MITRE ATT&CK Analysis</h3>
-<table id="mitreTable">
+<div id="mitreSection">
+<h3>MITRE ATT&CK Analysis</h3>
+<table>
 <thead>
 <tr>
 <th>Technique</th>
@@ -132,14 +140,14 @@ text-align:left;
 <th>Detection / Mitigation</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="mitreTableBody">
+</tbody>
 </table>
 </div>
 
 </div>
 
 <script>
-
 let currentLang = "ar";
 let speakTimer;
 let analyzeTimer;
@@ -169,7 +177,7 @@ msg.addEventListener("focus", () => {
     speak(currentLang==="ar"?"أنت الآن في مربع إدخال النص":"You are now in the text input field");
 });
 
-// 🧠 كلمات التحليل الأصلية كما أعطيتها
+// 🧠 كلمات التحليل كما أعطيتيني بدون أي تعديل
 const high = [
 "password","otp","bank","crypto","bitcoin","كلمة المرور","تحقق","تحقق من حسابك البنكي",
 "bank verification","verify your bank","verify your account","bank account suspended",
@@ -241,7 +249,7 @@ function analyze(){
     let status=document.getElementById("status");
     let rec=document.getElementById("rec");
     const mitreSection = document.getElementById("mitreSection");
-    const mitreTableBody = document.querySelector("#mitreTable tbody");
+    const mitreTableBody = document.getElementById("mitreTableBody");
 
     if(score>30){
         document.body.classList.add("danger-mode");
@@ -249,29 +257,28 @@ function analyze(){
         rec.innerText = currentLang==="ar"?"لا تضغط الروابط ولا تدخل بياناتك":"Do not click links or enter data";
         matrixColor="#ff0033";
         mitreSection.style.display="block";
+
+        // MITRE الاحترافي
+        const techniques = [
+            {name:"Phishing (T1566)",desc:"رسائل بريد إلكتروني أو رسائل مزيفة تحاول خداع المستخدم لإدخال بياناته الشخصية أو المالية.",detect:"تفعيل المصادقة متعددة العوامل، تدريب المستخدم على التصيد الاحتيالي."},
+            {name:"Spear Phishing (T1192)",desc:"هجمات تصيد موجهة تستهدف أشخاص محددين بمعلومات دقيقة لجعل الرسائل مقنعة.",detect:"تحليل سلوك البريد الإلكتروني، مراقبة روابط مشبوهة."},
+            {name:"Credential Access (T1078)",desc:"محاولة سرقة بيانات الدخول مثل كلمات المرور والـOTP.",detect:"مراقبة محاولات الدخول غير المعتادة، استخدام كلمات مرور قوية ومحدثة."},
+            {name:"Malicious Links (T1204.001)",desc:"روابط تؤدي لمواقع احتيالية أو تحميل برامج ضارة.",detect:"فلترة URL، تحذير المستخدم قبل الضغط على الروابط."}
+        ];
+
+        mitreTableBody.innerHTML="";
+        techniques.forEach(t=>{
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${t.name}</td><td>${t.desc}</td><td>${t.detect}</td>`;
+            mitreTableBody.appendChild(row);
+        });
+
     } else {
         document.body.classList.remove("danger-mode");
         status.innerText = currentLang==="ar"?"آمن":"SAFE";
         rec.innerText = currentLang==="ar"?"لا يوجد تهديد واضح":"No clear threat";
         matrixColor="#00ffcc";
         mitreSection.style.display="none";
-    }
-
-    // MITRE ATT&CK Table
-    mitreTableBody.innerHTML="";
-    if(score>30){
-        const techniques = [
-            {name:"Phishing",desc:"رسائل مزيفة تحاول خداع المستخدم لإدخال بياناته الشخصية أو المالية.",detect:"مراقبة الروابط المشبوهة، التدريب على التوعية الأمنية."},
-            {name:"Spear Phishing",desc:"هجمات تصيد موجهة تستهدف أشخاص محددين بمعلومات دقيقة لجعل الرسائل مقنعة.",detect:"تحليل سلوك البريد الإلكتروني، تفعيل مصادقة متعددة العوامل."},
-            {name:"Credential Access",desc:"محاولة سرقة بيانات الدخول مثل كلمات المرور والـOTP.",detect:"مراقبة محاولات الدخول غير العادية، استخدام كلمات مرور قوية ومحدثة."},
-            {name:"Malicious Links",desc:"روابط تؤدي لمواقع احتيالية أو تحميل برامج ضارة.",detect:"فحص الروابط قبل الضغط، استخدام فلترة URL."}
-        ];
-
-        techniques.forEach(t=>{
-            const row = document.createElement("tr");
-            row.innerHTML = `<td>${t.name}</td><td>${t.desc}</td><td>${t.detect}</td>`;
-            mitreTableBody.appendChild(row);
-        });
     }
 
     if(audioEnabled){ setTimeout(readFullResult,500); }
