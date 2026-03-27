@@ -2,295 +2,223 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-
-<!-- عنوان الصفحة -->
-<title>BlackFalcon SOC</title>
-
-<!-- خط احترافي -->
+<title>BlackFalcon SOC v2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-
 <style>
+/* --- المتغيرات اللونية --- */
+:root{ --neon-green:#00ffcc; --danger-red:#ff0033; --warning-orange: #ffcc00; }
 
-/* متغيرات الألوان */
-:root{ 
---neon-green:#00ffcc;  /* اللون الأساسي */
---danger-red:#ff0033;  /* لون الخطر */
-}
+/* --- التنسيق العام --- */
+body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
+canvas{ position:fixed; top:0; left:0; z-index:-1; }
+.container{ text-align:center; margin-top:30px; padding-bottom: 50px; }
 
-/* تصميم الصفحة */
-body{
-margin:0;
-background:black;
-color:var(--neon-green);
-font-family:'Orbitron',sans-serif;
-overflow-x:hidden;
-transition:0.4s;
-}
+/* --- تنسيق العناوين والمربعات --- */
+h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; }
+.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); opacity: 0.8; }
 
-/* خلفية الماتريكس */
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-1;
-}
-
-/* الحاوية الرئيسية */
-.container{
-text-align:center;
-margin-top:40px;
-padding-bottom:50px;
-}
-
-/* العنوان */
-h1{
-font-size:35px;
-text-shadow:0 0 15px var(--neon-green);
-}
-
-/* مربع الإدخال */
+/* --- صندوق الإدخال المطور --- */
 textarea{ 
-width:85%;
-height:130px;
-background:rgba(0,0,0,0.7); 
-border:2px solid var(--neon-green);
-border-radius:15px;
-padding:20px;
-color:var(--neon-green);
-box-shadow:0 0 10px var(--neon-green);
-font-size:18px;
+    width:85%; height:120px; background:rgba(0,0,0,0.8); 
+    border:2px solid var(--neon-green); 
+    border-radius:15px; padding:20px; color:var(--neon-green); 
+    box-shadow:0 0 15px rgba(0, 255, 204, 0.2); 
+    font-size: 16px; outline: none; resize: none;
 }
 
-/* صندوق النتائج */
-.card{
-width:80%;
-margin:25px auto;
-padding:25px;
-border-radius:20px;
-background:rgba(0,0,0,0.8);
-box-shadow:0 0 20px var(--neon-green);
+/* --- بطاقة التحليل (Dashboard Card) --- */
+.card{ width:80%; margin:20px auto; padding:20px; border-radius:20px; background:rgba(0,0,0,0.85); border: 1px solid var(--neon-green); box-shadow:0 0 20px var(--neon-green); text-align: left; }
+
+/* --- مؤشر الخطر --- */
+.bar-container { width: 100%; height: 12px; background: #111; border-radius: 10px; margin: 15px 0; overflow: hidden; border: 1px solid #333; }
+.bar{ height:100%; background:var(--neon-green); width:0%; transition:1s cubic-bezier(0.075, 0.82, 0.165, 1); }
+
+/* --- تفاصيل التحليل الفنية --- */
+.tags-container { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.tag { padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--neon-green); display: none; }
+
+.recommendation-box { 
+    width: 80%; margin: 20px auto; padding: 15px; 
+    border: 1px solid var(--danger-red); border-radius: 10px; 
+    background: rgba(255, 0, 51, 0.1); color: white; 
+    display: none; text-align: center; animation: pulse 2s infinite;
 }
 
-/* شريط النسبة */
-.bar-container{
-width:100%;
-height:10px;
-background:#222;
-border-radius:10px;
-margin:15px 0;
-}
+@keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
 
-.bar{
-height:100%;
-background:var(--neon-green);
-width:0%;
-transition:0.8s;
-}
+button{ padding:10px 25px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:8px; font-family: 'Orbitron'; transition: 0.3s; }
+button:hover { background: var(--neon-green); color: black; }
 
-/* لون الخطر */
-.danger-bar{ background:var(--danger-red); }
-.danger-text{ color:var(--danger-red); }
-
+/* --- حالات الألوان الخاصة بالخطر --- */
+.danger-mode { border-color: var(--danger-red) !important; box-shadow: 0 0 20px var(--danger-red) !important; }
+.danger-bar { background: linear-gradient(90deg, var(--danger-red), #990000) !important; }
+.danger-text { color: var(--danger-red) !important; }
 </style>
 </head>
-
 <body>
 
-<!-- خلفية الماتريكس -->
 <canvas id="matrix"></canvas>
 
 <div class="container">
+    <h1>🦅 BlackFalcon SOC</h1>
+    <div class="sub-title">Threat Intelligence & Deep Analysis</div>
 
-<h1>🦅 BlackFalcon SOC</h1>
+    <div style="margin-bottom: 15px;">
+        <button id="langBtn" onclick="toggleLang()">SWITCH LANGUAGE</button>
+    </div>
 
-<!-- زر تغيير اللغة -->
-<button onclick="toggleLang()">EN / AR</button>
+    <textarea id="msg" placeholder="أدخل رسالة، رابط URL، أو اسم ملف لفحصه..."></textarea>
 
-<!-- مربع الإدخال -->
-<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
+    <div class="card" id="mainCard">
+        <div id="statusLabel" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">SYSTEM READY: AWAITING INPUT</div>
+        
+        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+            <span id="riskLabel">Risk Probability:</span>
+            <span><span id="score">0</span>%</span>
+        </div>
+        
+        <div class="bar-container"><div class="bar" id="bar"></div></div>
+        
+        <div class="tags-container">
+            <div id="tag-phishing" class="tag">#Phishing_Detected</div>
+            <div id="tag-malware" class="tag">#Malware_Pattern</div>
+            <div id="tag-suspicious" class="tag">#Suspicious_URL</div>
+        </div>
 
-<!-- صندوق النتائج -->
-<div class="card">
+        <div style="margin-top: 15px; font-size: 13px; opacity: 0.7;">
+            <div id="mitreDiv" style="display:none;">Technique: T1566.002 (Spearphishing Link)</div>
+            <div id="incidentDiv" style="display:none;">Session ID: B-FLCON-772X</div>
+        </div>
+    </div>
 
-<div id="statusLabel">Threat Status: CLEAN</div>
-
-<div>
-Risk: <span id="score">0</span>%
-</div>
-
-<div class="bar-container">
-<div class="bar" id="bar"></div>
-</div>
-
-<!-- معلومات الهجوم -->
-<div id="mitreDiv" style="display:none;">MITRE: T1566 - Phishing</div>
-
-</div>
-
+    <div id="recBox" class="recommendation-box">
+        <span id="recContent"></span>
+    </div>
 </div>
 
 <script>
-
-/* اللغة الحالية */
 let currentLang = "ar";
-
-/* لون الماتريكس */
 let matrixColor = "#00ffcc";
-
-/* عنصر الإدخال */
+let analysisTimeout;
 const msgInput = document.getElementById("msg");
 
-/* =========================
-   🔥 قائمة الكلمات (كلها هنا)
-   ========================= */
+// --- محرك الفحص المطور (الكلمات، الروابط، الملفات) ---
+const THREAT_DATABASE = {
+    keywords: ["كلمة المرور", "تحقق", "بنك", "عاجل", "طلب", "verify", "login", "password", "urgent", "account"],
+    links: [".top", ".zip", ".click", ".free", ".xyz", "bit.ly", "t.co", "login-", "secure-"],
+    files: [".exe", ".scr", ".vbs", ".js", ".bat", ".zip", ".iso"]
+};
 
-const bigWordList = `
-
-$$$ €€€ جنيه إسترليني خصم 50% بضعة شلنات نقبل الدفع النقدي عبر البطاقات
-نقبل بطاقات الائتمان بسعر معقول عرض مناسب تجنب الإفلاس سوء الائتمان بنك
-الإفلاس مساومة الفواتير مليار مليار دولار ملياردير البطاقة مقبولة كاش
-كازينو شيك حوالة بريدية ائتمان دين قرض استثمار تأمين
-اربح اربح من المنزل دخل إضافي دخل سهل مجاني مجاناً عرض مجاني
-loan credit card bank account billing invoice payment required
-free win winner cash bonus offer deal limited
-click here act now apply now buy now subscribe
-exclusive guarantee 100% risk free no obligation
-verify account update account reset password security alert
-login now confirm identity phishing hack breach malware
-virus trojan ransomware casino bet gambling jackpot lottery prize
-
-`;
-
-/* تحويل النص إلى مصفوفة كلمات */
-const keys = bigWordList.toLowerCase().split(/\s+/);
-
-/* =========================
-   🎤 الصوت
-   ========================= */
-function speak(text){
-const u = new SpeechSynthesisUtterance(text);
-u.lang = currentLang === "ar" ? "ar-SA" : "en-US";
-speechSynthesis.speak(u);
+function speak(text) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
+    window.speechSynthesis.speak(utterance);
 }
 
-/* عند الكتابة يبدأ التحليل */
-msgInput.addEventListener("input", startAnalysis);
-
-/* =========================
-   🧠 تحليل النص
-   ========================= */
-function startAnalysis(){
-
-let text = msgInput.value.toLowerCase();
-
-/* نسبة الخطورة */
-let score = 0;
-
-/* مقارنة النص بالكلمات */
-keys.forEach(k=>{
-if(text.includes(k)){
-score += 2; /* كل كلمة ترفع الخطورة */
-}
+msgInput.addEventListener("input", () => {
+    clearTimeout(analysisTimeout);
+    analysisTimeout = setTimeout(() => startAnalysis(), 1000);
 });
 
-/* حد أقصى */
-if(score > 100) score = 100;
+function startAnalysis() {
+    let input = msgInput.value.toLowerCase();
+    if(input.length < 3) { resetUI(); return; }
 
-/* تحديث الواجهة */
-updateUI(score);
+    let score = 0;
+    let detections = { phishing: false, malware: false, url: false };
 
+    // 1. فحص الكلمات المفتاحية
+    THREAT_DATABASE.keywords.forEach(k => { 
+        if(input.includes(k)) { score += 20; detections.phishing = true; } 
+    });
+
+    // 2. فحص الروابط المشبوهة
+    THREAT_DATABASE.links.forEach(link => {
+        if(input.includes(link)) { score += 30; detections.url = true; }
+    });
+
+    // 3. فحص لواحق الملفات الخطرة
+    THREAT_DATABASE.files.forEach(ext => {
+        if(input.endsWith(ext) || input.includes(ext + " ")) { score += 40; detections.malware = true; }
+    });
+
+    if(score > 100) score = 100;
+    updateUI(score, detections);
 }
 
-/* =========================
-   📊 تحديث النتائج
-   ========================= */
-function updateUI(score){
+function updateUI(score, detections) {
+    const bar = document.getElementById("bar");
+    const scoreVal = document.getElementById("score");
+    const statusLabel = document.getElementById("statusLabel");
+    const mainCard = document.getElementById("mainCard");
+    const recBox = document.getElementById("recBox");
 
-const bar = document.getElementById("bar");
-const status = document.getElementById("statusLabel");
+    scoreVal.innerText = score;
+    bar.style.width = score + "%";
 
-document.getElementById("score").innerText = score;
-bar.style.width = score+"%";
+    // تصفير التاغات
+    document.querySelectorAll('.tag').forEach(t => t.style.display = 'none');
 
-/* إذا خطر */
-if(score > 30){
+    if(score >= 40) {
+        matrixColor = "#ff0033";
+        bar.classList.add("danger-bar");
+        mainCard.classList.add("danger-mode");
+        statusLabel.innerText = (currentLang === "ar") ? "⚠️ تهديد مكتشف: عالي الخطورة" : "⚠️ THREAT DETECTED: HIGH RISK";
+        statusLabel.classList.add("danger-text");
 
-matrixColor = "#ff0033";
+        // إظهار التاغات المناسبة
+        if(detections.phishing) document.getElementById("tag-phishing").style.display = "block";
+        if(detections.malware) document.getElementById("tag-malware").style.display = "block";
+        if(detections.url) document.getElementById("tag-suspicious").style.display = "block";
 
-bar.classList.add("danger-bar");
-status.classList.add("danger-text");
-
-status.innerText = currentLang === "ar" ? "غير آمن" : "UNSAFE";
-
-document.getElementById("mitreDiv").style.display="block";
-
-/* صوت تحذير */
-speak(currentLang==="ar"?"تحذير خطر":"Warning danger");
-
+        let msg = (currentLang === "ar") ? "تحذير! المحتوى يحتوي على أنماط اختراق. تجنب التفاعل." : "Security Alert! High-risk patterns found. Isolation recommended.";
+        document.getElementById("recContent").innerText = msg;
+        recBox.style.display = "block";
+        document.getElementById("mitreDiv").style.display = "block";
+        
+        if(score > 60) speak(msg);
+    } else {
+        resetUI();
+        if(input.length > 10) statusLabel.innerText = (currentLang === "ar") ? "الحالة: آمنة ظاهرياً" : "STATUS: APPARENTLY SAFE";
+    }
 }
 
-/* إذا آمن */
-else{
-
-matrixColor = "#00ffcc";
-
-bar.classList.remove("danger-bar");
-status.classList.remove("danger-text");
-
-status.innerText = currentLang === "ar" ? "آمن" : "SAFE";
-
-document.getElementById("mitreDiv").style.display="none";
-
+function resetUI() {
+    matrixColor = "#00ffcc";
+    const bar = document.getElementById("bar");
+    bar.classList.remove("danger-bar");
+    document.getElementById("mainCard").classList.remove("danger-mode");
+    document.getElementById("statusLabel").classList.remove("danger-text");
+    document.getElementById("statusLabel").innerText = (currentLang === "ar") ? "نظام المراقبة: جاهز" : "MONITORING: READY";
+    document.getElementById("recBox").style.display = "none";
+    document.querySelectorAll('.tag').forEach(t => t.style.display = 'none');
+    document.getElementById("mitreDiv").style.display = "none";
 }
 
+function toggleLang() {
+    currentLang = (currentLang === "ar") ? "en" : "ar";
+    msgInput.placeholder = (currentLang === "ar") ? "أدخل رسالة، رابط URL، أو اسم ملف لفحصه..." : "Enter message, URL, or filename...";
+    document.getElementById("riskLabel").innerText = (currentLang === "ar") ? "احتمالية الخطر:" : "Risk Probability:";
+    startAnalysis();
 }
 
-/* =========================
-   🌐 تغيير اللغة
-   ========================= */
-function toggleLang(){
-
-currentLang = currentLang === "ar" ? "en" : "ar";
-
-speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
-
-}
-
-/* =========================
-   💻 الماتريكس
-   ========================= */
-
+// Matrix Engine
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const drops = Array(Math.floor(canvas.width/14)).fill(1);
-
-/* رسم الخلفية */
-function draw(){
-
-ctx.fillStyle="rgba(0,0,0,0.05)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.fillStyle=matrixColor;
-ctx.font="14px monospace";
-
-drops.forEach((y,i)=>{
-const text=Math.floor(Math.random()*2);
-ctx.fillText(text,i*14,y*14);
-
-if(y*14>canvas.height) drops[i]=0;
-
-drops[i]++;
-});
-
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const drops = Array(Math.floor(canvas.width/15)).fill(1);
+function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = matrixColor; ctx.font = "15px monospace";
+    drops.forEach((y, i) => {
+        const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+        ctx.fillText(text, i * 15, y * 15);
+        if (y * 15 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    });
 }
-
-setInterval(draw,33);
-
+setInterval(draw, 35);
 </script>
-
 </body>
 </html>
