@@ -19,14 +19,6 @@ background:black;
 color:var(--neon-green);
 font-family:'Orbitron',sans-serif;
 overflow:hidden;
-transition:0.4s;
-}
-
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-1;
 }
 
 .container{
@@ -39,19 +31,15 @@ font-size:40px;
 text-shadow:0 0 15px var(--neon-green);
 }
 
-.danger-mode h1{
-text-shadow:0 0 20px var(--danger-red);
-}
-
 textarea{
 width:80%;
 height:130px;
+margin-top:20px;
 background:rgba(0,0,0,0.7);
 border:1px solid var(--neon-green);
 border-radius:20px;
 padding:20px;
 color:var(--neon-green);
-margin-top:20px;
 box-shadow:0 0 10px var(--neon-green);
 }
 
@@ -79,33 +67,18 @@ padding:8px 15px;
 border:1px solid var(--neon-green);
 background:transparent;
 color:var(--neon-green);
-cursor:pointer;
 border-radius:10px;
+cursor:pointer;
 }
 
-/* وضع الخطر */
 .danger-mode{
 color:var(--danger-red);
 }
 
 .danger-mode textarea,
-.danger-mode .card,
-.danger-mode button{
+.danger-mode .card{
 border-color:var(--danger-red);
 box-shadow:0 0 15px var(--danger-red);
-}
-
-.danger-mode .bar{
-background:var(--danger-red);
-}
-
-/* اهتزاز */
-@keyframes shake{
-0%{transform:translateX(0);}
-25%{transform:translateX(-5px);}
-50%{transform:translateX(5px);}
-75%{transform:translateX(-5px);}
-100%{transform:translateX(0);}
 }
 
 </style>
@@ -113,15 +86,13 @@ background:var(--danger-red);
 
 <body>
 
-<canvas id="matrix"></canvas>
-
 <div class="container">
 
 <h1>🦅 BlackFalcon SOC</h1>
 
-<button onclick="toggleLang()">AR / EN</button>
-
 <textarea id="msg" placeholder="الصق الرسالة هنا"></textarea>
+
+<button onclick="toggleLang()">AR / EN</button>
 
 <div class="card">
 <div id="status">—</div>
@@ -139,27 +110,21 @@ background:var(--danger-red);
 <script>
 
 let currentLang="ar";
-let lastStatus="";
-
-/* صوت */
-let speakTimer;
+let analyzeTimer=null;
 let audioEnabled=false;
 
+/* 🔊 صوت */
 function speak(text){
 if(!audioEnabled) return;
 
-clearTimeout(speakTimer);
-
-speakTimer=setTimeout(()=>{
 speechSynthesis.cancel();
 let u=new SpeechSynthesisUtterance(text);
 u.lang=currentLang==="ar"?"ar-SA":"en-US";
 u.rate=0.9;
 speechSynthesis.speak(u);
-},800);
 }
 
-/* تفعيل الصوت */
+/* 👆 عند الضغط على مربع النص */
 let msg=document.getElementById("msg");
 
 msg.addEventListener("focus",()=>{
@@ -169,12 +134,17 @@ let unlock=new SpeechSynthesisUtterance(" ");
 unlock.volume=0;
 speechSynthesis.speak(unlock);
 }
+
+if(currentLang==="ar"){
+speak("مربع كتابة النص");
+}else{
+speak("Text input field");
+}
 });
 
-/* اللغة */
+/* 🌐 اللغة */
 const lang={
 ar:{
-placeholder:"الصق الرسالة هنا",
 risk:"درجة الخطر",
 safe:"✔️ آمن",
 danger:"⚠️ تهديد",
@@ -182,7 +152,6 @@ recSafe:"لا يوجد تهديد",
 recDanger:"لا تتفاعل مع الرسالة"
 },
 en:{
-placeholder:"Paste message",
 risk:"Risk",
 safe:"✔️ SAFE",
 danger:"⚠️ THREAT",
@@ -191,100 +160,77 @@ recDanger:"Do not interact"
 }
 };
 
-/* تحليل */
+/* 🧠 التحليل مع تأخير */
+msg.addEventListener("input",()=>{
+
+clearTimeout(analyzeTimer);
+
+analyzeTimer=setTimeout(()=>{
+analyze();
+},1200); // تأخير 1.2 ثانية
+
+});
+
 function analyze(){
 
 let text=msg.value.toLowerCase();
 let score=0;
 
-const high=["password","otp","bank","crypto","bitcoin","verify","account suspended","كلمة المرور","تحقق"];
-const medium=["http","https","bit.ly","click","urgent","login","account","اضغط"];
+/* كلمات احتيالية قوية */
+const high=[
+"password","otp","bank","crypto","bitcoin",
+"كلمة المرور",
+"تحقق",
+"تحقق من حسابك البنكي",
+"تحقق من حسابك البنكي الآن",
+"bank verification",
+"verify your bank",
+"verify your account",
+"your account is suspended"
+];
+
+/* كلمات متوسطة */
+const medium=[
+"http","https","bit.ly",
+"click","urgent","login","account",
+"اضغط","فوراً","عاجل"
+];
 
 high.forEach(w=>{ if(text.includes(w)) score+=25; });
 medium.forEach(w=>{ if(text.includes(w)) score+=15; });
 
-let links=(text.match(/http/g)||[]).length;
-if(links>=2) score+=20;
-
-if(text.includes("@") && text.includes(".")) score+=10;
-
-if(text.includes("urgent") || text.includes("فوراً")) score+=10;
+if((text.match(/http/g)||[]).length>1) score+=20;
+if(text.includes("@")) score+=10;
 
 if(score>100) score=100;
 
-document.getElementById("score").innerText = score;
-document.getElementById("bar").style.width = score + "%";
+/* عرض */
+document.getElementById("score").innerText=score;
+document.getElementById("bar").style.width=score+"%";
 
 let status=document.getElementById("status");
 let rec=document.getElementById("rec");
 
-let typeBox=document.getElementById("type");
-let mitreBox=document.getElementById("mitre");
-
-/* تصنيف */
-let type="Unknown";
-let mitre="—";
-
-if(text.includes("otp") || text.includes("password")){
-type="Phishing";
-mitre="T1566";
-}
-else if(text.includes("crypto") || text.includes("bitcoin")){
-type="Scam";
-mitre="T1648";
-}
-else if(text.includes("http")){
-type="Suspicious Link";
-mitre="T1204";
-}
-
-typeBox.innerText="Type: "+type;
-mitreBox.innerText="MITRE: "+mitre;
-
 /* الحالة */
-let newStatus = score > 30 ? "danger" : "safe";
-
-if(newStatus !== lastStatus){
-
 if(score>30){
+
 document.body.classList.add("danger-mode");
+
 status.innerHTML="<span class='danger'>"+lang[currentLang].danger+"</span>";
 rec.innerText=lang[currentLang].recDanger;
+
 speak(lang[currentLang].danger);
 
-if(score>60){
-document.body.style.animation="shake 0.3s";
-setTimeout(()=>{document.body.style.animation=""},300);
-}
-
 }else{
+
 document.body.classList.remove("danger-mode");
+
 status.innerHTML="<span class='safe'>"+lang[currentLang].safe+"</span>";
 rec.innerText=lang[currentLang].recSafe;
+
 speak(lang[currentLang].safe);
-}
-
-lastStatus = newStatus;
-}
-
-/* حفظ سجل */
-saveLog(msg.value,score,type);
 
 }
-
-/* logs */
-function saveLog(message,score,type){
-
-let logs=JSON.parse(localStorage.getItem("soc_logs")||"[]");
-
-logs.unshift({
-msg:message,
-score:score,
-type:type,
-time:new Date().toLocaleString()
-});
-
-localStorage.setItem("soc_logs",JSON.stringify(logs.slice(0,20)));
 
 }
 
@@ -292,53 +238,11 @@ localStorage.setItem("soc_logs",JSON.stringify(logs.slice(0,20)));
 function toggleLang(){
 
 currentLang=currentLang==="ar"?"en":"ar";
-
-msg.placeholder=lang[currentLang].placeholder;
 document.getElementById("riskLabel").innerText=lang[currentLang].risk;
 
 speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
 
 }
-
-msg.addEventListener("input",analyze);
-
-/* MATRIX */
-const canvas=document.getElementById("matrix");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-const letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const fontSize=14;
-const columns=canvas.width/fontSize;
-
-const drops=[];
-for(let i=0;i<columns;i++){drops[i]=1;}
-
-function draw(){
-
-ctx.fillStyle="rgba(0,0,0,0.05)";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.fillStyle="#00ffcc";
-ctx.font=fontSize+"px monospace";
-
-for(let i=0;i<drops.length;i++){
-
-let text=letters[Math.floor(Math.random()*letters.length)];
-ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-
-if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
-drops[i]=0;
-}
-
-drops[i]++;
-}
-
-}
-
-setInterval(draw,33);
 
 </script>
 
