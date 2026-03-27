@@ -5,114 +5,23 @@
 <title>BlackFalcon SOC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{
-    --neon-green:#00ffcc;
-    --danger-red:#ff0033;
-}
-body{
-    margin:0;
-    background:black;
-    color:var(--neon-green);
-    font-family:'Orbitron',sans-serif;
-    overflow-x:hidden;
-    transition:0.4s;
-}
-canvas{
-    position:fixed;
-    top:0; left:0;
-    z-index:-1;
-}
-.container{
-    text-align:center;
-    margin-top:40px;
-    padding-bottom: 50px;
-}
-h1{
-    font-size:35px;
-    text-shadow:0 0 15px var(--neon-green);
-    margin-bottom: 5px;
-}
-.sub-title {
-    font-size: 14px;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-}
-textarea{
-    width:85%;
-    height:150px;
-    background:rgba(0,0,0,0.6);
-    border:2px solid var(--neon-green);
-    border-radius:15px;
-    padding:15px;
-    color:var(--neon-green);
-    box-shadow:0 0 15px var(--neon-green);
-    font-family: sans-serif;
-    font-size: 16px;
-}
-.card{
-    width:85%;
-    margin:25px auto;
-    padding:20px;
-    border-radius:15px;
-    background:rgba(0,0,0,0.8);
-    text-align: left;
-    box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
-}
-.status-title { font-size: 22px; font-weight: bold; margin-bottom: 15px; }
-.risk-text { margin: 10px 0; font-size: 18px; }
-.bar-container {
-    width: 100%;
-    height: 12px;
-    background: #222;
-    border-radius: 10px;
-    margin: 15px 0;
-    overflow: hidden;
-}
-.bar{
-    height:100%;
-    background:var(--neon-green);
-    width:0%;
-    transition:0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.mitre-mini {
-    margin-top: 15px;
-    font-size: 16px;
-    display: none;
-}
-.incident-id {
-    margin-top: 10px;
-    font-size: 14px;
-    opacity: 0.8;
-    display: none;
-}
-.recommendation-box {
-    width: 85%;
-    margin: 20px auto;
-    padding: 15px;
-    border: 1px solid var(--danger-red);
-    border-radius: 10px;
-    background: rgba(255, 0, 51, 0.1);
-    color: white;
-    font-size: 14px;
-    display: none;
-    text-align: left;
-}
-button{
-    padding:8px 20px;
-    border:1px solid var(--neon-green);
-    background:transparent;
-    color:var(--neon-green);
-    cursor:pointer;
-    border-radius:20px;
-    font-family: 'Orbitron';
-}
-/* Danger Mode Styles */
+:root{ --neon-green:#00ffcc; --danger-red:#ff0033; }
+body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
+canvas{ position:fixed; top:0; left:0; z-index:-1; }
+.container{ text-align:center; margin-top:40px; padding-bottom: 50px; }
+h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; }
+.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; }
+textarea{ width:85%; height:150px; background:rgba(0,0,0,0.6); border:2px solid var(--neon-green); border-radius:15px; padding:15px; color:var(--neon-green); box-shadow:0 0 15px var(--neon-green); font-size: 18px; outline: none; }
+.card{ width:85%; margin:25px auto; padding:20px; border-radius:15px; background:rgba(0,0,0,0.8); text-align: left; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); }
+.bar-container { width: 100%; height: 12px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.6s; }
+.mitre-mini, .incident-id { display: none; margin-top: 10px; font-weight: bold; }
+.recommendation-box { width: 85%; margin: 20px auto; padding: 15px; border: 1px solid var(--danger-red); border-radius: 10px; background: rgba(255, 0, 51, 0.1); color: white; display: none; text-align: left; border-left: 5px solid var(--danger-red); }
+button{ padding:12px 30px; border:2px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:25px; font-family: 'Orbitron'; font-weight: bold; transition: 0.3s; }
+button:hover { background: var(--neon-green); color: black; }
 .danger-mode { color: var(--danger-red); }
-.danger-mode h1 { text-shadow: 0 0 15px var(--danger-red); }
-.danger-mode textarea { border-color: var(--danger-red); box-shadow: 0 0 15px var(--danger-red); color: white; }
-.danger-mode .card { box-shadow: 0 0 20px rgba(255, 0, 51, 0.3); }
+.danger-mode textarea, .danger-mode .card, .danger-mode button { border-color: var(--danger-red); box-shadow: 0 0 15px var(--danger-red); }
 .danger-mode .bar { background: var(--danger-red); }
-.danger-mode button { border-color: var(--danger-red); color: var(--danger-red); }
 </style>
 </head>
 <body>
@@ -120,49 +29,59 @@ button{
 <canvas id="matrix"></canvas>
 
 <div class="container">
-    <h1>🦅 BlackFalcon SOC</h1>
+    <h1 aria-label="Black Falcon SOC">🦅 BlackFalcon SOC</h1>
     <div class="sub-title">Advanced Security Operations Platform</div>
 
     <div style="margin-bottom: 20px;">
-        <button onclick="toggleLang()">🌍 Language</button>
-        <button onclick="exportReport()">Export Report</button>
+        <button id="langBtn" onclick="toggleLang()" aria-live="polite">🌍 Language: Arabic</button>
     </div>
 
-    <textarea id="msg" placeholder="تحقق من حسابك..."></textarea>
+    <textarea id="msg" placeholder="الصق النص هنا للتحليل..." aria-label="Text analysis field"></textarea>
 
-    <div class="card" id="mainCard">
-        <div class="status-title">Threat Status</div>
-        <div id="riskLevel" class="risk-text">CLEAN</div>
+    <div class="card" role="region" aria-labelledby="statusTitle">
+        <div style="font-size: 22px; font-weight: bold;" id="statusTitle">Threat Status: CLEAN</div>
         <div class="risk-text">Risk Score: <span id="score">0</span>%</div>
-        
-        <div class="bar-container">
-            <div class="bar" id="bar"></div>
-        </div>
-
+        <div class="bar-container"><div class="bar" id="bar"></div></div>
         <div id="mitreLabel" class="mitre-mini">MITRE: T1566 - Phishing</div>
         <div id="incidentLabel" class="incident-id">Incident ID: INC-943219</div>
     </div>
 
-    <div id="recBox" class="recommendation-box">
-        ⚠️ <strong>Recommendation:</strong> Do NOT click any links. Block sender and report immediately.
+    <div id="recBox" class="recommendation-box" role="alert">
+        <span id="recContent">⚠️ Recommendation: Do NOT click any links. Block sender and report immediately.</span>
     </div>
 </div>
 
 <script>
-// الكلمات المفتاحية للتحليل (نفس القائمة التي وفرتها سابقاً)
-const highKeywords = ["تحقق من حسابك","password","otp","bank","crypto","كلمة المرور","تحقق","verify","account suspended","login"]; 
-
 let currentLang = "ar";
+let matrixColor = "#00ffcc";
 const msgInput = document.getElementById("msg");
+
+// --- وظيفة النطق الصوتي المحسنة ---
+function speak(text) {
+    window.speechSynthesis.cancel(); 
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
+    utterance.rate = 0.95; // سرعة هادئة ومفهومة
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+}
+
+// نطق عند التركيز على مربع النص
+msgInput.addEventListener("focus", () => {
+    let msg = (currentLang === "ar") ? "أنت الآن في حقل التحليل، قم بلصق الرسالة المشبوهة هنا" : "You are in the analysis field, paste the suspicious message here";
+    speak(msg);
+});
+
+let lastStatus = "";
 
 msgInput.addEventListener("input", () => {
     let text = msgInput.value.toLowerCase();
     let score = 0;
-
-    highKeywords.forEach(w => {
-        if(text.includes(w.toLowerCase())) score += 25;
-    });
-
+    
+    // كلمات الفحص (يمكنك زيادة هذه القائمة)
+    const dangerKeys = ["تحقق","كلمة المرور","البنك","برجاء","password","otp","login","verify","urgent","account suspended"];
+    
+    dangerKeys.forEach(w => { if(text.includes(w)) score += 20; });
     if(score > 100) score = 100;
 
     updateUI(score);
@@ -171,59 +90,77 @@ msgInput.addEventListener("input", () => {
 function updateUI(score) {
     const bar = document.getElementById("bar");
     const scoreText = document.getElementById("score");
-    const riskLevel = document.getElementById("riskLevel");
-    const mitre = document.getElementById("mitreLabel");
-    const incident = document.getElementById("incidentLabel");
+    const statusTitle = document.getElementById("statusTitle");
     const recBox = document.getElementById("recBox");
+    const recContent = document.getElementById("recContent");
     const body = document.body;
 
     scoreText.innerText = score;
     bar.style.width = score + "%";
 
+    let currentStatusText = "";
+    let recommendationText = "";
+
     if(score > 30) {
         body.classList.add("danger-mode");
-        riskLevel.innerText = "HIGH RISK";
-        mitre.style.display = "block";
-        incident.style.display = "block";
-        recBox.style.display = "block";
         matrixColor = "#ff0033";
+        statusTitle.innerText = (currentLang === "ar") ? "حالة التهديد: خطر مرتفع" : "Threat Status: HIGH RISK";
+        
+        currentStatusText = (currentLang === "ar") ? `تحذير! حالة التهديد خطر مرتفع. نسبة الخطر هي ${score} بالمئة.` : `Warning! High risk threat detected. Risk score is ${score} percent.`;
+        
+        recommendationText = (currentLang === "ar") ? "التوصية الأمنية: لا تقرأ الرسالة ولا تضغط على أي روابط. قم بحظر المرسل فوراً." : "Security Recommendation: Do not read the message or click any links. Block the sender immediately.";
+        
+        recContent.innerText = recommendationText;
+        document.getElementById("mitreLabel").style.display = "block";
+        document.getElementById("incidentLabel").style.display = "block";
+        recBox.style.display = "block";
+
     } else {
         body.classList.remove("danger-mode");
-        riskLevel.innerText = "CLEAN";
-        mitre.style.display = "none";
-        incident.style.display = "none";
-        recBox.style.display = "none";
         matrixColor = "#00ffcc";
+        statusTitle.innerText = (currentLang === "ar") ? "حالة التهديد: آمن" : "Threat Status: CLEAN";
+        currentStatusText = (currentLang === "ar") ? "الحالة آمنة حالياً." : "The status is currently safe.";
+        
+        document.getElementById("mitreLabel").style.display = "none";
+        document.getElementById("incidentLabel").style.display = "none";
+        recBox.style.display = "none";
     }
+
+    // نطق الحالة والتوصية عند التغير
+    if(currentStatusText !== lastStatus && msgInput.value.length > 2) {
+        // نطق الحالة ثم التوصية (إذا كانت موجودة)
+        let fullVoiceOutput = currentStatusText + " " + (score > 30 ? recommendationText : "");
+        speak(fullVoiceOutput);
+        lastStatus = currentStatusText;
+    }
+}
+
+function toggleLang() {
+    currentLang = (currentLang === "ar") ? "en" : "ar";
+    const btn = document.getElementById("langBtn");
+    btn.innerText = (currentLang === "ar") ? "🌍 Language: Arabic" : "🌍 Language: English";
+    msgInput.placeholder = (currentLang === "ar") ? "الصق النص هنا..." : "Paste text here...";
+    
+    let langMsg = (currentLang === "ar") ? "تم تحويل الواجهة للغة العربية" : "Interface switched to English";
+    speak(langMsg);
 }
 
 // Matrix Animation
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-const letters = "01";
-const fontSize = 14;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
-let matrixColor = "#00ffcc";
-
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const drops = Array(Math.floor(canvas.width/14)).fill(1);
 function draw() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = matrixColor;
-    ctx.font = fontSize + "px monospace";
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = matrixColor; ctx.font = "14px monospace";
     drops.forEach((y, i) => {
-        const text = letters[Math.floor(Math.random() * letters.length)];
-        ctx.fillText(text, i * fontSize, y * fontSize);
-        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        const text = Math.floor(Math.random()*2);
+        ctx.fillText(text, i * 14, y * 14);
+        if (y * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
     });
 }
 setInterval(draw, 33);
-
-function toggleLang() { alert("Language switched"); }
-function exportReport() { alert("Report Exported"); }
 </script>
 
 </body>
