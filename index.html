@@ -2,56 +2,41 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>BlackFalcon SOC v2.0</title>
+<title>BlackFalcon SOC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* --- المتغيرات اللونية --- */
-:root{ --neon-green:#00ffcc; --danger-red:#ff0033; --warning-orange: #ffcc00; }
-
-/* --- التنسيق العام --- */
+:root{ --neon-green:#00ffcc; --danger-red:#ff0033; }
 body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
 canvas{ position:fixed; top:0; left:0; z-index:-1; }
-.container{ text-align:center; margin-top:30px; padding-bottom: 50px; }
+.container{ text-align:center; margin-top:40px; padding-bottom: 50px; }
 
-/* --- تنسيق العناوين والمربعات --- */
-h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; }
-.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); opacity: 0.8; }
-
-/* --- صندوق الإدخال المطور --- */
+/* الألوان الثابتة للمشروع ومربع النص */
+h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; color: var(--neon-green) !important; }
+.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); }
 textarea{ 
-    width:85%; height:120px; background:rgba(0,0,0,0.8); 
-    border:2px solid var(--neon-green); 
-    border-radius:15px; padding:20px; color:var(--neon-green); 
-    box-shadow:0 0 15px rgba(0, 255, 204, 0.2); 
-    font-size: 16px; outline: none; resize: none;
+    width:85%; height:130px; background:rgba(0,0,0,0.7); 
+    border:2px solid var(--neon-green) !important; 
+    border-radius:15px; padding:20px; color:var(--neon-green) !important; 
+    box-shadow:0 0 10px var(--neon-green) !important; 
+    font-size: 18px; outline: none; 
 }
 
-/* --- بطاقة التحليل (Dashboard Card) --- */
-.card{ width:80%; margin:20px auto; padding:20px; border-radius:20px; background:rgba(0,0,0,0.85); border: 1px solid var(--neon-green); box-shadow:0 0 20px var(--neon-green); text-align: left; }
+.card{ width:80%; margin:25px auto; padding:25px; border-radius:20px; background:rgba(0,0,0,0.8); box-shadow:0 0 20px var(--neon-green); text-align: left; }
+.bar-container { width: 100%; height: 10px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.8s; }
 
-/* --- مؤشر الخطر --- */
-.bar-container { width: 100%; height: 12px; background: #111; border-radius: 10px; margin: 15px 0; overflow: hidden; border: 1px solid #333; }
-.bar{ height:100%; background:var(--neon-green); width:0%; transition:1s cubic-bezier(0.075, 0.82, 0.165, 1); }
-
-/* --- تفاصيل التحليل الفنية --- */
-.tags-container { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
-.tag { padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--neon-green); display: none; }
-
+/* صندوق التوصية - تم التوسيط هنا */
 .recommendation-box { 
     width: 80%; margin: 20px auto; padding: 15px; 
     border: 1px solid var(--danger-red); border-radius: 10px; 
     background: rgba(255, 0, 51, 0.1); color: white; 
-    display: none; text-align: center; animation: pulse 2s infinite;
+    display: none; text-align: center; /* التوصية في المنتصف */
 }
 
-@keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+button{ padding:8px 20px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:10px; font-family: 'Orbitron'; }
 
-button{ padding:10px 25px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:8px; font-family: 'Orbitron'; transition: 0.3s; }
-button:hover { background: var(--neon-green); color: black; }
-
-/* --- حالات الألوان الخاصة بالخطر --- */
-.danger-mode { border-color: var(--danger-red) !important; box-shadow: 0 0 20px var(--danger-red) !important; }
-.danger-bar { background: linear-gradient(90deg, var(--danger-red), #990000) !important; }
+/* تغيير لون شريط التحميل فقط عند الخطر */
+.danger-bar { background: var(--danger-red) !important; }
 .danger-text { color: var(--danger-red) !important; }
 </style>
 </head>
@@ -61,34 +46,20 @@ button:hover { background: var(--neon-green); color: black; }
 
 <div class="container">
     <h1>🦅 BlackFalcon SOC</h1>
-    <div class="sub-title">Threat Intelligence & Deep Analysis</div>
+    <div class="sub-title">Advanced Security Operations Platform</div>
 
     <div style="margin-bottom: 15px;">
-        <button id="langBtn" onclick="toggleLang()">SWITCH LANGUAGE</button>
+        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
     </div>
 
-    <textarea id="msg" placeholder="أدخل رسالة، رابط URL، أو اسم ملف لفحصه..."></textarea>
+    <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
-    <div class="card" id="mainCard">
-        <div id="statusLabel" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">SYSTEM READY: AWAITING INPUT</div>
-        
-        <div style="display: flex; justify-content: space-between; font-size: 14px;">
-            <span id="riskLabel">Risk Probability:</span>
-            <span><span id="score">0</span>%</span>
-        </div>
-        
+    <div class="card">
+        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
+        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
         <div class="bar-container"><div class="bar" id="bar"></div></div>
-        
-        <div class="tags-container">
-            <div id="tag-phishing" class="tag">#Phishing_Detected</div>
-            <div id="tag-malware" class="tag">#Malware_Pattern</div>
-            <div id="tag-suspicious" class="tag">#Suspicious_URL</div>
-        </div>
-
-        <div style="margin-top: 15px; font-size: 13px; opacity: 0.7;">
-            <div id="mitreDiv" style="display:none;">Technique: T1566.002 (Spearphishing Link)</div>
-            <div id="incidentDiv" style="display:none;">Session ID: B-FLCON-772X</div>
-        </div>
+        <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
+        <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
     </div>
 
     <div id="recBox" class="recommendation-box">
@@ -99,126 +70,105 @@ button:hover { background: var(--neon-green); color: black; }
 <script>
 let currentLang = "ar";
 let matrixColor = "#00ffcc";
-let analysisTimeout;
+let analysisTimeout; // مؤقت التأخير
 const msgInput = document.getElementById("msg");
-
-// --- محرك الفحص المطور (الكلمات، الروابط، الملفات) ---
-const THREAT_DATABASE = {
-    keywords: ["كلمة المرور", "تحقق", "بنك", "عاجل", "طلب", "verify", "login", "password", "urgent", "account"],
-    links: [".top", ".zip", ".click", ".free", ".xyz", "bit.ly", "t.co", "login-", "secure-"],
-    files: [".exe", ".scr", ".vbs", ".js", ".bat", ".zip", ".iso"]
-};
 
 function speak(text) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
 }
 
+msgInput.addEventListener("focus", () => {
+    speak(currentLang === "ar" ? "مربع إدخال النص" : "Text input field");
+});
+
+// وظيفة التأخير (Debounce) لعدم التحليل من أول حرف
 msgInput.addEventListener("input", () => {
     clearTimeout(analysisTimeout);
-    analysisTimeout = setTimeout(() => startAnalysis(), 1000);
+    analysisTimeout = setTimeout(() => {
+        startAnalysis();
+    }, 1500); // التأخير لمدة ثانية ونصف
 });
 
 function startAnalysis() {
-    let input = msgInput.value.toLowerCase();
-    if(input.length < 3) { resetUI(); return; }
+    let text = msgInput.value.toLowerCase();
+    if(text.length < 2) return; // لا يحلل إذا كان النص قصيراً جداً
 
     let score = 0;
-    let detections = { phishing: false, malware: false, url: false };
-
-    // 1. فحص الكلمات المفتاحية
-    THREAT_DATABASE.keywords.forEach(k => { 
-        if(input.includes(k)) { score += 20; detections.phishing = true; } 
-    });
-
-    // 2. فحص الروابط المشبوهة
-    THREAT_DATABASE.links.forEach(link => {
-        if(input.includes(link)) { score += 30; detections.url = true; }
-    });
-
-    // 3. فحص لواحق الملفات الخطرة
-    THREAT_DATABASE.files.forEach(ext => {
-        if(input.endsWith(ext) || input.includes(ext + " ")) { score += 40; detections.malware = true; }
-    });
-
+    const keys = ["تحقق","كلمة المرور","بنك","بطاقة","عاجل","password","otp","login","verify","urgent","bank"];
+    
+    keys.forEach(k => { if(text.includes(k)) score += 25; });
     if(score > 100) score = 100;
-    updateUI(score, detections);
+
+    updateUI(score);
 }
 
-function updateUI(score, detections) {
+function updateUI(score) {
     const bar = document.getElementById("bar");
     const scoreVal = document.getElementById("score");
     const statusLabel = document.getElementById("statusLabel");
-    const mainCard = document.getElementById("mainCard");
     const recBox = document.getElementById("recBox");
+    const recContent = document.getElementById("recContent");
 
     scoreVal.innerText = score;
     bar.style.width = score + "%";
 
-    // تصفير التاغات
-    document.querySelectorAll('.tag').forEach(t => t.style.display = 'none');
-
-    if(score >= 40) {
-        matrixColor = "#ff0033";
+    if(score > 30) {
+        matrixColor = "#ff0033"; // الماتريكس فقط يصبح أحمر
         bar.classList.add("danger-bar");
-        mainCard.classList.add("danger-mode");
-        statusLabel.innerText = (currentLang === "ar") ? "⚠️ تهديد مكتشف: عالي الخطورة" : "⚠️ THREAT DETECTED: HIGH RISK";
+        statusLabel.innerText = (currentLang === "ar") ? "حالة التهديد: غير آمن" : "Threat Status: UNSAFE";
         statusLabel.classList.add("danger-text");
 
-        // إظهار التاغات المناسبة
-        if(detections.phishing) document.getElementById("tag-phishing").style.display = "block";
-        if(detections.malware) document.getElementById("tag-malware").style.display = "block";
-        if(detections.url) document.getElementById("tag-suspicious").style.display = "block";
-
-        let msg = (currentLang === "ar") ? "تحذير! المحتوى يحتوي على أنماط اختراق. تجنب التفاعل." : "Security Alert! High-risk patterns found. Isolation recommended.";
-        document.getElementById("recContent").innerText = msg;
-        recBox.style.display = "block";
-        document.getElementById("mitreDiv").style.display = "block";
+        let recText = (currentLang === "ar") ? "توصية: لا تضغط على الروابط وقم بحظر المرسل فوراً" : "Recommendation: Do NOT click links and block sender immediately";
+        recContent.innerText = "⚠️ " + recText;
         
-        if(score > 60) speak(msg);
-    } else {
-        resetUI();
-        if(input.length > 10) statusLabel.innerText = (currentLang === "ar") ? "الحالة: آمنة ظاهرياً" : "STATUS: APPARENTLY SAFE";
-    }
-}
+        document.getElementById("mitreDiv").style.display = "block";
+        document.getElementById("incidentDiv").style.display = "block";
+        recBox.style.display = "block";
 
-function resetUI() {
-    matrixColor = "#00ffcc";
-    const bar = document.getElementById("bar");
-    bar.classList.remove("danger-bar");
-    document.getElementById("mainCard").classList.remove("danger-mode");
-    document.getElementById("statusLabel").classList.remove("danger-text");
-    document.getElementById("statusLabel").innerText = (currentLang === "ar") ? "نظام المراقبة: جاهز" : "MONITORING: READY";
-    document.getElementById("recBox").style.display = "none";
-    document.querySelectorAll('.tag').forEach(t => t.style.display = 'none');
-    document.getElementById("mitreDiv").style.display = "none";
+        speak((currentLang === "ar" ? "تحذير، الحالة غير آمنة. " : "Warning, unsafe status. ") + recText);
+    } else {
+        matrixColor = "#00ffcc"; // العودة للون الأخضر
+        bar.classList.remove("danger-bar");
+        statusLabel.classList.remove("danger-text");
+        statusLabel.innerText = (currentLang === "ar") ? "حالة التهديد: آمن" : "Threat Status: CLEAN";
+        
+        document.getElementById("mitreDiv").style.display = "none";
+        document.getElementById("incidentDiv").style.display = "none";
+        recBox.style.display = "none";
+        
+        if(msgInput.value.length > 5) speak(currentLang === "ar" ? "الحالة آمنة" : "Status is safe");
+    }
 }
 
 function toggleLang() {
     currentLang = (currentLang === "ar") ? "en" : "ar";
-    msgInput.placeholder = (currentLang === "ar") ? "أدخل رسالة، رابط URL، أو اسم ملف لفحصه..." : "Enter message, URL, or filename...";
-    document.getElementById("riskLabel").innerText = (currentLang === "ar") ? "احتمالية الخطر:" : "Risk Probability:";
-    startAnalysis();
+    msgInput.placeholder = (currentLang === "ar") ? "الصق الرسالة هنا" : "Paste message here";
+    startAnalysis(); 
+    speak(currentLang === "ar" ? "اللغة العربية" : "English language");
 }
 
-// Matrix Engine
+// Matrix Animation
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const drops = Array(Math.floor(canvas.width/15)).fill(1);
+const drops = Array(Math.floor(canvas.width/14)).fill(1);
+
 function draw() {
-    ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = matrixColor; ctx.font = "15px monospace";
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = matrixColor; ctx.font = "14px monospace";
     drops.forEach((y, i) => {
-        const text = String.fromCharCode(0x30A0 + Math.random() * 96);
-        ctx.fillText(text, i * 15, y * 15);
-        if (y * 15 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        const text = Math.floor(Math.random()*2);
+        ctx.fillText(text, i * 14, y * 14);
+        if (y * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
     });
 }
-setInterval(draw, 35);
+setInterval(draw, 33);
 </script>
+
 </body>
 </html>
