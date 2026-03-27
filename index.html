@@ -2,176 +2,294 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
+
+<!-- عنوان الصفحة -->
 <title>BlackFalcon SOC</title>
+
+<!-- خط احترافي -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
-:root{ --neon-green:#00ffcc; --danger-red:#ff0033; }
-body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
-canvas{ position:fixed; top:0; left:0; z-index:-1; }
-.container{ text-align:center; margin-top:40px; padding-bottom: 50px; }
 
-/* ألوان ثابتة للمشروع ومربع النص لا تتغير */
-h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; color: var(--neon-green) !important; }
-.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); }
+/* متغيرات الألوان */
+:root{ 
+--neon-green:#00ffcc;  /* اللون الأساسي */
+--danger-red:#ff0033;  /* لون الخطر */
+}
+
+/* تصميم الصفحة */
+body{
+margin:0;
+background:black;
+color:var(--neon-green);
+font-family:'Orbitron',sans-serif;
+overflow-x:hidden;
+transition:0.4s;
+}
+
+/* خلفية الماتريكس */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:-1;
+}
+
+/* الحاوية الرئيسية */
+.container{
+text-align:center;
+margin-top:40px;
+padding-bottom:50px;
+}
+
+/* العنوان */
+h1{
+font-size:35px;
+text-shadow:0 0 15px var(--neon-green);
+}
+
+/* مربع الإدخال */
 textarea{ 
-    width:85%; height:130px; background:rgba(0,0,0,0.7); 
-    border:2px solid var(--neon-green) !important; 
-    border-radius:15px; padding:20px; color:var(--neon-green) !important; 
-    box-shadow:0 0 10px var(--neon-green) !important; 
-    font-size: 18px; outline: none; 
+width:85%;
+height:130px;
+background:rgba(0,0,0,0.7); 
+border:2px solid var(--neon-green);
+border-radius:15px;
+padding:20px;
+color:var(--neon-green);
+box-shadow:0 0 10px var(--neon-green);
+font-size:18px;
 }
 
-.card{ width:80%; margin:25px auto; padding:25px; border-radius:20px; background:rgba(0,0,0,0.8); box-shadow:0 0 20px var(--neon-green); text-align: left; }
-.bar-container { width: 100%; height: 10px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.8s; }
-
-.recommendation-box { 
-    width: 80%; margin: 20px auto; padding: 15px; 
-    border: 1px solid var(--danger-red); border-radius: 10px; 
-    background: rgba(255, 0, 51, 0.1); color: white; 
-    display: none; text-align: center; 
+/* صندوق النتائج */
+.card{
+width:80%;
+margin:25px auto;
+padding:25px;
+border-radius:20px;
+background:rgba(0,0,0,0.8);
+box-shadow:0 0 20px var(--neon-green);
 }
 
-button{ padding:8px 20px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:10px; font-family: 'Orbitron'; }
+/* شريط النسبة */
+.bar-container{
+width:100%;
+height:10px;
+background:#222;
+border-radius:10px;
+margin:15px 0;
+}
 
-.danger-bar { background: var(--danger-red) !important; }
-.danger-text { color: var(--danger-red) !important; }
+.bar{
+height:100%;
+background:var(--neon-green);
+width:0%;
+transition:0.8s;
+}
+
+/* لون الخطر */
+.danger-bar{ background:var(--danger-red); }
+.danger-text{ color:var(--danger-red); }
+
 </style>
 </head>
+
 <body>
 
+<!-- خلفية الماتريكس -->
 <canvas id="matrix"></canvas>
 
 <div class="container">
-    <h1>🦅 BlackFalcon SOC</h1>
-    <div class="sub-title">Advanced Security Operations Platform</div>
 
-    <div style="margin-bottom: 15px;">
-        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
-    </div>
+<h1>🦅 BlackFalcon SOC</h1>
 
-    <textarea id="msg" placeholder="الصق الرسالة هنا للتحليل العميق..."></textarea>
+<!-- زر تغيير اللغة -->
+<button onclick="toggleLang()">EN / AR</button>
 
-    <div class="card">
-        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
-        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
-        <div class="bar-container"><div class="bar" id="bar"></div></div>
-        <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
-        <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
-    </div>
+<!-- مربع الإدخال -->
+<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
-    <div id="recBox" class="recommendation-box">
-        <span id="recContent"></span>
-    </div>
+<!-- صندوق النتائج -->
+<div class="card">
+
+<div id="statusLabel">Threat Status: CLEAN</div>
+
+<div>
+Risk: <span id="score">0</span>%
+</div>
+
+<div class="bar-container">
+<div class="bar" id="bar"></div>
+</div>
+
+<!-- معلومات الهجوم -->
+<div id="mitreDiv" style="display:none;">MITRE: T1566 - Phishing</div>
+
+</div>
+
 </div>
 
 <script>
+
+/* اللغة الحالية */
 let currentLang = "ar";
+
+/* لون الماتريكس */
 let matrixColor = "#00ffcc";
-let analysisTimeout;
+
+/* عنصر الإدخال */
 const msgInput = document.getElementById("msg");
 
-// الكلمات المشبوهة التي زودتني بها مع زيادة الحساسية
-const suspiciousKeys = [
-    "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان","بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير","مليار","مليار دولار","ملياردير","البطاقة مقبولة","البطاقات المقبولة","نقدي","مكافأة نقدية","سحب نقدي","كاش كاش كاش","كازينو","سنتات مقابل الدولار","يفحص","شيك أو حوالة بريدية","احصل على خصمك","يكلف","التكاليف","ائتمان","مكاتب الائتمان","بطاقة إئتمان","عروض بطاقات الائتمان","ائتمان أو مدين","اتفاق","دَين","تخفيض","دولارات","ضاعف","ضاعف ثروتك","يكسب","اربح دولارات","اربح نقوداً","اكسب دخلاً إضافياً","اربح من المنزل","اربح شهرياً","اكسب شهريًا","اكسب أسبوعياً","دخل سنوي","دخل سهل","شروط ميسرة","حر","مجاناً","مقابل دولار واحد فقط","دخول مجاني","استشارة مجانية","هدية مجانية","استضافة مجانية","معلومات مجانية","الاستثمار الحر","عضوية مجانية","أموال مجانية","معاينة مجانية","عرض سعر مجاني","تجربة مجانية","استرداد كامل المبلغ","التخلص من الديون","يتبرع","وديعة مضمونة","زيادة الإيرادات","زيادة المبيعات","أرباح فورية","دخل فوري","تأمين","استثمار","نصائح استثمارية","القروض","ضمان استرداد الأموال","القرض العقاري","أسعار الرهن العقاري","يعرض","مجاني بالكامل","سعر","ضمان السعر","الأرباح","يقتبس","مضمون بنسبة 100%","ادخل الآن","بادر بالتحرك سريعاً","عرض مذهل","قدم الآن","أفضل عرض","ربح كبير","لا تفوت","انقر أدناه","انقر هنا","الصفقة ستنتهي قريباً","لا تحذف","ضاعف أموالك","عرض حصري","أخبار رائعة","نتائج مضمونة","معلومات هامة","توفير فوري","لفترة محدودة","قراءة ضرورية","بدون شروط","لا حاجة لفحص الائتمان","لا يوجد أي التزام","مرة واحدة في العمر","اطلب الآن","خالٍ من المخاطر","دعوة خاصة","عاجل","إعادة التمويل","وفر المال","لماذا تدفع أكثر؟","دخلك","رقم 1","مجاني 100%","خصم 100%","دخل إضافي","مدهش","أشياء رائعة","كن مدير نفسك","أفضل صفقة","أفضل سعر","مبالغ طائلة","علاوة","توحيد الديون","ضاعف دخلك","اكسب أموالاً","سيولة نقدية سريعة","الحرية المالية","انضم إلى الملايين","جائزة","يعد","رضاكم مضمون","عرض لا يُضاهى","غير محدود","لن تصدق عينيك","تم الآن","بادر بالتحرك الآن","الإجراء المطلوب","قدّم طلبك هنا","قدم الآن","قدم طلبك الآن","انضم إلى العضوية","قبل فوات الأوان","اشتر مباشرة","اشتري الآن","اشتر اليوم","مكالمة مجانية","اتصل بي","اتصل الآن","ألغِ الآن","يلزم الإلغاء","انقر هنا للتحميل","انقر للحصول على","انقر للإزالة","اتصل بنا فوراً","لا تتردد","لا تضيع الوقت","تاريخ الانتهاء","النداء الأخير","للوصول الفوري","احصل عليه الآن","ابدأ الآن","أسرع","في الحال","المعلومات التي طلبتها","فوري","الآن فقط","ينتهي العرض","سجل مجاناً","الكميات محدودة","عاجل للغاية","ماذا تنتظر؟","العرض ساري حتى نفاذ الكمية","أنت فائز","قم بالدخول إلى حسابك","تحديث الحساب","فعّل الآن","مضاد للفيروسات","تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","اختراق البيانات","حمل الآن","إشعار نهائي","تحديث هام","يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن","رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة","تحذير من التصيد الاحتيالي","دفع آمن","خرق أمني","تحديث أمني","تحذير من التصيد","التحقق من الهوية","رسالة تحذير","راهن الآن","فوز كبير","لعبة البلاك جاك","مكافأة الكازينو","اسحب أموالك الآن","انقر للفوز","وصول حصري","رقائق البطاطس المجانية","دورات مجانية","المقامرة عبر الإنترنت","عرض مميز","جوائز فورية","الفوز بالجائزة الكبرى","موزع مباشر","الفائز باليانصيب","فرصة حظ","المراهنات عبر الإنترنت","كازينو على الإنترنت","الألعاب عبر الإنترنت","بطولة البوكر","رهان خالٍ من المخاطر","أدر العجلة واربح","جرب مجاناً","عرض لكبار الشخصيات","تم الإعلان عن الفائز","الأرقام الفائزة"
-];
+/* =========================
+   🔥 قائمة الكلمات (كلها هنا)
+   ========================= */
 
-function speak(text) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+const bigWordList = `
+
+$$$ €€€ جنيه إسترليني خصم 50% بضعة شلنات نقبل الدفع النقدي عبر البطاقات
+نقبل بطاقات الائتمان بسعر معقول عرض مناسب تجنب الإفلاس سوء الائتمان بنك
+الإفلاس مساومة الفواتير مليار مليار دولار ملياردير البطاقة مقبولة كاش
+كازينو شيك حوالة بريدية ائتمان دين قرض استثمار تأمين
+اربح اربح من المنزل دخل إضافي دخل سهل مجاني مجاناً عرض مجاني
+loan credit card bank account billing invoice payment required
+free win winner cash bonus offer deal limited
+click here act now apply now buy now subscribe
+exclusive guarantee 100% risk free no obligation
+verify account update account reset password security alert
+login now confirm identity phishing hack breach malware
+virus trojan ransomware casino bet gambling jackpot lottery prize
+
+`;
+
+/* تحويل النص إلى مصفوفة كلمات */
+const keys = bigWordList.toLowerCase().split(/\s+/);
+
+/* =========================
+   🎤 الصوت
+   ========================= */
+function speak(text){
+const u = new SpeechSynthesisUtterance(text);
+u.lang = currentLang === "ar" ? "ar-SA" : "en-US";
+speechSynthesis.speak(u);
 }
 
-msgInput.addEventListener("focus", () => {
-    speak(currentLang === "ar" ? "مربع إدخال النص" : "Text input field");
+/* عند الكتابة يبدأ التحليل */
+msgInput.addEventListener("input", startAnalysis);
+
+/* =========================
+   🧠 تحليل النص
+   ========================= */
+function startAnalysis(){
+
+let text = msgInput.value.toLowerCase();
+
+/* نسبة الخطورة */
+let score = 0;
+
+/* مقارنة النص بالكلمات */
+keys.forEach(k=>{
+if(text.includes(k)){
+score += 2; /* كل كلمة ترفع الخطورة */
+}
 });
 
-msgInput.addEventListener("input", () => {
-    clearTimeout(analysisTimeout);
-    analysisTimeout = setTimeout(() => {
-        startAnalysis();
-    }, 1500); 
-});
+/* حد أقصى */
+if(score > 100) score = 100;
 
-function startAnalysis() {
-    let text = msgInput.value.toLowerCase();
-    if(text.length < 2) return;
+/* تحديث الواجهة */
+updateUI(score);
 
-    let score = 0;
-    // زيادة وزن الكلمة لرفع درجة الخطورة بسرعة
-    suspiciousKeys.forEach(k => {
-        if(text.includes(k.toLowerCase())) {
-            score += 35; 
-        }
-    });
-
-    if(score > 100) score = 100;
-    updateUI(score);
 }
 
-function updateUI(score) {
-    const bar = document.getElementById("bar");
-    const scoreVal = document.getElementById("score");
-    const statusLabel = document.getElementById("statusLabel");
-    const recBox = document.getElementById("recBox");
-    const recContent = document.getElementById("recContent");
+/* =========================
+   📊 تحديث النتائج
+   ========================= */
+function updateUI(score){
 
-    scoreVal.innerText = score;
-    bar.style.width = score + "%";
+const bar = document.getElementById("bar");
+const status = document.getElementById("statusLabel");
 
-    if(score > 30) {
-        matrixColor = "#ff0033"; 
-        bar.classList.add("danger-bar");
-        statusLabel.innerText = (currentLang === "ar") ? "حالة التهديد: غير آمن" : "Threat Status: UNSAFE";
-        statusLabel.classList.add("danger-text");
+document.getElementById("score").innerText = score;
+bar.style.width = score+"%";
 
-        let recText = (currentLang === "ar") ? "توصية: لا تضغط على الروابط وقم بحظر المرسل فوراً" : "Recommendation: Do NOT click links and block sender immediately";
-        recContent.innerText = "⚠️ " + recText;
-        
-        document.getElementById("mitreDiv").style.display = "block";
-        document.getElementById("incidentDiv").style.display = "block";
-        recBox.style.display = "block";
+/* إذا خطر */
+if(score > 30){
 
-        speak((currentLang === "ar" ? "تحذير، الحالة غير آمنة. " : "Warning, unsafe status. ") + recText);
-    } else {
-        matrixColor = "#00ffcc";
-        bar.classList.remove("danger-bar");
-        statusLabel.classList.remove("danger-text");
-        statusLabel.innerText = (currentLang === "ar") ? "حالة التهديد: آمن" : "Threat Status: CLEAN";
-        
-        document.getElementById("mitreDiv").style.display = "none";
-        document.getElementById("incidentDiv").style.display = "none";
-        recBox.style.display = "none";
-        
-        if(msgInput.value.length > 5) speak(currentLang === "ar" ? "الحالة آمنة" : "Status is safe");
-    }
+matrixColor = "#ff0033";
+
+bar.classList.add("danger-bar");
+status.classList.add("danger-text");
+
+status.innerText = currentLang === "ar" ? "غير آمن" : "UNSAFE";
+
+document.getElementById("mitreDiv").style.display="block";
+
+/* صوت تحذير */
+speak(currentLang==="ar"?"تحذير خطر":"Warning danger");
+
 }
 
-function toggleLang() {
-    currentLang = (currentLang === "ar") ? "en" : "ar";
-    msgInput.placeholder = (currentLang === "ar") ? "الصق الرسالة هنا" : "Paste message here";
-    startAnalysis(); 
-    speak(currentLang === "ar" ? "اللغة العربية" : "English language");
+/* إذا آمن */
+else{
+
+matrixColor = "#00ffcc";
+
+bar.classList.remove("danger-bar");
+status.classList.remove("danger-text");
+
+status.innerText = currentLang === "ar" ? "آمن" : "SAFE";
+
+document.getElementById("mitreDiv").style.display="none";
+
 }
+
+}
+
+/* =========================
+   🌐 تغيير اللغة
+   ========================= */
+function toggleLang(){
+
+currentLang = currentLang === "ar" ? "en" : "ar";
+
+speak(currentLang==="ar"?"تم تغيير اللغة":"Language changed");
+
+}
+
+/* =========================
+   💻 الماتريكس
+   ========================= */
 
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
 const drops = Array(Math.floor(canvas.width/14)).fill(1);
 
-function draw() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = matrixColor; ctx.font = "14px monospace";
-    drops.forEach((y, i) => {
-        const text = Math.floor(Math.random()*2);
-        ctx.fillText(text, i * 14, y * 14);
-        if (y * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    });
+/* رسم الخلفية */
+function draw(){
+
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle=matrixColor;
+ctx.font="14px monospace";
+
+drops.forEach((y,i)=>{
+const text=Math.floor(Math.random()*2);
+ctx.fillText(text,i*14,y*14);
+
+if(y*14>canvas.height) drops[i]=0;
+
+drops[i]++;
+});
+
 }
-setInterval(draw, 33);
+
+setInterval(draw,33);
+
 </script>
 
 </body>
