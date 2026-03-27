@@ -161,18 +161,12 @@ msg.addEventListener("focus", () => {
         speechSynthesis.speak(unlock);
     }
 
-    // يقول للمستخدم انه في مربع النص
+    // يقول للمستخدم انه في مربع النص مرة وحدة فقط
     if(currentLang==="ar"){
         speak("أنت الآن في مربع إدخال النص");
     } else {
         speak("You are now in the text input field");
     }
-});
-
-// 🔄 تحليل بعد توقف الكتابة
-msg.addEventListener("input", () => {
-    clearTimeout(analyzeTimer);
-    analyzeTimer = setTimeout(analyze, 1000); // ينتظر ثانية بعد آخر كتابة قبل التحليل
 });
 
 // 🌐 نصوص اللغة
@@ -181,26 +175,17 @@ const lang = {
     en:{ placeholder:"Paste message", risk:"Risk", safe:"✔️ SAFE", danger:"⚠️ THREAT", recSafe:"No threat detected", recDanger:"Do not interact" }
 };
 
-// 🧠 قراءة النتيجة
-function readFullResult(){
-    let score = document.getElementById("score").innerText;
-    let status = document.getElementById("status").innerText;
-    let rec = document.getElementById("rec").innerText;
-
-    let text;
-    if(currentLang==="ar"){
-        text=`النتيجة ${status}. نسبة الخطر ${score} بالمئة. التوصية ${rec}`;
-    }else{
-        text=`Result is ${status}. Risk is ${score} percent. Recommendation ${rec}`;
-    }
-
-    speak(text);
-}
-
 // ⚠️ كلمات التحليل
 const high = ["password","otp","bank","crypto","bitcoin","كلمة المرور","تحقق","تحقق من حسابك البنكي","bank verification","verify your bank","verify your account","bank account suspended"];
 const medium = ["http","https","bit.ly","click","urgent","login","account","اضغط"];
 
+// 🔄 تحليل بعد توقف الكتابة
+msg.addEventListener("input", () => {
+    clearTimeout(analyzeTimer);
+    analyzeTimer = setTimeout(analyze, 1000); // ينتظر ثانية بعد آخر كتابة قبل التحليل
+});
+
+// 🧠 تحليل الرسالة
 function analyze(){
     let text = msg.value.toLowerCase();
     let score = 0;
@@ -218,21 +203,31 @@ function analyze(){
 
     if(score > 30){
         document.body.classList.add("danger-mode");
-        status.innerHTML = "<span class='danger'>" + lang[currentLang].danger + "</span>";
+        status.innerText = currentLang==="ar"?"غير آمن":"UNSAFE";
         rec.innerText = lang[currentLang].recDanger;
-        speak(lang[currentLang].danger);
-        matrixColor = "#ff0033"; // 🔴 تغيير لون الماتريكس لأحمر
+        matrixColor = "#ff0033";
     } else {
         document.body.classList.remove("danger-mode");
-        status.innerHTML = "<span class='safe'>" + lang[currentLang].safe + "</span>";
+        status.innerText = currentLang==="ar"?"آمن":"SAFE";
         rec.innerText = lang[currentLang].recSafe;
-        speak(lang[currentLang].safe);
-        matrixColor = "#00ffcc"; // 🟢 أخضر طبيعي
+        matrixColor = "#00ffcc";
     }
 
+    // قراءة النتيجة مرة واحدة فقط بعد التحليل
     if(audioEnabled){
-        setTimeout(readFullResult, 800);
+        setTimeout(readFullResult, 500);
     }
+}
+
+// 🧠 دالة قراءة النتيجة والتوصية مرة واحدة فقط
+function readFullResult(){
+    let score = document.getElementById("score").innerText;
+    let rec = document.getElementById("rec").innerText;
+
+    let resultText = score > 30 ? (currentLang==="ar"?"غير آمن":"UNSAFE") : (currentLang==="ar"?"آمن":"SAFE");
+
+    let finalText = `${resultText}. ${rec}`;
+    speak(finalText);
 }
 
 // 🌐 تغيير اللغة
