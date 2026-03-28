@@ -143,26 +143,12 @@ function startAnalysis() {
         "أدر العجلة واربح","جرب مجاناً","عرض لكبار الشخصيات","تم الإعلان عن الفائز","الأرقام الفائزة",
         "bank","credit card","debit card","account","login","password","otp","verify","click here","urgent",
         "bitcoin","crypto","investment","profit","double your money","earn money fast","lottery","jackpot","casino"
-        ‏"phishing","scam","fraud","malware","ransomware","trojan","virus","hack","hacker","stolen","identity theft",
-‏        "fake invoice","urgent payment","unauthorized","suspicious link","clickbait","get rich quick","investment scam",
-‏        "online casino","bitcoin scam","crypto scam","double your profit","limited time offer","password reset",
-‏        "account compromised","security alert","unauthorized transaction","click to claim","claim prize",
-‏        "login required","verify your account","reset password","account locked","confirm your identity",
-‏        "earn money fast","win money","jackpot","bonus","free gift","free trial","free offer","reward","instant cash",
-‏        "double your money","make money online","income opportunity","cash prize","payout","instant payout",
-‏        "high returns","guaranteed profit","passive income","monthly income","easy money","earn extra cash",
-‏        "financial freedom","debt consolidation","payday loan","mortgage","investment opportunity",
-‏        "casino","online casino","poker","blackjack","roulette","gambling","bet","free spins","jackpot winner",
-‏        "lottery","lottery win","spin the wheel","gamble now","win big","prize draw","sweepstakes","reward points",
-‏        "urgent","action required","immediate","alert","warning","critical update","security alert","breach detected",
-‏        "unauthorized access","account compromised","verify immediately","confirm payment","final notice"
-];
-
+    ];
 
     // زيادة الخطورة حسب كل كلمة وعددها
     suspiciousKeywords.forEach(k => {
         if(text.includes(k.toLowerCase())) {
-            score += 20; // كل كلمة تضيف 10 نقاط
+            score += 10; // كل كلمة تضيف 10 نقاط
             if(k.length > 6) score += 5;
             if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 15;
         }
@@ -243,3 +229,4 @@ setInterval(draw, 33);
 
 </body>
 </html>
+
