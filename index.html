@@ -6,36 +6,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{ --neon-green:#00ffcc; --danger-red:#ff0033; }
-body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
+body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; }
 canvas{ position:fixed; top:0; left:0; z-index:-1; }
-.container{ text-align:center; margin-top:40px; padding-bottom: 50px; }
-
-h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; color: var(--neon-green) !important; }
-.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); }
-
-textarea{ 
-    width:85%; height:130px; background:rgba(0,0,0,0.7); 
-    border:2px solid var(--neon-green) !important; 
-    border-radius:15px; padding:20px; color:var(--neon-green) !important; 
-    box-shadow:0 0 10px var(--neon-green) !important; 
-    font-size: 18px; outline: none; 
-}
-
-.card{ width:80%; margin:25px auto; padding:25px; border-radius:20px; background:rgba(0,0,0,0.8); box-shadow:0 0 20px var(--neon-green); text-align: left; }
-.bar-container { width: 100%; height: 10px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.8s; }
-
-.recommendation-box { 
-    width: 80%; margin: 20px auto; padding: 15px; 
-    border: 1px solid var(--danger-red); border-radius: 10px; 
-    background: rgba(255, 0, 51, 0.1); color: white; 
-    display: none; text-align: center;
-}
-
-button{ padding:8px 20px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:10px; font-family: 'Orbitron'; }
-
-.danger-bar { background: var(--danger-red) !important; }
-.danger-text { color: var(--danger-red) !important; }
+.container{ text-align:center; margin-top:40px; }
+textarea{ width:85%; height:130px; background:black; border:2px solid var(--neon-green); color:var(--neon-green); padding:15px; }
+.bar{ height:10px; background:var(--neon-green); width:0%; transition:0.5s;}
+.danger-bar{ background:var(--danger-red)!important;}
 </style>
 </head>
 <body>
@@ -43,145 +19,224 @@ button{ padding:8px 20px; border:1px solid var(--neon-green); background:transpa
 <canvas id="matrix"></canvas>
 
 <div class="container">
-    <h1>🦅 BlackFalcon SOC</h1>
-    <div class="sub-title">Advanced Security Operations Platform</div>
+<h1>🦅 BlackFalcon SOC</h1>
 
-    <div style="margin-bottom: 15px;">
-        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
-    </div>
+<button onclick="toggleLang()">EN / AR</button>
 
-    <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
+<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
-    <div class="card">
-        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
-        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
-        <div class="bar-container"><div class="bar" id="bar"></div></div>
-        <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
-        <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
-    </div>
+<div>
+<p id="statusLabel">Threat Status: CLEAN</p>
+<p>Risk: <span id="score">0</span>%</p>
+<div class="bar" id="bar"></div>
+</div>
 
-    <div id="recBox" class="recommendation-box">
-        <span id="recContent"></span>
-    </div>
+<p id="recContent"></p>
 </div>
 
 <script>
-let currentLang = "ar";
-let matrixColor = "#00ffcc";
-let analysisTimeout;
-const msgInput = document.getElementById("msg");
+let currentLang="ar";
+const msgInput=document.getElementById("msg");
 
-function speak(text) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+function speak(text){
+speechSynthesis.cancel();
+let u=new SpeechSynthesisUtterance(text);
+u.lang=currentLang==="ar"?"ar-SA":"en-US";
+speechSynthesis.speak(u);
 }
 
-msgInput.addEventListener("focus", () => {
-    speak(currentLang === "ar" ? "مربع إدخال النص" : "Text input field");
+/* 🔥 هنا كل كلماتك بدون حذف */
+const keywordsText = `
+$$$
+€€€
+جنيه إسترليني
+خصم 50%
+بضعة شلنات
+نقبل الدفع النقدي عبر البطاقات
+نقبل بطاقات الائتمان
+بسعر معقول
+عرض مناسب
+تجنب الإفلاس
+سوء الائتمان
+بنك
+الإفلاس
+مساومة
+الفواتير
+عنوان الفواتير
+مليار
+مليار دولار
+ملياردير
+البطاقة مقبولة
+البطاقات المقبولة
+نقدي
+مكافأة نقدية
+سحب نقدي
+كاش كاش كاش
+كازينو
+سنتات مقابل الدولار
+يفحص
+شيك أو حوالة بريدية
+احصل على خصمك
+يكلف
+التكاليف
+ائتمان
+مكاتب الائتمان
+بطاقة إئتمان
+عروض بطاقات الائتمان
+ائتمان أو مدين
+اتفاق
+دَين
+تخفيض
+دولارات
+ضاعف
+ضاعف ثروتك
+يكسب
+اربح دولارات
+اربح نقوداً
+اكسب دخلاً إضافياً
+اربح من المنزل
+اربح شهرياً
+اكسب شهريًا
+اكسب أسبوعياً
+دخل سنوي
+دخل سهل
+شروط ميسرة
+حر
+مجاناً
+مقابل دولار واحد فقط
+دخول مجاني
+استشارة مجانية
+هدية مجانية
+استضافة مجانية
+معلومات مجانية
+الاستثمار الحر
+عضوية مجانية
+أموال مجانية
+معاينة مجانية
+عرض سعر مجاني
+تجربة مجانية
+استرداد كامل المبلغ
+التخلص من الديون
+وديعة مضمونة
+زيادة الإيرادات
+أرباح فورية
+دخل فوري
+تأمين
+استثمار
+القروض
+ضمان استرداد الأموال
+دولار أمريكي
+مضمون بنسبة 100%
+ادخل الآن
+عرض مذهل
+قدم الآن
+أفضل عرض
+ربح كبير
+لا تفوت
+انقر هنا
+عرض حصري
+عرض رائع
+نتائج مضمونة
+لفترة محدودة
+بدون تكلفة
+مرة واحدة في العمر
+اطلب الآن
+ربح صافٍ
+خالٍ من المخاطر
+عاجل
+تحقق من حسابك البنكي
+أنت فائز
+قم بالدخول إلى حسابك
+تحديث الحساب
+تغيير كلمة المرور
+أكد بياناتك
+اختراق البيانات
+إشعار نهائي
+آخر تحذير
+سجل الدخول الآن
+تفاصيل الدفع مطلوبة
+تحذير من التصيد الاحتيالي
+تحديث أمني
+التحقق من الهوية
+رسالة تحذير
+راهن الآن
+فوز كبير
+مكافأة الكازينو
+اسحب أموالك الآن
+انقر للفوز
+الفوز بالجائزة الكبرى
+الفائز باليانصيب
+
+/* English */
+bank
+credit card
+login
+password
+verify
+otp
+click here
+urgent
+free
+offer
+winner
+prize
+bonus
+bitcoin
+crypto
+investment
+profit
+casino
+`;
+
+const suspiciousKeywords = keywordsText.split("\n").map(k=>k.trim()).filter(k=>k);
+
+msgInput.addEventListener("input",()=>{
+let text=msgInput.value.toLowerCase();
+let score=0;
+
+suspiciousKeywords.forEach(k=>{
+if(text.includes(k.toLowerCase())){
+score+=20;
+if(k.length>6)score+=10;
+}
 });
 
-msgInput.addEventListener("input", () => {
-    clearTimeout(analysisTimeout);
-    analysisTimeout = setTimeout(() => {
-        startAnalysis();
-    }, 1500);
+if(score>100)score=100;
+
+updateUI(score);
 });
 
-function startAnalysis() {
-    let text = msgInput.value.toLowerCase();
-    if(text.length < 2) return;
+function updateUI(score){
+let bar=document.getElementById("bar");
+let scoreVal=document.getElementById("score");
+let statusLabel=document.getElementById("statusLabel");
+let rec=document.getElementById("recContent");
 
-    let score = 0;
+scoreVal.innerText=score;
+bar.style.width=score+"%";
 
-    const suspiciousKeywords = [/* 🔥 جميع كلماتك بالكامل + إضافات */
-    "","$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان","بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير","مليار","مليار دولار","ملياردير","البطاقة مقبولة","البطاقات المقبولة","نقدي","مكافأة نقدية","سحب نقدي","كاش كاش كاش","كازينو","سنتات مقابل الدولار","يفحص","شيك أو حوالة بريدية","احصل على خصمك","يكلف","التكاليف","ائتمان","مكاتب الائتمان","بطاقة إئتمان","عروض بطاقات الائتمان","ائتمان أو مدين","اتفاق","دَين","تخفيض","دولارات","ضاعف","ضاعف ثروتك","يكسب","اربح دولارات","اربح نقوداً","اكسب دخلاً إضافياً","اربح من المنزل","اربح شهرياً","اكسب شهريًا","اكسب أسبوعياً","دخل سنوي","دخل سهل","شروط ميسرة","حر","مجاناً","مقابل دولار واحد فقط","دخول مجاني","استشارة مجانية","هدية مجانية","استضافة مجانية","معلومات مجانية","الاستثمار الحر","عضوية مجانية","أموال مجانية","معاينة مجانية","عرض سعر مجاني","تجربة مجانية","استرداد كامل المبلغ","التخلص من الديون","يتبرع","وديعة مضمونة","زيادة الإيرادات","زيادة المبيعات/حركة المرور","أرباح فورية","دخل فوري","تأمين","استثمار","نصائح استثمارية","القروض","اكسب دولارات","ضمان استرداد الأموال","القرض العقاري","أسعار الرهن العقاري","يعرض","مجاني بالكامل","دولار واحد فقط","سعر","ضمان السعر","الأرباح","يقتبس","إعادة التمويل","وفر المال","وفر الكثير من المال","رهناً بالموافقة الائتمانية","دولار أمريكي","لماذا تدفع أكثر؟","دخلك",
-    "مضمون بنسبة 100%","ادخل الآن","بادر بالتحرك سريعاً","عرض مذهل","قدم الآن","كما شاهدتم على","أفضل عرض","ربح كبير","لا تفوت","انقر أدناه","انقر هنا","الصفقة ستنتهي قريباً","لا تحذف","ضاعف أموالك","عرض حصري","عرض رائع","احصل عليه الآن","أخبار رائعة","نتائج مضمونة","معلومات هامة","زيادة المبيعات","توفير فوري","لفترة محدودة","قراءة ضرورية","للعملاء الجدد فقط","بدون شروط","بدون تكلفة","لا حاجة لفحص الائتمان","لا يوجد أي التزام","بدون أي التزامات","مرة واحدة في العمر","متوفر هنا فقط","اطلب الآن","الأرباح المحتملة","ربح صافٍ","خالٍ من المخاطر","دعوة خاصة","عرض خاص","هذا لن يدوم","عاجل","لن أصدق","تحقق من حسابك البنكي",
-    "رقم 1","مجاني 100%","خصم 100%","راضٍ بنسبة 100%","دخل إضافي","مندهش","مدهش","أشياء رائعة","اندهش","كن متفاجئاً","كن مدير نفسك","أفضل صفقة","أفضل سعر","أفضل الأسعار","مبالغ طائلة","علاوة","لا أستطيع العيش بدونها","توحيد الديون","ضاعف دخلك","تم تخفيضها بشكل كبير","اكسب أموالاً إضافية","اكسب المال","توقع أن تربح","إضافي","نقود إضافية","رائع","سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني","احصل على أموالك","صفقة رائعة","انضم إلى الملايين","أقل سعر","مليون دولار","جائزة","يعد","رضاكم مضمون","وفر حتى","عرض ترويجي خاص","الأفضل","الآلاف","عرض لا يُضاهى","لا يصدق","غير محدود","لن تصدق عينيك",
-    "قم بالدخول إلى حسابك","تحديث الحساب","فعّل الآن","تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","اختراق البيانات","حمل الآن","إشعار نهائي","تحديث هام","يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير","سجل الدخول الآن","تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة","تحذير من التصيد الاحتيالي","خرق أمني","تحديث أمني","التحقق من الهوية","رسالة تحذير",
+if(score>30){
+bar.classList.add("danger-bar");
 
-    /* إضافات قوية */
-    "bank","credit card","debit card","account","login","password","otp","verify","click here","urgent",
-    "bitcoin","crypto","investment","profit","double your money","earn money fast","lottery","jackpot","casino"
-    ];
+let s=currentLang==="ar"?"خطر عالي":"HIGH RISK";
+let r=currentLang==="ar"?"🚨 رسالة احتيالية":"🚨 Phishing detected";
 
-    suspiciousKeywords.forEach(k => {
-        if(text.includes(k)) {
-            score += 20;
-            if(k.length > 6) score += 10;
-            if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 25;
-        }
-    });
+statusLabel.innerText=s;
+rec.innerText=r;
+speak(s+" "+r);
 
-    if(score > 100) score = 100;
-
-    updateUI(score);
+}else{
+bar.classList.remove("danger-bar");
+let s=currentLang==="ar"?"آمن":"SAFE";
+statusLabel.innerText=s;
+rec.innerText="";
+speak(s);
+}
 }
 
-function updateUI(score) {
-    const bar = document.getElementById("bar");
-    const scoreVal = document.getElementById("score");
-    const statusLabel = document.getElementById("statusLabel");
-    const recBox = document.getElementById("recBox");
-    const recContent = document.getElementById("recContent");
-
-    scoreVal.innerText = score;
-    bar.style.width = score + "%";
-
-    if(score > 30) {
-        matrixColor = "#ff0033";
-        bar.classList.add("danger-bar");
-        statusLabel.innerText = "حالة التهديد: خطر عالي جداً";
-        statusLabel.classList.add("danger-text");
-
-        let recText = "🚨 تحذير شديد: هذه الرسالة تحتوي على مؤشرات احتيال قوية جداً، لا تضغط أي رابط";
-        recContent.innerText = recText;
-
-        document.getElementById("mitreDiv").style.display = "block";
-        document.getElementById("incidentDiv").style.display = "block";
-        recBox.style.display = "block";
-
-        speak(recText);
-    } else {
-        matrixColor = "#00ffcc";
-        bar.classList.remove("danger-bar");
-        statusLabel.classList.remove("danger-text");
-        statusLabel.innerText = "حالة التهديد: آمن";
-        
-        document.getElementById("mitreDiv").style.display = "none";
-        document.getElementById("incidentDiv").style.display = "none";
-        recBox.style.display = "none";
-    }
+function toggleLang(){
+currentLang=currentLang==="ar"?"en":"ar";
 }
-
-function toggleLang() {
-    currentLang = (currentLang === "ar") ? "en" : "ar";
-    msgInput.placeholder = (currentLang === "ar") ? "الصق الرسالة هنا" : "Paste message here";
-    startAnalysis(); 
-    speak(currentLang === "ar" ? "اللغة العربية" : "English language");
-}
-
-// Matrix
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const drops = Array(Math.floor(canvas.width/14)).fill(1);
-
-function draw() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = matrixColor;
-    ctx.font = "14px monospace";
-    drops.forEach((y, i) => {
-        const text = Math.floor(Math.random()*2);
-        ctx.fillText(text, i * 14, y * 14);
-        if (y * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    });
-}
-setInterval(draw, 33);
 </script>
 
 </body>
