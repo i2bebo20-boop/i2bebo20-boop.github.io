@@ -6,36 +6,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{ --neon-green:#00ffcc; --danger-red:#ff0033; }
-body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
+body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; }
 canvas{ position:fixed; top:0; left:0; z-index:-1; }
-.container{ text-align:center; margin-top:0px; padding-bottom: 0px; }
+.container{ text-align:center; }
 
-h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; color: var(--neon-green) !important; }
-.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); }
+textarea{ width:85%; height:130px; background:rgba(0,0,0,0.7); border:2px solid var(--neon-green); border-radius:15px; padding:20px; color:var(--neon-green); }
 
-textarea{ 
-    width:85%; height:130px; background:rgba(0,0,0,0.7); 
-    border:2px solid var(--neon-green) !important; 
-    border-radius:15px; padding:20px; color:var(--neon-green) !important; 
-    box-shadow:0 0 10px var(--neon-green) !important; 
-    font-size: 18px; outline: none; 
-}
+.card{ width:80%; margin:20px auto; padding:20px; background:rgba(0,0,0,0.8); box-shadow:0 0 20px var(--neon-green); }
 
-.card{ width:80%; margin:25px auto; padding:25px; border-radius:20px; background:rgba(0,0,0,0.8); box-shadow:0 0 20px var(--neon-green); text-align: left; }
-.bar-container { width: 100%; height: 10px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.8s; }
+.bar{ height:10px; background:var(--neon-green); width:0%; transition:0.5s; }
 
-.recommendation-box { 
-    width: 80%; margin: 20px auto; padding: 15px; 
-    border: 1px solid var(--danger-red); border-radius: 10px; 
-    background: rgba(255, 0, 51, 0.1); color: white; 
-    display: none; text-align: center;
-}
-
-button{ padding:8px 20px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:10px; font-family: 'Orbitron'; }
-
-.danger-bar { background: var(--danger-red) !important; }
-.danger-text { color: var(--danger-red) !important; }
+.danger{ color:var(--danger-red); }
 </style>
 </head>
 <body>
@@ -43,212 +24,175 @@ button{ padding:8px 20px; border:1px solid var(--neon-green); background:transpa
 <canvas id="matrix"></canvas>
 
 <div class="container">
-    <h1>🦅 BlackFalcon SOC</h1>
-    <div class="sub-title">Advanced Security Operations Platform</div>
+<h1>🦅 BlackFalcon SOC</h1>
 
-    <div style="margin-bottom: 15px;">
-        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
-    </div>
+<textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
-    <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
+<div class="card">
+<div id="status">SAFE</div>
+<div>Score: <span id="score">0</span>%</div>
+<div class="bar" id="bar"></div>
+<div id="mitre"></div>
+</div>
 
-    <div class="card">
-        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
-        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
-        <div class="bar-container"><div class="bar" id="bar"></div></div>
-        <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
-        <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
-    </div>
-
-    <div id="recBox" class="recommendation-box">
-        <span id="recContent"></span>
-    </div>
+<div id="rec"></div>
 </div>
 
 <script>
-let currentLang = "ar";
-let matrixColor = "#00ffcc";
-let analysisTimeout;
-const msgInput = document.getElementById("msg");
+let msg=document.getElementById("msg");
 
-function speak(text) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+function speak(t){
+speechSynthesis.cancel();
+let u=new SpeechSynthesisUtterance(t);
+u.lang="ar-SA";
+speechSynthesis.speak(u);
 }
 
-msgInput.addEventListener("focus", () => {
-    speak(currentLang === "ar" ? "أنت الآن في مربع إدخال النص" : "You are now in the text input field");
+msg.addEventListener("input",()=>setTimeout(analyze,1000));
+
+function analyze(){
+let text=msg.value.toLowerCase();
+let score=0;
+
+// 🔥 كل الكلمات (عربي + إنجليزي كاملة)
+const words=[
+"تحقق من حسابك البنكي","http",
+"بنك","احتيال","اختراق","كلمة المرور","otp","login","verify","account","password",
+"free money","guaranteed profit","no risk","limited offer","act now","claim now",
+"verify your account","account suspended","unusual activity detected","confirm identity",
+"secure your account","update your details","reset now","login immediately",
+"urgent action required","final notice","last warning","security alert",
+"you have won","winner","congratulations","claim your prize","reward waiting",
+"instant payout","fast cash","quick money","earn instantly","double earnings",
+"investment opportunity","high return","risk free investment","crypto profit",
+"bitcoin giveaway","airdrop","exclusive deal","vip offer","special promotion",
+"buy now","order now","limited stock","only today","offer expires",
+"click below","visit link","open link","download file","install now",
+"attachment included","see attachment","open attachment","invoice attached",
+"payment required","pending payment","billing issue","update payment info",
+"confirm payment","transaction failed","account locked","access denied",
+"unauthorized login","security breach","data leak","compromised account",
+"recover account","verify now","identity check","send code","enter code"
+"تحقق من حسابك البنكي","تحقق من حسابك","تحديث الحساب","تحديث بياناتك","تأكيد الهوية",
+"تأكيد بياناتك","قم بتسجيل الدخول","تسجيل الدخول الآن","أدخل كلمة المرور","إعادة تعيين كلمة المرور",
+"تم اختراق حسابك","تم إيقاف حسابك","حسابك معلق","نشاط غير معتاد","محاولة تسجيل دخول",
+"تم رصد نشاط مشبوه","تنبيه أمني","تحذير أمني","إشعار نهائي","آخر تحذير","يلزم اتخاذ إجراء",
+"قم بالتحقق الآن","تحقق الآن","اضغط هنا","انقر هنا","انقر على الرابط","افتح الرابط",
+"حمل الآن","تحميل فوري","افتح المرفق","راجع المرفق","فاتورة مرفقة","مستند مرفق",
+"دفع مطلوب","مشكلة في الدفع","فشل العملية","تحديث معلومات الدفع","تأكيد الدفع",
+"تم سحب مبلغ","تمت عملية شراء","تم خصم مبلغ","حوالة مالية","تحويل مالي",
+"جائزة","ربحت","مبروك","أنت فائز","اربح الآن","فرصة ربح","سحب عشوائي",
+"مكافأة نقدية","جائزة كبرى","هدية مجانية","عرض مجاني","عرض حصري","عرض خاص",
+"لفترة محدودة","سارع الآن","لا تفوت","عرض ينتهي قريباً","فرصة لا تعوض",
+"اربح المال","دخل إضافي","دخل سريع","اربح من المنزل","استثمار","استثمار مضمون",
+"أرباح مضمونة","بدون مخاطرة","مخاطر صفر","مكاسب فورية","مضاعفة الأرباح",
+"عملة رقمية","بيتكوين","عملات مشفرة","استثمار رقمي","تداول",
+"حساب بنكي","بطاقة ائتمان","بطاقة مدى","بطاقة بنكية","بيانات البطاقة",
+"رمز التحقق","رمز otp","أدخل الرمز","أرسل الرمز","تأكيد الرمز",
+"بياناتك الشخصية","معلومات حساسة","رقم الهوية","رقم البطاقة",
+"الوصول غير مصرح","تم اختراق البيانات","تسريب بيانات","اختراق أمني",
+"رابط آمن","دخول آمن","حماية الحساب","تأمين الحساب"
+];
+
+words.forEach(w=>{
+if(text.includes(w)) score+=10;
 });
 
-msgInput.addEventListener("input", () => {
-    clearTimeout(analysisTimeout);
-    analysisTimeout = setTimeout(() => { startAnalysis(); }, 1500);
+// 🔥 كلمات حساسة
+["password","otp","login","bank","تحقق من حسابك البنكي","http"].forEach(k=>{
+if(text.includes(k)) score+=25;
 });
 
-function startAnalysis() {
-    let text = msgInput.value.toLowerCase();
-    if(text.length < 2) return;
+// 🔥 تكرار قوي
+let wc={};
+text.split(" ").forEach(w=>wc[w]=(wc[w]||0)+1);
 
-    let score = 0;
+Object.values(wc).forEach(c=>{
+if(c>=20) score+=80;
+});
 
-    // ✅ نفس كلماتك العربية كاملة بدون حذف + إضافة الإنجليزي
-    const suspiciousKeywords = [
-        "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
-        "بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير",
-        "مليار","مليار دولار","ملياردير","البطاقة مقبولة","البطاقات المقبولة","نقدي","مكافأة نقدية","سحب نقدي",
-        "كاش كاش كاش","كازينو","سنتات مقابل الدولار","يفحص","شيك أو حوالة بريدية","احصل على خصمك","يكلف","التكاليف",
-        "ائتمان","مكاتب الائتمان","بطاقة إئتمان","عروض بطاقات الائتمان","ائتمان أو مدين","اتفاق","دَين","تخفيض","دولارات",
-        "ضاعف","ضاعف ثروتك","يكسب","اربح دولارات","اربح نقوداً","اكسب دخلاً إضافياً","اربح من المنزل","اربح شهرياً",
-        "اكسب شهريًا","اكسب أسبوعياً","دخل سنوي","دخل سهل","شروط ميسرة","حر","مجاناً","مقابل دولار واحد فقط","دخول مجاني",
-        "استشارة مجانية","هدية مجانية","استضافة مجانية","معلومات مجانية","الاستثمار الحر","عضوية مجانية","أموال مجانية",
-        "معاينة مجانية","عرض سعر مجاني","تجربة مجانية","استرداد كامل المبلغ","التخلص من الديون","يتبرع","وديعة مضمونة",
-        "زيادة الإيرادات","زيادة المبيعات/حركة المرور","أرباح فورية","دخل فوري","تأمين","استثمار","نصائح استثمارية","القروض",
-        "اكسب دولارات","ضمان استرداد الأموال","القرض العقاري","أسعار الرهن العقاري","يعرض","مجاني بالكامل","دولار واحد فقط",
-        "سعر","ضمان السعر","الأرباح","يقتبس","إعادة التمويل","وفر المال","وفر الكثير من المال","رهناً بالموافقة الائتمانية",
-        "دولار أمريكي","لماذا تدفع أكثر؟","دخلك","مضمون بنسبة 100%","ادخل الآن","بادر بالتحرك سريعاً","عرض مذهل","قدم الآن",
-        "كما شاهدتم على","أفضل عرض","ربح كبير","لا تفوت","انقر أدناه","انقر هنا","الصفقة ستنتهي قريباً","لا تحذف",
-        "ضاعف أموالك","عرض حصري","عرض رائع","عضوية مجانية","احصل عليه الآن","أخبار رائعة","نتائج مضمونة","معلومات هامة",
-        "زيادة المبيعات","توفير فوري","لفترة محدودة","قراءة ضرورية","للعملاء الجدد فقط","بدون شروط","بدون تكلفة","لا حاجة لفحص الائتمان",
-        "لا يوجد أي التزام","بدون أي التزامات","مرة واحدة في العمر","متوفر هنا فقط","اطلب الآن","الأرباح المحتملة","ربح صافٍ",
-        "خالٍ من المخاطر","دعوة خاصة","عرض خاص","هذا لن يدوم","عاجل","لن أصدق","تحقق من حسابك البنكي","رقم 1","مجاني 100%",
-        "خصم 100%","راضٍ بنسبة 100%","دخل إضافي","مندهش","مدهش","عرض مذهل","أشياء رائعة","اندهش","كن متفاجئاً","كن مدير نفسك",
-        "أفضل صفقة","أفضل عرض","أفضل سعر","أفضل الأسعار","مبالغ طائلة","علاوة","لا أستطيع العيش بدونها","توحيد الديون","ضاعف دخلك",
-        "تم تخفيضها بشكل كبير","اكسب أموالاً إضافية","اكسب المال","توقع أن تربح","إضافي","نقود إضافية","دخل إضافي","رائع",
-        "سيولة نقدية سريعة","الحرية المالية","بريد ذو أولوية مجاني","احصل على أموالك","صفقة رائعة","انضم إلى الملايين","أقل سعر",
-        "اكسب المال","مليون دولار","ضمان استرداد الأموال","جائزة","يعد","رضاكم مضمون","وفر حتى","عرض ترويجي خاص","الأفضل",
-        "الآلاف","عرض لا يُضاهى","لا يصدق","غير محدود","رائع","لن تصدق عينيك","وصول","ادخل الآن","يمثل","بادر بالتحرك فوراً",
-        "تم الآن","بادر بالتحرك الآن!","فعل","الإجراء المطلوب","قدّم طلبك هنا","قدم الآن","قدم طلبك الآن!","قدم طلبك عبر الإنترنت",
-        "انضم إلى العضوية","قبل فوات الأوان","كونك عضواً","يشتري","اشتر مباشرة","اشتري الآن","اشتر اليوم","يتصل","مكالمة مجانية",
-        "اتصل الآن مجاناً","اتصل بي","اتصل الآن","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء",
-        "اطلب الآن","انقر","انقر أدناه","انقر هنا","انقر هنا للتحميل","انقر الآن","انقر على هذا الرابط","انقر للحصول على",
-        "انقر للإزالة","اتصل بنا فوراً","الصفقة ستنتهي قريباً","افعل ذلك الآن","افعل ذلك اليوم","لا تحذف","لا تتردد","لا تضيع الوقت",
+// AUTO
+if(score>=70) score=100;
 
-        // 🔥 إنجليزي مضاف
-        "free money","guaranteed profit","no risk","limited offer","act now","claim now",
-        "verify your account","account suspended","unusual activity detected","confirm identity",
-        "secure your account","update your details","reset now","login immediately",
-        "urgent action required","final notice","last warning","security alert",
-        "you have won","winner","congratulations","claim your prize","reward waiting",
-        "instant payout","fast cash","quick money","earn instantly","double earnings",
-        "investment opportunity","high return","risk free investment","crypto profit",
-        "bitcoin giveaway","airdrop","exclusive deal","vip offer","special promotion",
-        "buy now","order now","limited stock","only today","offer expires",
-        "click below","visit link","open link","download file","install now",
-        "attachment included","see attachment","open attachment","invoice attached",
-        "payment required","pending payment","billing issue","update payment info",
-        "confirm payment","transaction failed","account locked","access denied",
-        "unauthorized login","security breach","data leak","compromised account",
-        "recover account","verify now","identity check","send code","enter code","تحقق من حسابك البنكي","http"
-    ];
-
-    suspiciousKeywords.forEach(k => {
-        if(text.includes(k.toLowerCase())) {
-            score += 10;
-        }
-    });
-
-    if(score > 100) score = 100;
-
-    updateUI(score, text);
+update(score,text);
 }
 
-function updateUI(score, text) {
-    const bar = document.getElementById("bar");
-    const scoreVal = document.getElementById("score");
-    const statusLabel = document.getElementById("statusLabel");
-    const recBox = document.getElementById("recBox");
-    const recContent = document.getElementById("recContent");
+function update(score,text){
 
-    scoreVal.innerText = score;
-    bar.style.width = score + "%";
+document.getElementById("score").innerText=score;
+document.getElementById("bar").style.width=score+"%";
 
-    if(score > 30) {
+let status=document.getElementById("status");
+let rec=document.getElementById("rec");
+let mitre=document.getElementById("mitre");
 
-        // ✅ MITRE متعدد
-        let mitreTechniques = [];
+if(score>30){
 
-        if(text.includes("link") || text.includes("click") || text.includes("http")){
-            mitreTechniques.push("T1566 - Phishing");
-        }
+status.innerText="🚨 CRITICAL";
+status.classList.add("danger");
 
-        if(text.includes("password") || text.includes("login") || text.includes("verify")){
-            mitreTechniques.push("T1556 - Credential Harvesting");
-        }
+// MITRE
+let m=[];
+if(text.includes("http")) m.push("T1566 Phishing");
+if(text.includes("password")||text.includes("login")) m.push("Credential Theft");
+if(text.includes("bank")) m.push("Financial Fraud");
+if(text.includes("otp")) m.push("OTP Abuse");
+if(m.length==0) m.push("T1566 Phishing");
 
-        if(text.includes("bank") || text.includes("account") || text.includes("credit")){
-            mitreTechniques.push("T1650 - Financial Theft");
-        }
+mitre.innerText="MITRE: "+m.join(" | ");
 
-        if(text.includes("attachment") || text.includes("download")){
-            mitreTechniques.push("T1204 - User Execution");
-        }
+// 🔥 توصيات SOC حقيقية
+let recs=[];
 
-        if(text.includes("otp") || text.includes("code")){
-            mitreTechniques.push("T1110 - OTP Abuse");
-        }
+if(text.includes("http")) recs.push("لا تضغط أي رابط مشبوه");
+if(text.includes("password")) recs.push("لا تدخل كلمة المرور خارج النظام الرسمي");
+if(text.includes("bank")) recs.push("استخدم تطبيق البنك الرسمي فقط للتحقق");
+if(text.includes("otp")) recs.push("لا تشارك رمز التحقق مطلقاً");
 
-        if(mitreTechniques.length === 0){
-            mitreTechniques.push("T1566 - Phishing");
-        }
+recs.push("اعزل الرسالة فوراً من بيئة العمل");
+recs.push("أبلغ فريق الأمن السيبراني مباشرة");
+recs.push("افحص الجهاز باستخدام برنامج حماية محدث");
+recs.push("راجع سجلات الدخول للحسابات المرتبطة");
 
-        document.getElementById("mitreDiv").innerText = "MITRE: " + mitreTechniques.join(" | ");
-        document.getElementById("mitreDiv").style.display = "block";
+let final=recs.join(" | ");
+rec.innerText=final;
 
-        matrixColor = "#ff0033";
-        bar.classList.add("danger-bar");
-        statusLabel.innerText = (currentLang==="ar")?"حالة التهديد: خطر عالي جداً":"Threat Status: HIGH RISK";
-        statusLabel.classList.add("danger-text");
+// 🔊 صوت
+speak("تحذير خطر عالي");
+setTimeout(()=>speak(final),1500);
 
-        let recText = (currentLang==="ar")?"تحذير: الرسالة تحتوي على مؤشرات احتيال قوية. لا تضغط أي رابط":"Warning: The message contains strong fraud indicators. Do NOT click links";
-        recContent.innerText = recText;
-
-        document.getElementById("incidentDiv").style.display = "block";
-        recBox.style.display = "block";
-
-        speak(recText);
-    } else {
-        matrixColor = "#00ffcc";
-        bar.classList.remove("danger-bar");
-        statusLabel.classList.remove("danger-text");
-        statusLabel.innerText = (currentLang==="ar")?"حالة التهديد: آمن":"Threat Status: CLEAN";
-        document.getElementById("mitreDiv").style.display = "none";
-        document.getElementById("incidentDiv").style.display = "none";
-        recBox.style.display = "none";
-
-        if(msgInput.value.length > 5){
-            speak((currentLang==="ar")?"الحالة آمنة":"Status is safe");
-        }
-    }
+}else{
+status.innerText="SAFE";
+rec.innerText="";
+mitre.innerText="";
+speak("الحالة آمنة");
+}
 }
 
-function toggleLang() {
-    currentLang = (currentLang === "ar") ? "en" : "ar";
-    msgInput.placeholder = (currentLang === "ar") ? "الصق الرسالة هنا..." : "Paste message here...";
-    startAnalysis(); 
-    speak(currentLang==="ar"?"اللغة العربية":"English language");
-}
+// شاشة لا محدودة
+let canvas=document.getElementById("matrix");
+let ctx=canvas.getContext("2d");
 
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const drops = Array(Math.floor(canvas.width/14)).fill(1);
-
-function draw() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = matrixColor;
-    ctx.font = "14px monospace";
-    drops.forEach((y, i) => {
-        const text = Math.floor(Math.random()*2);
-        ctx.fillText(text, i * 14, y * 14);
-        if (y * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    });
+function resize(){
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 }
-setInterval(draw, 33);
+window.addEventListener("resize",resize);
+resize();
+
+let drops=Array(Math.floor(canvas.width/14)).fill(1);
+
+function draw(){
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="#00ffcc";
+drops.forEach((y,i)=>{
+ctx.fillText(Math.random()>0.5?1:0,i*14,y*14);
+if(y*14>canvas.height) drops[i]=0;
+drops[i]++;
+});
+}
+setInterval(draw,33);
 </script>
 
 </body>
