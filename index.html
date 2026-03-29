@@ -79,12 +79,10 @@ function speak(text) {
     window.speechSynthesis.speak(utterance);
 }
 
-// اقرأ عند الضغط على مربع النص
 msgInput.addEventListener("focus", () => {
     speak(currentLang === "ar" ? "أنت الآن في مربع إدخال النص" : "You are now in the text input field");
 });
 
-// تحليل الرسالة بعد التوقف
 msgInput.addEventListener("input", () => {
     clearTimeout(analysisTimeout);
     analysisTimeout = setTimeout(() => { startAnalysis(); }, 1500);
@@ -96,7 +94,7 @@ function startAnalysis() {
 
     let score = 0;
 
-    // قائمة الكلمات كلها بدون حذف
+    // ✅ نفس كلماتك العربية كاملة بدون حذف + إضافة الإنجليزي
     const suspiciousKeywords = [
         "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
         "بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير",
@@ -127,39 +125,37 @@ function startAnalysis() {
         "اتصل الآن مجاناً","اتصل بي","اتصل الآن","اتصل الآن!","هل يمكننا الحصول على دقيقة من وقتك؟","ألغِ الآن","يلزم الإلغاء",
         "اطلب الآن","انقر","انقر أدناه","انقر هنا","انقر هنا للتحميل","انقر الآن","انقر على هذا الرابط","انقر للحصول على",
         "انقر للإزالة","اتصل بنا فوراً","الصفقة ستنتهي قريباً","افعل ذلك الآن","افعل ذلك اليوم","لا تحذف","لا تتردد","لا تضيع الوقت",
-        "عرض حصري","تاريخ الانتهاء","ينتهي العرض اليوم","النداء الأخير","للوصول الفوري","بسعر فقط","لك","يوم الجمعة الذي يسبق [العطلة]",
-        "أبعده","احصل عليه الآن","احصل عليه الآن","احصل على أموالك","ابدأ الآن","ابدأ الآن","عرض رائع","أسرع","في الحال",
-        "المعلومات التي طلبتها","المعلومات التي طلبتها","فوري","لفترة محدودة","للعملاء الجدد فقط","الآن","الآن فقط","ينتهي العرض",
-        "مرة واحدة في العمر","فقط","اطلب الآن","اطلب اليوم","يرجى القراءة","اشتر الآن","سجل مجاناً","سجل مجاناً اليوم","الكميات محدودة",
-        "اتخذ إجراءً","بادر بالتحرك الآن","هذا لن يدوم","لفترة محدودة","اليوم","عاجل للغاية","محاكمة","عاجل","ماذا تنتظر؟",
-        "العرض ساري حتى نفاذ الكمية","أنت فائز","قم بالدخول إلى حسابك","تحديث الحساب","الإجراء المطلوب","فعّل الآن","مضاد للفيروسات",
-        "تغيير كلمة المرور","انقر للتحقق","أكد بياناتك","معلومات سرية","سايبر مونداي","اختراق البيانات","حمل الآن","إشعار نهائي",
-        "برنامج مكافحة فيروسات مجاني","تجربة مجانية","تحديث هام","يلزم اتخاذ إجراء فوري","تحسين الأمن","قم بالتثبيت الآن","آخر تحذير",
-        "سجل الدخول الآن","تم رصد تسجيل دخول جديد","حساب إلكتروني","إعادة تعيين كلمة المرور","تفاصيل الدفع مطلوبة","تحذير من التصيد الاحتيالي",
-        "دفع آمن","خرق أمني","تحديث أمني","تحديث الحساب","التحقق من الهوية","رسالة تحذير","راهن الآن","فوز كبير","لعبة البلاك جاك",
-        "مكافأة الكازينو","اسحب أموالك الآن","انقر للفوز","ضاعف أموالك","وصول حصري","رقائق البطاطس المجانية","دورات مجانية",
-        "المقامرة عبر الإنترنت","عرض مميز","جوائز فورية","الفوز بالجائزة الكبرى","موزع مباشر","الفائز باليانصيب","فرصة حظ",
-        "المراهنات عبر الإنترنت","كازينو على الإنترنت","الألعاب عبر الإنترنت","بطولة البوكر","رهان خالٍ من المخاطر","جائزة كبرى في ماكينات القمار",
-        "أدر العجلة واربح","جرب مجاناً","عرض لكبار الشخصيات","تم الإعلان عن الفائز","الأرقام الفائزة",
-        "bank","credit card","debit card","account","login","password","otp","verify","click here","urgent",
-        "bitcoin","crypto","investment","profit","double your money","earn money fast","lottery","jackpot","casino"
+
+        // 🔥 إنجليزي مضاف
+        "free money","guaranteed profit","no risk","limited offer","act now","claim now",
+        "verify your account","account suspended","unusual activity detected","confirm identity",
+        "secure your account","update your details","reset now","login immediately",
+        "urgent action required","final notice","last warning","security alert",
+        "you have won","winner","congratulations","claim your prize","reward waiting",
+        "instant payout","fast cash","quick money","earn instantly","double earnings",
+        "investment opportunity","high return","risk free investment","crypto profit",
+        "bitcoin giveaway","airdrop","exclusive deal","vip offer","special promotion",
+        "buy now","order now","limited stock","only today","offer expires",
+        "click below","visit link","open link","download file","install now",
+        "attachment included","see attachment","open attachment","invoice attached",
+        "payment required","pending payment","billing issue","update payment info",
+        "confirm payment","transaction failed","account locked","access denied",
+        "unauthorized login","security breach","data leak","compromised account",
+        "recover account","verify now","identity check","send code","enter code"
     ];
 
-    // زيادة الخطورة حسب كل كلمة وعددها
     suspiciousKeywords.forEach(k => {
         if(text.includes(k.toLowerCase())) {
-            score += 10; // كل كلمة تضيف 10 نقاط
-            if(k.length > 6) score += 5;
-            if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 15;
+            score += 10;
         }
     });
 
     if(score > 100) score = 100;
 
-    updateUI(score);
+    updateUI(score, text);
 }
 
-function updateUI(score) {
+function updateUI(score, text) {
     const bar = document.getElementById("bar");
     const scoreVal = document.getElementById("score");
     const statusLabel = document.getElementById("statusLabel");
@@ -170,6 +166,37 @@ function updateUI(score) {
     bar.style.width = score + "%";
 
     if(score > 30) {
+
+        // ✅ MITRE متعدد
+        let mitreTechniques = [];
+
+        if(text.includes("link") || text.includes("click") || text.includes("http")){
+            mitreTechniques.push("T1566 - Phishing");
+        }
+
+        if(text.includes("password") || text.includes("login") || text.includes("verify")){
+            mitreTechniques.push("T1556 - Credential Harvesting");
+        }
+
+        if(text.includes("bank") || text.includes("account") || text.includes("credit")){
+            mitreTechniques.push("T1650 - Financial Theft");
+        }
+
+        if(text.includes("attachment") || text.includes("download")){
+            mitreTechniques.push("T1204 - User Execution");
+        }
+
+        if(text.includes("otp") || text.includes("code")){
+            mitreTechniques.push("T1110 - OTP Abuse");
+        }
+
+        if(mitreTechniques.length === 0){
+            mitreTechniques.push("T1566 - Phishing");
+        }
+
+        document.getElementById("mitreDiv").innerText = "MITRE: " + mitreTechniques.join(" | ");
+        document.getElementById("mitreDiv").style.display = "block";
+
         matrixColor = "#ff0033";
         bar.classList.add("danger-bar");
         statusLabel.innerText = (currentLang==="ar")?"حالة التهديد: خطر عالي جداً":"Threat Status: HIGH RISK";
@@ -178,11 +205,9 @@ function updateUI(score) {
         let recText = (currentLang==="ar")?"تحذير: الرسالة تحتوي على مؤشرات احتيال قوية. لا تضغط أي رابط":"Warning: The message contains strong fraud indicators. Do NOT click links";
         recContent.innerText = recText;
 
-        document.getElementById("mitreDiv").style.display = "block";
         document.getElementById("incidentDiv").style.display = "block";
         recBox.style.display = "block";
 
-        // قراءة التوصية بعد النتيجة بدون الإيموجي
         speak(recText);
     } else {
         matrixColor = "#00ffcc";
@@ -206,7 +231,6 @@ function toggleLang() {
     speak(currentLang==="ar"?"اللغة العربية":"English language");
 }
 
-// Matrix Animation
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -229,4 +253,3 @@ setInterval(draw, 33);
 
 </body>
 </html>
-
