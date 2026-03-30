@@ -1,74 +1,15 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>BlackFalcon SOC</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{ --neon-green:#00ffcc; --danger-red:#ff0033; }
-body{ margin:0; background:black; color:var(--neon-green); font-family:'Orbitron',sans-serif; overflow-x:hidden; transition:0.4s; }
-canvas{ position:fixed; top:0; left:0; z-index:-1; }
-.container{ text-align:center; margin-top:40px; padding-bottom: 50px; }
-h1{ font-size:35px; text-shadow:0 0 15px var(--neon-green); margin-bottom: 5px; color: var(--neon-green) !important; }
-.sub-title { font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; color: var(--neon-green); }
-textarea{ width:85%; height:130px; background:rgba(0,0,0,0.7); border:2px solid var(--neon-green) !important; border-radius:15px; padding:20px; color:var(--neon-green) !important; box-shadow:0 0 10px var(--neon-green) !important; font-size: 18px; outline: none; }
-.card{ width:80%; margin:25px auto; padding:25px; border-radius:20px; background:rgba(0,0,0,0.8); box-shadow:0 0 20px var(--neon-green); text-align: left; }
-.bar-container { width: 100%; height: 10px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-.bar{ height:100%; background:var(--neon-green); width:0%; transition:0.8s; }
-.recommendation-box { width: 80%; margin: 20px auto; padding: 15px; border: 1px solid var(--danger-red); border-radius: 10px; background: rgba(255, 0, 51, 0.1); color: white; display: none; text-align: center; }
-button{ padding:8px 20px; border:1px solid var(--neon-green); background:transparent; color:var(--neon-green); cursor:pointer; border-radius:10px; font-family: 'Orbitron'; }
-.danger-bar { background: var(--danger-red) !important; }
-.danger-text { color: var(--danger-red) !important; }
-</style>
-</head>
-<body>
-
-<canvas id="matrix"></canvas>
-
-<div class="container">
-    <h1>🦅 BlackFalcon SOC</h1>
-    <div class="sub-title">Advanced Security Operations Platform</div>
-
-    <div style="margin-bottom: 15px;">
-        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
-    </div>
-
-    <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
-
-    <div class="card">
-        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
-        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
-        <div class="bar-container"><div class="bar" id="bar"></div></div>
-        <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
-        <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
-    </div>
-
-    <div id="recBox" class="recommendation-box">
-        <span id="recContent"></span>
-    </div>
-</div>
-
 <script>
 let currentLang = "ar";
 let matrixColor = "#00ffcc";
 let analysisTimeout;
-let lastSpoken = "";
-let speechEnabled = false;
+let lastSpoken = ""; // منع تكرار الصوت
 
 const msgInput = document.getElementById("msg");
 
-// تفعيل الصوت عند أول تفاعل
-document.addEventListener("click", () => {
-    if(!speechEnabled){
-        speechEnabled = true;
-        const test = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(test);
-    }
-});
-
 function speak(text) {
-    if(!speechEnabled || text === lastSpoken) return;
+    if(text === lastSpoken) return;
     lastSpoken = text;
+
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
@@ -76,32 +17,29 @@ function speak(text) {
     window.speechSynthesis.speak(utterance);
 }
 
-msgInput.addEventListener("click", () => {
-    speak(currentLang === "ar" ? "أنت الآن في مربع إدخال النص" : "You are now in the text input field");
-});
-
-msgInput.addEventListener("input", () => {
-    clearTimeout(analysisTimeout);
-    analysisTimeout = setTimeout(() => { startAnalysis(); }, 1500);
-});
-
+// Incident ID عشوائي
 function generateIncident() {
     return "INC-" + Math.floor(100000 + Math.random() * 900000);
 }
 
+// تحديد MITRE حسب نوع الهجوم
 function detectMitre(text) {
     if(text.includes("otp") || text.includes("password") || text.includes("verify"))
         return "T1110 - Credential Access";
+    
     if(text.includes("click") || text.includes("link") || text.includes("http"))
         return "T1566 - Phishing";
+
     if(text.includes("bank") || text.includes("transfer") || text.includes("iban"))
         return "T1657 - Financial Theft";
+
     if(text.includes("download") || text.includes("install"))
         return "T1204 - Malware Execution";
+
     return "T1566 - Phishing";
 }
 
-// الكلمات كلها هنا
+
 const suspiciousKeywords = [
     "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
     "بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير",
@@ -169,7 +107,7 @@ const suspiciousKeywords = [
     "update now","verify identity","unlock account","access your account","secure login",
     "confidential","sensitive information","do not ignore","action required","response needed"
 ];
-
+// تحليل الرسالة
 function startAnalysis() {
     let text = msgInput.value.toLowerCase();
     if(text.length < 2) return;
@@ -177,23 +115,32 @@ function startAnalysis() {
     let score = 0;
     let hits = 0;
 
+    const suspiciousKeywords = [...]; // خله نفس قائمتك بدون تغيير
+
     suspiciousKeywords.forEach(k => {
-        if(text.includes(k.toLowerCase())){
+        if(text.includes(k.toLowerCase())) {
             hits++;
             score += 15;
+
             if(k.length > 6) score += 10;
             if(k.includes("http") || k.includes("click") || k.includes("انقر")) score += 25;
         }
     });
 
-    if(/https?:\/\/|www\./.test(text)) score += 30;
+    // روابط مباشرة
+    if(/https?:\/\/|www\./.test(text)) {
+        score += 30;
+    }
+
+    // كثافة الكلمات
     if(hits > 5) score += 20;
-    if(score>100) score=100;
+
+    if(score > 100) score = 100;
 
     updateUI(score, text);
 }
 
-function updateUI(score, text){
+function updateUI(score, text) {
     const bar = document.getElementById("bar");
     const scoreVal = document.getElementById("score");
     const statusLabel = document.getElementById("statusLabel");
@@ -203,12 +150,52 @@ function updateUI(score, text){
     const incidentDiv = document.getElementById("incidentDiv");
 
     scoreVal.innerText = score;
-    bar.style.width = score+"%";
+    bar.style.width = score + "%";
 
-    if(score>30){
-        matrixColor="#ff0033";
+    if(score > 30) {
+        matrixColor = "#ff0033";
         bar.classList.add("danger-bar");
         statusLabel.classList.add("danger-text");
-        statusLabel.innerText = (currentLang==="ar")?"حالة التهديد: خطر عالي جداً":"Threat Status: HIGH RISK";
 
-        recContent.innerText =
+        statusLabel.innerText = (currentLang==="ar")?
+        "حالة التهديد: خطر عالي جداً":
+        "Threat Status: HIGH RISK";
+
+        let recText = (currentLang==="ar")?
+        "تحذير: هذه الرسالة تبدو كتصيد احتيالي. لا تضغط أي رابط أو تدخل بياناتك":
+        "Warning: This message appears to be phishing. Do not click links or enter data";
+
+        recContent.innerText = recText;
+
+        // MITRE حقيقي
+        let mitre = detectMitre(text);
+        mitreDiv.innerText = "MITRE: " + mitre;
+
+        // Incident متغير
+        incidentDiv.innerText = "Incident ID: " + generateIncident();
+
+        mitreDiv.style.display = "block";
+        incidentDiv.style.display = "block";
+        recBox.style.display = "block";
+
+        speak(recText);
+
+    } else {
+        matrixColor = "#00ffcc";
+        bar.classList.remove("danger-bar");
+        statusLabel.classList.remove("danger-text");
+
+        statusLabel.innerText = (currentLang==="ar")?
+        "حالة التهديد: آمن":
+        "Threat Status: CLEAN";
+
+        mitreDiv.style.display = "none";
+        incidentDiv.style.display = "none";
+        recBox.style.display = "none";
+
+        if(msgInput.value.length > 5){
+            speak((currentLang==="ar")?"الحالة آمنة":"Status is safe");
+        }
+    }
+}
+</script>
