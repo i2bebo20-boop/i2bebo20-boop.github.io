@@ -142,15 +142,35 @@ function startAnalysis() {
         "المراهنات عبر الإنترنت","كازينو على الإنترنت","الألعاب عبر الإنترنت","بطولة البوكر","رهان خالٍ من المخاطر","جائزة كبرى في ماكينات القمار",
         "أدر العجلة واربح","جرب مجاناً","عرض لكبار الشخصيات","تم الإعلان عن الفائز","الأرقام الفائزة",
         "bank","credit card","debit card","account","login","password","otp","verify","click here","urgent",
-        "bitcoin","crypto","investment","profit","double your money","earn money fast","lottery","jackpot","casino"
+        "bitcoin","crypto","investment","profit","double your money","earn money fast","lottery","jackpot","casino","bank","credit","credit card","debit card","account","account update","account suspended","account locked",
+        "login","login now","sign in","password","reset password","change password","otp","verification code",
+        "verify","verify now","verify your account","confirm","confirm your account","identity verification",
+        "click here","click now","click below","tap here","open link","visit link","download now","install now",
+        "urgent","very urgent","immediate action","act now","limited time","offer expires","final notice","last warning",
+        "security alert","security update","system alert","important notice","unauthorized login","suspicious activity",
+        "fraud alert","data breach","compromised account","recover account","secure your account",
+        "payment","payment required","payment failed","update payment","billing","invoice","billing issue",
+        "transaction","transaction failed","pending payment","confirm payment","refund","claim refund",
+        "bank transfer","wire transfer","send money","receive money","transfer funds","swift","iban",
+        "paypal","visa","mastercard","apple pay","google pay",
+        "bitcoin","crypto","cryptocurrency","wallet","crypto wallet","investment","investment opportunity",
+        "profit","guaranteed profit","double your money","high return","earn money","earn money fast",
+        "make money online","passive income","financial freedom",
+        "lottery","jackpot","winner","you won","claim prize","claim your prize","reward","bonus",
+        "free gift","free money","free trial","exclusive deal","special offer","limited offer",
+        "100% guarantee","guaranteed","risk free","no risk","no fees","no cost","instant","instant access",
+        "gift card","redeem","redeem now","voucher","coupon","promo code",
+        "support","support team","customer service","help desk","technical support","contact us",
+        "update now","verify identity","unlock account","access your account","secure login",
+        "confidential","sensitive information","do not ignore","action required","response needed"
     ];
 
     // زيادة الخطورة حسب كل كلمة وعددها
     suspiciousKeywords.forEach(k => {
         if(text.includes(k.toLowerCase())) {
-            score += 10; // كل كلمة تضيف 10 نقاط
-            if(k.length > 6) score += 5;
-            if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 15;
+            score += 20; // كل كلمة تضيف 20 نقاط
+            if(k.length > 6) score += 10;
+            if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 20;
         }
     });
 
@@ -230,4 +250,5 @@ setInterval(draw, 33);
 </body>
 </html>
 
-ابيك بس تزيد كلمات الانجليزيه مشبوهه وتزيد الخطوره على كلمات العربيه ولا تغير شي ثاني
+
+
