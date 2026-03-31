@@ -58,6 +58,11 @@ button{ padding:8px 20px; border:1px solid var(--neon-green); background:transpa
         <div class="bar-container"><div class="bar" id="bar"></div></div>
         <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
         <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
+
+        <!-- ✅ إضافة نوع الهجوم -->
+        <div class="info-line" id="attackTypeDiv" style="display:none; color: var(--neon-green);">
+            Attack Type: Phishing
+        </div>
     </div>
 
     <div id="recBox" class="recommendation-box">
@@ -71,6 +76,27 @@ let matrixColor = "#00ffcc";
 let analysisTimeout;
 const msgInput = document.getElementById("msg");
 
+/* ✅ دالة تحديد نوع الهجوم */
+function detectAttackType(text){
+    if(text.includes("http") || text.includes("click") || text.includes("login") || text.includes("verify")){
+        return currentLang==="ar" ? "تصيد احتيالي (Phishing)" : "Phishing";
+    }
+
+    if(text.includes("bank") || text.includes("credit") || text.includes("بطاقة") || text.includes("دفع")){
+        return currentLang==="ar" ? "احتيال مالي (Financial Scam)" : "Financial Scam";
+    }
+
+    if(text.includes("download") || text.includes("install") || text.includes("تحميل") || text.includes("تثبيت")){
+        return currentLang==="ar" ? "برمجيات خبيثة (Malware)" : "Malware";
+    }
+
+    if(text.includes("otp") || text.includes("password") || text.includes("كلمة المرور")){
+        return currentLang==="ar" ? "سرقة بيانات (Credential Theft)" : "Credential Theft";
+    }
+
+    return currentLang==="ar" ? "غير معروف" : "Unknown";
+}
+
 function speak(text) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -79,12 +105,10 @@ function speak(text) {
     window.speechSynthesis.speak(utterance);
 }
 
-// اقرأ عند الضغط على مربع النص
 msgInput.addEventListener("focus", () => {
     speak(currentLang === "ar" ? "أنت الآن في مربع إدخال النص" : "You are now in the text input field");
 });
 
-// تحليل الرسالة بعد التوقف
 msgInput.addEventListener("input", () => {
     clearTimeout(analysisTimeout);
     analysisTimeout = setTimeout(() => { startAnalysis(); }, 1500);
@@ -96,7 +120,6 @@ function startAnalysis() {
 
     let score = 0;
 
-    // قائمة الكلمات كلها بدون حذف
     const suspiciousKeywords = [
         "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
         "بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير",
@@ -165,10 +188,9 @@ function startAnalysis() {
         "confidential","sensitive information","do not ignore","action required","response needed"
     ];
 
-    // زيادة الخطورة حسب كل كلمة وعددها
     suspiciousKeywords.forEach(k => {
         if(text.includes(k.toLowerCase())) {
-            score += 20; // كل كلمة تضيف 20 نقاط
+            score += 20;
             if(k.length > 6) score += 10;
             if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 20;
         }
@@ -176,15 +198,18 @@ function startAnalysis() {
 
     if(score > 100) score = 100;
 
-    updateUI(score);
+    let attackType = detectAttackType(text); // ✅ إضافة
+
+    updateUI(score, attackType); // ✅ تعديل بسيط
 }
 
-function updateUI(score) {
+function updateUI(score, attackType) {
     const bar = document.getElementById("bar");
     const scoreVal = document.getElementById("score");
     const statusLabel = document.getElementById("statusLabel");
     const recBox = document.getElementById("recBox");
     const recContent = document.getElementById("recContent");
+    const attackTypeDiv = document.getElementById("attackTypeDiv"); // ✅
 
     scoreVal.innerText = score;
     bar.style.width = score + "%";
@@ -202,7 +227,9 @@ function updateUI(score) {
         document.getElementById("incidentDiv").style.display = "block";
         recBox.style.display = "block";
 
-        // قراءة التوصية بعد النتيجة بدون الإيموجي
+        attackTypeDiv.style.display = "block"; // ✅
+        attackTypeDiv.innerText = (currentLang==="ar"?"نوع الهجوم: ":"Attack Type: ") + attackType;
+
         speak(recText);
     } else {
         matrixColor = "#00ffcc";
@@ -212,6 +239,7 @@ function updateUI(score) {
         document.getElementById("mitreDiv").style.display = "none";
         document.getElementById("incidentDiv").style.display = "none";
         recBox.style.display = "none";
+        attackTypeDiv.style.display = "none"; // ✅
 
         if(msgInput.value.length > 5){
             speak((currentLang==="ar")?"الحالة آمنة":"Status is safe");
@@ -226,7 +254,7 @@ function toggleLang() {
     speak(currentLang==="ar"?"اللغة العربية":"English language");
 }
 
-// Matrix Animation
+// Matrix Animation (نفسه بدون تغيير)
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
