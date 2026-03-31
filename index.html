@@ -46,17 +46,22 @@ button{ padding:8px 20px; border:1px solid var(--neon-green); background:transpa
     <h1>🦅 BlackFalcon SOC</h1>
     <div class="sub-title">Advanced Security Operations Platform</div>
 
-    <button onclick="toggleLang()">EN / AR</button>
+    <div style="margin-bottom: 15px;">
+        <button id="langBtn" onclick="toggleLang()">EN / AR</button>
+    </div>
 
     <textarea id="msg" placeholder="الصق الرسالة هنا..."></textarea>
 
     <div class="card">
-        <div id="statusLabel">Threat Status: CLEAN</div>
-        <div>Risk Score: <span id="score">0</span>%</div>
+        <div id="statusLabel" style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">Threat Status: CLEAN</div>
+        <div class="info-line"><span id="riskText">Risk Score:</span> <span id="score">0</span>%</div>
         <div class="bar-container"><div class="bar" id="bar"></div></div>
+        <div class="info-line" id="mitreDiv" style="display:none; color: var(--neon-green);">MITRE: T1566 - Phishing</div>
+        <div class="info-line" id="incidentDiv" style="display:none; color: var(--neon-green);">Incident ID: INC-943219</div>
 
-        <div id="mitreDiv" style="display:none;">MITRE: T1566 - Phishing</div>
-        <div id="incidentDiv" style="display:none;">Incident ID: INC-943219</div>
+        <div class="info-line" id="attackTypeDiv" style="display:none; color: var(--neon-green);">
+            Attack Type: Phishing
+        </div>
     </div>
 
     <div id="recBox" class="recommendation-box">
@@ -67,53 +72,74 @@ button{ padding:8px 20px; border:1px solid var(--neon-green); background:transpa
 <script>
 let currentLang = "ar";
 let matrixColor = "#00ffcc";
-let msgInput = document.getElementById("msg");
+let analysisTimeout;
+const msgInput = document.getElementById("msg");
 
-function detectAttack(text){
-    if(text.includes("http") || text.includes("click") || text.includes("login") || text.includes("verify")) return "phishing";
-    if(text.includes("bank") || text.includes("credit") || text.includes("بطاقة") || text.includes("دفع")) return "financial";
-    if(text.includes("download") || text.includes("install") || text.includes("تحميل") || text.includes("تثبيت")) return "malware";
-    if(text.includes("otp") || text.includes("password") || text.includes("كلمة المرور")) return "credential";
-    return "unknown";
+function detectAttackType(text){
+    if(text.includes("http") || text.includes("click") || text.includes("login") || text.includes("verify")){
+        return currentLang==="ar" ? "تصيد احتيالي (Phishing)" : "Phishing";
+    }
+    if(text.includes("bank") || text.includes("credit") || text.includes("بطاقة") || text.includes("دفع")){
+        return currentLang==="ar" ? "احتيال مالي (Financial Scam)" : "Financial Scam";
+    }
+    if(text.includes("download") || text.includes("install") || text.includes("تحميل") || text.includes("تثبيت")){
+        return currentLang==="ar" ? "برمجيات خبيثة (Malware)" : "Malware";
+    }
+    if(text.includes("otp") || text.includes("password") || text.includes("كلمة المرور")){
+        return currentLang==="ar" ? "سرقة بيانات (Credential Theft)" : "Credential Theft";
+    }
+    return currentLang==="ar" ? "غير معروف" : "Unknown";
 }
 
+/* ✅ توصيات احترافية حسب نوع الهجوم */
 function getRecommendation(type){
-    if(type==="phishing"){
+    if(type.includes("Phishing") || type.includes("تصيد")){
         return currentLang==="ar"
         ? "🚨 يشتبه بمحاولة تصيد احتيالي: لا تضغط على الروابط، تحقق من الرابط يدوياً، لا تدخل بياناتك، وفعّل التحقق الثنائي (MFA)."
         : "🚨 Phishing suspected: Do not click links, verify URLs manually, never enter credentials, enable MFA.";
     }
-    if(type==="financial"){
+
+    if(type.includes("Financial") || type.includes("مالي")){
         return currentLang==="ar"
         ? "💰 احتيال مالي محتمل: لا ترسل أموال، تحقق من المصدر، تواصل مع الجهة الرسمية مباشرة، وراقب حساباتك البنكية."
         : "💰 Financial scam detected: Do not send money, verify source, contact official entity, monitor bank accounts.";
     }
-    if(type==="malware"){
+
+    if(type.includes("Malware") || type.includes("خبيثة")){
         return currentLang==="ar"
         ? "🦠 خطر برمجيات خبيثة: لا تقم بالتحميل، استخدم برنامج حماية، افحص الجهاز فوراً، واعزل الملف المشبوه."
         : "🦠 Malware risk: Do not download, use antivirus, scan device immediately, isolate suspicious files.";
     }
-    if(type==="credential"){
+
+    if(type.includes("Credential") || type.includes("بيانات")){
         return currentLang==="ar"
         ? "🔐 محاولة سرقة بيانات: لا تشارك كلمة المرور أو OTP، غيّر كلمات المرور فوراً، وفعّل الحماية المتقدمة."
         : "🔐 Credential theft attempt: Do not share password/OTP, change passwords immediately, enable advanced security.";
     }
+
     return currentLang==="ar"
     ? "⚠️ نشاط مشبوه: تحقق من المصدر، لا تتفاعل مع الرسالة، وابلغ فريق الأمن."
     : "⚠️ Suspicious activity: Verify source, do not engage, report to security team.";
 }
 
-function getMITRE(type){
-    switch(type){
-        case "phishing": return "T1566 - Phishing";
-        case "financial": return "T1657 - Financial Fraud";
-        case "malware": return "T1204 - User Execution";
-        case "credential": return "T1556 - Credential Access";
-        default: return "T1599 - Unknown";
-    }
+function speak(text) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = (currentLang === "ar") ? "ar-SA" : "en-US";
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
 }
 
-function startAnalysis(){
+msgInput.addEventListener("focus", () => {
+    speak(currentLang === "ar" ? "أنت الآن في مربع إدخال النص" : "You are now in the text input field");
+});
+
+msgInput.addEventListener("input", () => {
+    clearTimeout(analysisTimeout);
+    analysisTimeout = setTimeout(() => { startAnalysis(); }, 1500);
+});
+
+function startAnalysis() {
     let text = msgInput.value.toLowerCase();
     if(text.length < 2) return;
 
@@ -184,46 +210,98 @@ function startAnalysis(){
     "gift card","redeem","redeem now","voucher","coupon","promo code",
     "support","support team","customer service","help desk","technical support","contact us",
     "update now","verify identity","unlock account","access your account","secure login",
-    "confidential","sensitive information","do not ignore","action required","response needed",
-    ];
+    "confidential","sensitive information","do not ignore","action required","response needed"
+];
 
-    suspiciousKeywords.forEach(k=>{
-        if(text.includes(k)) {
-            score+=20;
-            if(k.length>6) score+=10;
-            if(k.includes("click") || k.includes("http")) score+=20;
+    suspiciousKeywords.forEach(k => {
+        if(text.includes(k.toLowerCase())) {
+            score += 20;
+            if(k.length > 6) score += 10;
+            if(k.includes("http") || k.includes("انقر") || k.includes("click")) score += 20;
         }
     });
 
-    if(score>100) score=100;
+    if(score > 100) score = 100;
 
-    let attack = detectAttack(text);
-    let mitre = getMITRE(attack);
-    let rec = getRecommendation(attack);
+    let attackType = detectAttackType(text);
 
-    updateUI(score, mitre, rec);
+    updateUI(score, attackType);
 }
 
-function updateUI(score, mitre, rec){
-    document.getElementById("score").innerText = score;
-    document.getElementById("bar").style.width = score+"%";
+function updateUI(score, attackType) {
+    const bar = document.getElementById("bar");
+    const scoreVal = document.getElementById("score");
+    const statusLabel = document.getElementById("statusLabel");
+    const recBox = document.getElementById("recBox");
+    const recContent = document.getElementById("recContent");
+    const attackTypeDiv = document.getElementById("attackTypeDiv");
 
-    if(score>30){
-        document.getElementById("statusLabel").innerText = "Threat Status: HIGH RISK";
-        document.getElementById("mitreDiv").style.display="block";
-        document.getElementById("incidentDiv").style.display="block";
-        document.getElementById("recBox").style.display="block";
+    scoreVal.innerText = score;
+    bar.style.width = score + "%";
 
-        document.getElementById("mitreDiv").innerText = "MITRE: "+mitre;
-        document.getElementById("recContent").innerText = rec;
+    if(score > 30) {
+        matrixColor = "#ff0033";
+        bar.classList.add("danger-bar");
+        statusLabel.classList.add("danger-text");
+
+        statusLabel.innerText = (currentLang==="ar")?"حالة التهديد: خطر عالي جداً":"Threat Status: HIGH RISK";
+
+        let recText = getRecommendation(attackType); // ✅ هنا التغيير
+
+        recContent.innerText = recText;
+
+        document.getElementById("mitreDiv").style.display = "block";
+        document.getElementById("incidentDiv").style.display = "block";
+        recBox.style.display = "block";
+
+        attackTypeDiv.style.display = "block";
+        attackTypeDiv.innerText = (currentLang==="ar"?"نوع الهجوم: ":"Attack Type: ") + attackType;
+
+        speak(recText);
+    } else {
+        matrixColor = "#00ffcc";
+        bar.classList.remove("danger-bar");
+        statusLabel.classList.remove("danger-text");
+
+        statusLabel.innerText = (currentLang==="ar")?"حالة التهديد: آمن":"Threat Status: CLEAN";
+
+        document.getElementById("mitreDiv").style.display = "none";
+        document.getElementById("incidentDiv").style.display = "none";
+        recBox.style.display = "none";
+        attackTypeDiv.style.display = "none";
+
+        if(msgInput.value.length > 5){
+            speak((currentLang==="ar")?"الحالة آمنة":"Status is safe");
+        }
     }
 }
 
-msgInput.addEventListener("input", ()=> setTimeout(startAnalysis,1500));
-
-function toggleLang(){
-    currentLang = currentLang==="ar"?"en":"ar";
+function toggleLang() {
+    currentLang = (currentLang === "ar") ? "en" : "ar";
+    msgInput.placeholder = (currentLang === "ar") ? "الصق الرسالة هنا..." : "Paste message here...";
+    startAnalysis(); 
+    speak(currentLang==="ar"?"اللغة العربية":"English language");
 }
+
+// Matrix Animation (بدون تغيير)
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const drops = Array(Math.floor(canvas.width/14)).fill(1);
+
+function draw() {
+    ctx.fillStyle = "rgba(0,0,0,0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = matrixColor;
+    ctx.font = "14px monospace";
+    drops.forEach((y, i) => {
+        const text = Math.floor(Math.random()*2);
+        ctx.fillText(text, i * 14, y * 14);
+        if (y * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    });
+}
+setInterval(draw, 33);
 </script>
 
 </body>
