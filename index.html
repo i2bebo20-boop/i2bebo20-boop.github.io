@@ -41,7 +41,17 @@ function detectMitre(text) {
 
 
 const suspiciousKeywords = [
-    "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
+
+];
+// تحليل الرسالة
+function startAnalysis() {
+    let text = msgInput.value.toLowerCase();
+    if(text.length < 2) return;
+
+    let score = 0;
+    let hits = 0;
+
+    const suspiciousKeywords = [    "$$$","€€€","جنيه إسترليني","خصم 50%","بضعة شلنات","نقبل الدفع النقدي عبر البطاقات","نقبل بطاقات الائتمان",
     "بسعر معقول","عرض مناسب","تجنب الإفلاس","سوء الائتمان","بنك","الإفلاس","مساومة","الفواتير","عنوان الفواتير",
     "مليار","مليار دولار","ملياردير","البطاقة مقبولة","البطاقات المقبولة","نقدي","مكافأة نقدية","سحب نقدي",
     "كاش كاش كاش","كازينو","سنتات مقابل الدولار","يفحص","شيك أو حوالة بريدية","احصل على خصمك","يكلف","التكاليف",
@@ -106,16 +116,7 @@ const suspiciousKeywords = [
     "support","support team","customer service","help desk","technical support","contact us",
     "update now","verify identity","unlock account","access your account","secure login",
     "confidential","sensitive information","do not ignore","action required","response needed"
-];
-// تحليل الرسالة
-function startAnalysis() {
-    let text = msgInput.value.toLowerCase();
-    if(text.length < 2) return;
-
-    let score = 0;
-    let hits = 0;
-
-    const suspiciousKeywords = [...]; // خله نفس قائمتك بدون تغيير
+]; 
 
     suspiciousKeywords.forEach(k => {
         if(text.includes(k.toLowerCase())) {
