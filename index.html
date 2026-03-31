@@ -95,31 +95,31 @@ function detectAttackType(text){
 function getRecommendation(type){
     if(type.includes("Phishing") || type.includes("تصيد")){
         return currentLang==="ar"
-        ? "🚨 يشتبه بمحاولة تصيد احتيالي: لا تضغط على الروابط، تحقق من الرابط يدوياً، لا تدخل بياناتك، وفعّل التحقق الثنائي (MFA)."
-        : "🚨 Phishing suspected: Do not click links, verify URLs manually, never enter credentials, enable MFA.";
+        ? " يشتبه بمحاولة تصيد احتيالي: لا تضغط على الروابط، تحقق من الرابط يدوياً، لا تدخل بياناتك، وفعّل التحقق الثنائي (MFA)."
+        : " Phishing suspected: Do not click links, verify URLs manually, never enter credentials, enable MFA.";
     }
 
     if(type.includes("Financial") || type.includes("مالي")){
         return currentLang==="ar"
-        ? "💰 احتيال مالي محتمل: لا ترسل أموال، تحقق من المصدر، تواصل مع الجهة الرسمية مباشرة، وراقب حساباتك البنكية."
-        : "💰 Financial scam detected: Do not send money, verify source, contact official entity, monitor bank accounts.";
+        ? " احتيال مالي محتمل: لا ترسل أموال، تحقق من المصدر، تواصل مع الجهة الرسمية مباشرة، وراقب حساباتك البنكية."
+        : " Financial scam detected: Do not send money, verify source, contact official entity, monitor bank accounts.";
     }
 
     if(type.includes("Malware") || type.includes("خبيثة")){
         return currentLang==="ar"
-        ? "🦠 خطر برمجيات خبيثة: لا تقم بالتحميل، استخدم برنامج حماية، افحص الجهاز فوراً، واعزل الملف المشبوه."
-        : "🦠 Malware risk: Do not download, use antivirus, scan device immediately, isolate suspicious files.";
+        ? " خطر برمجيات خبيثة: لا تقم بالتحميل، استخدم برنامج حماية، افحص الجهاز فوراً، واعزل الملف المشبوه."
+        : " Malware risk: Do not download, use antivirus, scan device immediately, isolate suspicious files.";
     }
 
     if(type.includes("Credential") || type.includes("بيانات")){
         return currentLang==="ar"
-        ? "🔐 محاولة سرقة بيانات: لا تشارك كلمة المرور أو OTP، غيّر كلمات المرور فوراً، وفعّل الحماية المتقدمة."
-        : "🔐 Credential theft attempt: Do not share password/OTP, change passwords immediately, enable advanced security.";
+        ? " محاولة سرقة بيانات: لا تشارك كلمة المرور أو OTP، غيّر كلمات المرور فوراً، وفعّل الحماية المتقدمة."
+        : " Credential theft attempt: Do not share password/OTP, change passwords immediately, enable advanced security.";
     }
 
     return currentLang==="ar"
-    ? "⚠️ نشاط مشبوه: تحقق من المصدر، لا تتفاعل مع الرسالة، وابلغ فريق الأمن."
-    : "⚠️ Suspicious activity: Verify source, do not engage, report to security team.";
+    ? " نشاط مشبوه: تحقق من المصدر، لا تتفاعل مع الرسالة، وابلغ فريق الأمن."
+    : " Suspicious activity: Verify source, do not engage, report to security team.";
 }
 
 function speak(text) {
